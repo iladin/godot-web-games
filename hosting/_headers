@@ -1,0 +1,5 @@
+# Only needed if a game is exported with variant/thread_support=true.
+# Works on Cloudflare Pages and Netlify: copy this file into build/ before deploying.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

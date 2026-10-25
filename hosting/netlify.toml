@@ -1,0 +1,14 @@
+# Move to the repo root to deploy on Netlify (connect the repo in the Netlify UI).
+[build]
+  command = "./scripts/install_godot.sh && export PATH=$HOME/.local/bin:$PATH && ./scripts/export_all.sh && python3 scripts/build_site.py"
+  publish = "build"
+
+[build.environment]
+  GODOT_VERSION = "4.7.2"
+
+# Uncomment if any game uses thread support:
+# [[headers]]
+#   for = "/*"
+#   [headers.values]
+#     Cross-Origin-Opener-Policy = "same-origin"
+#     Cross-Origin-Embedder-Policy = "require-corp"
