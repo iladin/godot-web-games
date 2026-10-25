@@ -261,7 +261,10 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
 		# The player is the payer when buying as a ship, or when their station receives goods.
 		var player_pays := (buy and ship_player) or (not buy and st_player)
 		if player_pays:
-			qty = mini(qty, int(floor(credits / maxf(p, 0.01))))
+			# Automated player assets (traders, stations) keep a reserve for repairs and purchases;
+			# only the pilot's own ship may spend down to zero.
+			var budget := credits if ship.is_player else credits - Defs.TRADER_RESERVE
+			qty = mini(qty, int(floor(maxf(budget, 0.0) / maxf(p, 0.01))))
 	if qty <= 0:
 		return 0
 	var total := p * float(qty)

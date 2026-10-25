@@ -19,7 +19,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Likely levers: raid targeting (non-combat ships are free kills), RAID_INTERVAL ramp, raid size cap, defence platform cost, union quota. Measure before/after.
 
 ## VS-002 · Player auto-traders must not drain credits to zero
-- status: todo
+- status: done
 - priority: P1
 - type: bug
 - size: S
@@ -27,9 +27,11 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0000
 - why: Economic run seed 118 shows credits_10 = 1: player freighters on auto-trade spend every credit on cargo, which blocks repairs and purchases.
 - acceptance:
-  - [ ] Player-owned traders never buy when it would leave credits below a reserve constant (e.g. `TRADER_RESERVE` in defs.gd)
-  - [ ] New selftest assertion: a player trader with low credits buys nothing / is clamped to the reserve
-  - [ ] Economic balance run shows credits_10 > reserve in all seeds
+  - [x] Player-owned traders never buy when it would leave credits below a reserve constant (e.g. `TRADER_RESERVE` in defs.gd)
+  - [x] New selftest assertion: a player trader with low credits buys nothing / is clamped to the reserve
+  - [x] Economic balance run shows credits_10 > reserve in all seeds
+- done: S0001 — automated player assets keep a 2000 cr reserve (defs TRADER_RESERVE, Universe.transact clamp, selftest)
+- notes: S0001: TRADER_RESERVE=2000 clamp in Universe.transact() for all automated player assets; QA verified (credits_10 4088/2104/3865, HQ 2/3). Seed 118 margin only ~104 cr.
 
 ## VS-003 · Procedural sound effects (web-safe)
 - status: todo
@@ -123,6 +125,19 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - acceptance:
   - [ ] The Producer splits this into S/M tasks before work (serialize Universe → user://, restore on title "Continue", autosave cadence, versioning)
 - notes: Size L on purpose — exercises the split rule.
+
+## VS-010 · NPC traders must not get stuck at a player station that can't pay
+- status: todo
+- priority: P2
+- type: bug
+- size: S
+- source: qa
+- created: S0001
+- why: S0001 QA (VS-002 verify): below TRADER_RESERVE, Universe.transact() refuses NPC deliveries to player stations, but ship_ai.gd best_buyer()/plan_trade() keep picking the same station, so NPC traders/miners retry at the dock every tick. Balance runs sit at 2-4k credits, so this triggers often.
+- acceptance:
+  - [ ] best_buyer()/plan_trade() skip player stations when the player cannot afford a meaningful delivery (credits - TRADER_RESERVE below ~5 units' price)
+  - [ ] New selftest assertion: with credits <= TRADER_RESERVE an NPC seller docked at a player station picks a different buyer instead of retrying
+  - [ ] check.sh PASS; economic balance run credits_10 still > TRADER_RESERVE in all seeds
 
 # Ideas parking lot
 - Engine trails and a proper travel-drive streak effect

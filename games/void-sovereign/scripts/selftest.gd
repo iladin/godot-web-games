@@ -34,6 +34,18 @@ func _init() -> void:
 	var got := u.transact(ship, seller, "energy", 10, true)
 	assert(got == 10)
 	assert(is_equal_approx(u.credits, before - price * 10.0))
+	# Player auto-traders never spend below TRADER_RESERVE.
+	seller.stock["energy"] = 200
+	var price_r := seller.price("energy")
+	u.credits = Defs.TRADER_RESERVE + price_r * 3.5
+	ship.cargo.clear()
+	var got_r := u.transact(ship, seller, "energy", 50, true)
+	assert(got_r == 3, "trader buys only what the reserve allows")
+	assert(u.credits >= Defs.TRADER_RESERVE)
+	u.credits = Defs.TRADER_RESERVE - 1.0
+	assert(u.transact(ship, seller, "energy", 10, true) == 0, "trader below reserve buys nothing")
+	assert(is_equal_approx(u.credits, Defs.TRADER_RESERVE - 1.0))
+	u.credits = Defs.START_CREDITS
 	var pst := u.spawn_station("solar", Defs.Faction.PLAYER, 0, Vector3(-500, 0, 0))
 	pst.stock["energy"] = 50
 	var npc := u.spawn_ship("trader", Defs.Faction.UNION, 0, Vector3.ZERO)
