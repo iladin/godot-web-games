@@ -1,0 +1,198 @@
+class_name Director
+extends RefCounted
+## Faction-level brains: starting fleets, Hive nests + raids (the difficulty ramp),
+## Union fleet upkeep and station rebuilding.
+
+var u: Universe
+var raid_t: float = Defs.FIRST_RAID
+var union_t: float = Defs.UNION_SPAWN_TIME
+var raid_count: int = 0
+var rebuild_queue: Array[Dictionary] = []
+
+
+func _init(p_u: Universe) -> void:
+	u = p_u
+
+
+func seed_fleets() -> void:
+	var hq := u.hq
+	u.spawn_player(hq.sector, hq.pos + Vector3(0, 40, hq.radius + 140.0))
+	var m := u.spawn_ship("miner", Defs.Faction.PLAYER, hq.sector, hq.pos + Vector3(250, 0, 0))
+	m.order = "mine"
+	for i in 2:
+		var f := u.spawn_ship("fighter", Defs.Faction.PLAYER, hq.sector, hq.pos + Vector3(-200, 20 * i, 200 + 60 * i))
+		f.order = "escort"
+	var union_sectors := _union_sectors()
+	for cls: String in Defs.UNION_QUOTA:
+		var n: int = Defs.UNION_QUOTA[cls]
+		for i in n:
+			var sidx: int = union_sectors[i % union_sectors.size()]
+			var p := Vector3(randf_range(-2000, 2000), randf_range(-200, 200), randf_range(-2000, 2000))
+			_assign(u.spawn_ship(cls, Defs.Faction.UNION, sidx, p), sidx)
+	for nest: StationData in u.alive_nests():
+		for i in 5:
+			var d := u.spawn_ship("drone", Defs.Faction.HIVE, nest.sector, nest.pos + _rand_dir() * 500.0)
+			d.order = "patrol"
+			d.order_sector = nest.sector
+	# Light infestation in Cinder Belt so the mid-game has a contested sector.
+	for i in 3:
+		var d2 := u.spawn_ship("drone", Defs.Faction.HIVE, 3, Vector3(randf_range(-1500, 1500), 0, randf_range(-1500, 1500)))
+		d2.order = "patrol"
+		d2.order_sector = 3
+
+
+func step(delta: float) -> void:
+	_nests(delta)
+	_raids(delta)
+	_union(delta)
+	_rebuild(delta)
+
+
+func _nests(delta: float) -> void:
+	var cap := 6 + int(u.time / 120.0)
+	for nest: StationData in u.alive_nests():
+		nest.spawn_t -= delta
+		if nest.spawn_t > 0.0:
+			continue
+		nest.spawn_t = maxf(Defs.NEST_SPAWN_MIN, Defs.NEST_SPAWN_START - u.time / 40.0)
+		var count := 0
+		for e: SimEntity in u.ents_in(nest.sector):
+			if e is ShipData and e.faction == Defs.Faction.HIVE:
+				count += 1
+		if count < cap:
+			var cls := "ravager" if u.time > Defs.RAVAGER_TIME and randf() < 0.25 else "drone"
+			var d := u.spawn_ship(cls, Defs.Faction.HIVE, nest.sector, nest.pos + _rand_dir() * (nest.radius + 80.0))
+			d.order = "patrol"
+			d.order_sector = nest.sector
+
+
+func raid_interval() -> float:
+	return maxf(Defs.RAID_INTERVAL_MIN, Defs.RAID_INTERVAL_START - u.time / 12.0)
+
+
+func raid_size() -> int:
+	return mini(3 + int(u.time / 90.0), 16)
+
+
+func _raids(delta: float) -> void:
+	raid_t -= delta
+	if raid_t > 0.0:
+		return
+	raid_t = raid_interval()
+	var nests := u.alive_nests()
+	if nests.is_empty():
+		return
+	var target := _pick_raid_target()
+	if target == null:
+		return
+	raid_count += 1
+	var nest: StationData = nests[randi() % nests.size()]
+	var n := raid_size()
+	for i in n:
+		var cls := "drone"
+		if u.time > Defs.RAVAGER_TIME and i % 3 == 0:
+			cls = "ravager"
+		if u.time > Defs.DREAD_TIME and i == 0 and raid_count % 3 == 0:
+			cls = "dreadnought"
+		var s := u.spawn_ship(cls, Defs.Faction.HIVE, nest.sector, nest.pos + _rand_dir() * (nest.radius + 150.0))
+		s.order = "raid"
+		s.order_target = target.id
+		s.order_sector = target.sector
+	var col := Defs.faction_color(Defs.Faction.HIVE)
+	u.message.emit("HIVE RAID: %d ships moving on %s in %s" % [n, target.display_name, u.sectors[target.sector].name], col)
+
+
+func _pick_raid_target() -> StationData:
+	var player_sts: Array[StationData] = []
+	var union_sts: Array[StationData] = []
+	for e: SimEntity in u.entities.values():
+		if not e.alive or not (e is StationData):
+			continue
+		if e.faction == Defs.Faction.PLAYER:
+			player_sts.append(e as StationData)
+		elif e.faction == Defs.Faction.UNION:
+			union_sts.append(e as StationData)
+	if not player_sts.is_empty() and (randf() < 0.65 or union_sts.is_empty()):
+		return player_sts[randi() % player_sts.size()]
+	if union_sts.is_empty():
+		return null
+	return union_sts[randi() % union_sts.size()]
+
+
+func _union(delta: float) -> void:
+	union_t -= delta
+	if union_t > 0.0:
+		return
+	union_t = Defs.UNION_SPAWN_TIME
+	var yards: Array[StationData] = []
+	var counts: Dictionary = {}
+	for e: SimEntity in u.entities.values():
+		if not e.alive or e.faction != Defs.Faction.UNION:
+			continue
+		if e is StationData and (e as StationData).kind == "shipyard":
+			yards.append(e as StationData)
+		elif e is ShipData:
+			var c: String = (e as ShipData).cls
+			counts[c] = int(counts.get(c, 0)) + 1
+	if yards.is_empty():
+		return
+	var yard: StationData = yards[0]
+	for cls: String in Defs.UNION_QUOTA:
+		var have: int = counts.get(cls, 0)
+		var quota: int = Defs.UNION_QUOTA[cls]
+		if have >= quota:
+			continue
+		var stocked := int(yard.stock["alloy"]) >= 20 and int(yard.stock["munitions"]) >= 8
+		if stocked:
+			yard.stock["alloy"] = int(yard.stock["alloy"]) - 20
+			yard.stock["munitions"] = int(yard.stock["munitions"]) - 8
+		elif have >= quota / 2:
+			continue   # without materials, only rebuild a badly depleted fleet
+		_assign(u.spawn_ship(cls, Defs.Faction.UNION, yard.sector, yard.pos + _rand_dir() * (yard.radius + 120.0)), yard.sector)
+		return
+
+
+func _assign(s: ShipData, home: int) -> void:
+	match s.role:
+		"trader":
+			s.order = "trade"
+		"miner":
+			s.order = "mine"
+		_:
+			s.order = "patrol"
+			var us := _union_sectors()
+			s.order_sector = us[randi() % us.size()] if not us.is_empty() else home
+
+
+func _union_sectors() -> Array[int]:
+	var out: Array[int] = []
+	for s: SectorData in u.sectors:
+		if u.sector_has_nest(s.idx):
+			continue
+		for e: SimEntity in u.ents_in(s.idx):
+			if e is StationData and e.faction == Defs.Faction.UNION:
+				out.append(s.idx)
+				break
+	if out.is_empty():
+		out.append(0)
+	return out
+
+
+func queue_rebuild(st: StationData) -> void:
+	rebuild_queue.append({"kind": st.kind, "sector": st.sector, "pos": st.pos, "t": Defs.UNION_REBUILD_TIME})
+
+
+func _rebuild(delta: float) -> void:
+	for i in range(rebuild_queue.size() - 1, -1, -1):
+		var r: Dictionary = rebuild_queue[i]
+		r["t"] = float(r["t"]) - delta
+		if float(r["t"]) <= 0.0:
+			var sidx: int = r["sector"]
+			rebuild_queue.remove_at(i)
+			if not u.sector_has_nest(sidx):
+				u.spawn_station(r["kind"], Defs.Faction.UNION, sidx, r["pos"])
+				u.message.emit("Union rebuilt %s in %s" % [Defs.STATION[r["kind"]]["name"], u.sectors[sidx].name], Defs.faction_color(Defs.Faction.UNION))
+
+
+func _rand_dir() -> Vector3:
+	return Vector3(randf_range(-1, 1), randf_range(-0.3, 0.3), randf_range(-1, 1)).normalized()

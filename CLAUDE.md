@@ -47,3 +47,15 @@ If Godot isn't available in your environment, say so plainly, still run `bash -n
 - Constants at the top in SCREAMING_CASE for every tunable (speeds, spawn rates, colors) so the user can tweak feel quickly.
 - Signals over node-path reaching. `get_node("../../X")` is a smell.
 - Commit message per game: `Add <Title>` / `<Title>: <change>`.
+
+## AI studio (autonomous development loop)
+Games can be developed by a role-based AI studio — strategy in `docs/AI_STUDIO.md`, procedure in `ai-studio/studio-cycle.md`, roles in `ai-studio/roles/` (game-developer, qa-tester, game-critic, balance-analyst, feature-scout). A scheduled session runs one studio cycle every 5 hours for `void-sovereign`.
+
+Studio state per game lives in `games/<slug>/HANDOVER.md` and `games/<slug>/studio/` (BACKLOG, INBOX, LOG, state.json, metrics.csv, reviews/). The `studio/` folder has a `.gdignore`, so Godot never imports or exports it.
+
+**HANDOVER rule — applies to every session that touches a game with a `HANDOVER.md`, scheduled or manual:**
+1. Read `games/<slug>/HANDOVER.md` before doing anything else; its "Next session should" list is the default plan.
+2. Before ending the session — including failed, aborted or partial sessions — rewrite `HANDOVER.md` with the template in the studio-cycle skill: what you did, the state of the build, uncommitted/in-flight work, and an ordered, concrete "Next session should" list for whoever comes next.
+3. If you're running out of time or context, write the handover first, then stop.
+
+Studio tooling: `scripts/studio/ensure_godot.sh` (find/install Godot into gitignored `.tools/`), `backlog.py`, `shots.sh`, `balance.sh`, `snapshot.sh`.

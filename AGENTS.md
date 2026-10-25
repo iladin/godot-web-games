@@ -13,3 +13,5 @@ Task-specific playbooks are in `.claude/skills/*/SKILL.md` — plain Markdown, u
 | Export / host / publish | `.claude/skills/export-and-deploy/SKILL.md` |
 
 Gate before finishing any game: `./scripts/check.sh <slug>` prints `PASS`.
+
+Autonomous development loop (Producer + Developer, QA, Critic, Balance Analyst, Feature Scout): `docs/AI_STUDIO.md` and `ai-studio/studio-cycle.md`. **Always read and, before you finish, rewrite `games/<slug>/HANDOVER.md` for any game that has one.**

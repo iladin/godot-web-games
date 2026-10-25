@@ -1,0 +1,3 @@
+session,date,policy,minutes,seeds,hq_survived,hq_lost_at_median,first_raid_at_median,union_collapse_at_median,net_worth_10_median,net_worth_20_median,hive_ships_20_median,union_ships_20_median,surface_l1_bot,notes
+S0000,2026-10-25,economic,30,3,1/3,26.7,3.3,24.1,41262,8032,56,6,,baseline after v1
+S0000,2026-10-25,passive,40,3,0/3,26.4,3.3,21.9,47730,38154,54,3,core at 44% when bot died (pylons down at ~48s),baseline after v1

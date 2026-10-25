@@ -1,0 +1,31 @@
+; Engine configuration file.
+; Web-ready defaults: Compatibility renderer, 1280x720 landscape, stretch to fit.
+
+config_version=5
+
+[application]
+
+config/name="Void Sovereign"
+config/description="Fly, trade, command fleets and fight on foot across a living star cluster."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=0
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.01, 0.012, 0.03, 1)
+textures/vram_compression/import_etc2_astc=true

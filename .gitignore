@@ -13,3 +13,6 @@ dist/
 Thumbs.db
 *.swp
 .vscode/
+
+# Studio tooling (Godot binary, screenshots, snapshots)
+.tools/
