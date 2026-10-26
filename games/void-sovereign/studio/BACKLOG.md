@@ -51,18 +51,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0005 — scripts/audio/sfx.gd synthesises 6 AudioStreamWAVs at startup, gated on first input, N/SND mute, ±8% pitch; autoplay plays 15 / blocks 63 pre-input (QA PASS)
 
 ## VS-004 · Guided first 10 minutes
-- status: todo
+- status: done
 - priority: P1
 - type: polish
 - size: S
 - source: dev
 - created: S0000
 - why: A new player gets a wall of controls on the title screen and one objective line. Nothing teaches throttle, targeting, docking, the map or landing in context.
+- notes: S0006 started (rollback HEAD 48b0706).
 - acceptance:
-  - [ ] Contextual hints appear in sequence based on state (capture mouse → throttle → target an enemy → dock → open map → land on Ember), each disappears once done
-  - [ ] Hints show touch wording when touch is active
-  - [ ] Hints can be skipped (one key/button) and never reappear in that run
-  - [ ] Screenshot of at least two hint states reviewed
+  - [x] Contextual hints appear in sequence based on state (capture mouse → throttle → target an enemy → dock → open map → land on Ember), each disappears once done
+  - [x] Hints show touch wording when touch is active
+  - [x] Hints can be skipped (one key/button) and never reappear in that run
+  - [x] Screenshot of at least two hint states reviewed
+- done: S0006 — scripts/ui/tutorial_hints.gd: 6 state-latched tips (steer→throttle→target→dock→map→land Ember), touch wording, skip via H or tap; selftest + autoplay asserts (QA PASS, assert mutation-tested)
 
 ## VS-005 · Declutter surface objective markers
 - status: todo
@@ -173,6 +175,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Playing a sound before first input makes check.sh FAIL (assert or a pattern check.sh matches); verified by a temporary mutation, then reverted
   - [ ] check.sh PASS
 
+## VS-013 · Tutorial tip follow-ups (touch skip overlap, docs)
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0006
+- why: S0006 QA of VS-004: in touch mode the tap-to-skip tip box (x 260–1020, y 418–484 at 1280x720) overlaps the left-side steering zone, so a player starting a steer drag on it skips all tips instead of steering; the H key isn't documented anywhere but the tip itself.
+- acceptance:
+  - [ ] A touch drag starting in the steering zone while a tip shows steers the ship and does not skip tips (xvfb probe at --resolution 1280x720)
+  - [ ] Tips are still skippable on touch with one dedicated tap target that does not overlap the stick zone or the touch buttons (screenshot hints_touch reviewed)
+  - [ ] "H: skip tips" appears in the title/help controls, game.json controls and DESIGN.md controls
+  - [ ] check.sh PASS
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -189,3 +205,9 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0005, QA) Explosion SFX peaks at full scale and is hard-clipped by clampf — lower its gain or soft-clip.
 - (S0005, QA) main.gd is ~325 lines (> ~300 guideline) — split input/pause handling out.
 - (S0005, dev) Click sounds on map/dock buttons; HUD mute indicator; persist mute in user://save.cfg; distance-scaled explosion volume; NPC weapon sounds.
+- (S0006, QA) Tutorial tip box sits at 58% height over the player ship model; move higher/side (BOX_Y_FRAC in tutorial_hints.gd).
+- (S0006, QA) Desktop tip 1 duplicates the HUD line "Click to capture mouse for steering"; hide the HUD line while tip 1 shows.
+- (S0006, QA) Touch steer tip says "drag on the left side" / "steer" but the stick is labelled MOVE — align wording.
+- (S0006, QA) The "land" tip completes on any planet, not Ember specifically (harmless on the current map).
+- (S0006, dev/QA) Touch OBJECTIVE line says "press F to land"; use ACT wording in touch mode.
+- (S0006, dev) Persist "tips completed/skipped" in user://save.cfg so returning players don't see them.

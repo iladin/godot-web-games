@@ -116,6 +116,7 @@ func _init() -> void:
 
 	_test_ai_journeys()
 	_test_sfx()
+	_test_hints()
 	print("SELFTEST OK")
 	quit()
 
@@ -205,3 +206,29 @@ func _test_sfx() -> void:
 	assert(s.play("hit"))
 	print("sfx: %d streams generated in %d ms" % [streams.size(), gen_ms])
 	s.free()
+
+
+func _test_hints() -> void:
+	var h := TutorialHints.new()
+	assert(h.current() == "steer", "first tip is steering")
+	h.update({"throttle": true})
+	assert(h.current() == "steer", "tips show in order even if a later step is done early")
+	h.update({"steer": true})
+	assert(h.current() == "target", "steps done out of order stay done")
+	h.update({"steer": false, "target": true, "dock": true})
+	assert(h.current() == "map" and h.done.has("steer"), "done steps are latched")
+	assert(TutorialHints.hint_text("throttle", true, "Ember").contains("THR+"), "touch wording")
+	assert(TutorialHints.hint_text("throttle", false, "Ember").contains("W / S"), "keyboard wording")
+	assert(TutorialHints.hint_text("land", false, "Ember").contains("Ember"))
+	for st: String in TutorialHints.STEPS:
+		assert(TutorialHints.hint_text(st, false, "X") != "" and TutorialHints.hint_text(st, true, "X") != "")
+	h.skip()
+	assert(h.skipped and h.current() == "", "skip hides tips")
+	h.update({"map": true, "land": false})
+	assert(h.current() == "", "skipped tips never reappear")
+	var h2 := TutorialHints.new()
+	h2.update({"steer": true, "throttle": true, "target": true, "dock": true, "map": true, "land": true})
+	assert(h2.current() == "", "all steps done hides tips")
+	print("hints: step order, latch and skip OK")
+	h.free()
+	h2.free()

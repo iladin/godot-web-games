@@ -2,7 +2,8 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: title map dock surface touch touch_surface over win death combat (+ _long variants).
+## Scenarios: title map dock surface touch touch_surface over win death combat hints hints_touch
+## (+ _long variants).
 
 var g: VoidMain
 var _ap_step: int = 0
@@ -39,6 +40,7 @@ func tick() -> void:
 	elif _ap_step == 3 and t > 14.0 and g.surface:
 		_ap_step = 4
 		print("sfx: played %d, blocked before first input %d, muted %s" % [g.sfx.played, g.sfx.blocked, g.sfx.muted])
+		_exercise_hints()
 		g.surface.fps.take_damage(1000.0)
 
 
@@ -52,6 +54,15 @@ func _exercise_audio() -> void:
 	g.sfx.toggle_mute()
 	g.sfx.play("explosion")   # muted: dropped
 	g.sfx.toggle_mute()
+
+
+func _exercise_hints() -> void:
+	# Autoplay visited map, dock and surface: those tips must be latched done; then skip the rest.
+	for s: String in ["dock", "map", "land"]:
+		assert(g.hints.done.has(s), "tutorial hint '%s' completed by autoplay" % s)
+	g.hints.skip()
+	assert(g.hints.skipped and g.hints.current() == "", "skipped tips never come back")
+	print("hints: done %s, skipped %s" % [", ".join(PackedStringArray(g.hints.done.keys())), g.hints.skipped])
 
 
 func _shot_script(t: float) -> void:
@@ -73,6 +84,15 @@ func _shot_script(t: float) -> void:
 				g.touch.active = true
 				g.touch.set_layout("none")
 				g.touch.set_layout("flight")
+			"hints":
+				g.space.autoplay = false   # keep the ship still under the first tip
+				g.space.target_id = 0
+				g.space.player.autopilot = false
+			"hints_touch":
+				g.touch.active = true
+				g.touch.set_layout("none")
+				g.touch.set_layout("flight")
+				g.hints.update({"steer": true, "throttle": true, "target": true})
 			"touch_surface":
 				g.touch.active = true
 				g._on_land(0)

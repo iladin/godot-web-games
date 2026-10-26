@@ -23,6 +23,7 @@ var hud: Hud
 var map: MapView
 var dock: DockPanel
 var touch: TouchControls
+var hints: TutorialHints
 var overlay: Overlay
 var fade: ColorRect
 var docked_at: StationData
@@ -86,6 +87,9 @@ func _build_ui() -> void:
 	dock.undock_pressed.connect(func() -> void: _set_mode("flight"))
 	touch = TouchControls.new()
 	root.add_child(touch)
+	hints = TutorialHints.new()
+	hints.main = self
+	root.add_child(hints)
 	overlay = Overlay.new()
 	root.add_child(overlay)
 	fade = ColorRect.new()

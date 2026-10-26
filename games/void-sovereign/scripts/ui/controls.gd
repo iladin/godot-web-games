@@ -10,7 +10,7 @@ const KEYS: Dictionary = {
 	"move_f": [KEY_W], "move_b": [KEY_S], "move_l": [KEY_A], "move_r": [KEY_D],
 	"jump": [KEY_SPACE], "sprint": [KEY_SHIFT], "reload": [KEY_R],
 	"pitch_up": [KEY_UP], "pitch_dn": [KEY_DOWN], "yaw_l": [KEY_LEFT], "yaw_r": [KEY_RIGHT],
-	"pause": [KEY_P],
+	"pause": [KEY_P], "skip_hints": [KEY_H],
 }
 
 
