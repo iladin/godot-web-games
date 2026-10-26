@@ -88,6 +88,11 @@ func _raids(delta: float) -> void:
 	var target := _pick_raid_target()
 	if target == null:
 		return
+	var go := raid_go_chance(target)
+	if go < 1.0 and randf() >= go:   # no extra randf() draw unless deterred (keeps early game identical)
+		# VS-020: the Hive scouts a fortified Sovereign sector and calls the raid off.
+		u.message.emit("Hive raid on %s turned back by your Defense Platforms" % u.sectors[target.sector].name, Defs.faction_color(Defs.Faction.PLAYER))
+		return
 	raid_count += 1
 	var nest: StationData = nests[randi() % nests.size()]
 	var n := raid_size()
@@ -103,6 +108,19 @@ func _raids(delta: float) -> void:
 		s.order_sector = target.sector
 	var col := Defs.faction_color(Defs.Faction.HIVE)
 	u.message.emit("HIVE RAID: %d ships moving on %s in %s" % [n, target.display_name, u.sectors[target.sector].name], col)
+
+
+## VS-020: chance a raid on `target` goes ahead. Each Sovereign Defense Platform in the target's
+## sector multiplies it by Defs.RAID_DETER_PER_PLATFORM from Defs.RAID_DETER_FROM on, so a defended player HQ sees fewer raids
+## (an undefended one, and Union targets, are unaffected).
+func raid_go_chance(target: StationData) -> float:
+	if target == null or target.faction != Defs.Faction.PLAYER or u.time < Defs.RAID_DETER_FROM:
+		return 1.0
+	var platforms := 0
+	for e: SimEntity in u.ents_in(target.sector):
+		if e.alive and e is StationData and e.faction == Defs.Faction.PLAYER and (e as StationData).kind == "defense":
+			platforms += 1
+	return pow(Defs.RAID_DETER_PER_PLATFORM, platforms)
 
 
 func _pick_raid_target() -> StationData:

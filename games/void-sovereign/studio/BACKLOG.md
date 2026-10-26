@@ -294,7 +294,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0008: no game code changed (scripts/sim untouched). Fixed seed list 101,118,135 (first=0) + 152,169,186 (first=3); run both halves in parallel in one device call (~101 s). Numbers are not comparable with S0003/S0007 (new policy, lost HQ = 0). Tried and reverted: raid nerf 75→100/16→13 (passive HQ survives 3/3 — breaks the passive gate); Defense Platform buff 24k/dps140 (econ nw30 100k but passive median 37.6 — Union stations use the same platform).
 
 ## VS-020 · Late-game Hive pressure: economic net worth grows from minute 20 to 30
-- status: todo
+- status: done
 - priority: P1
 - type: balance
 - size: M
@@ -302,11 +302,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0008
 - why: Split from VS-011 criterion 2, still FAIL in S0008 QA: with a defending policy (VS-019) HQ survives 6/6 but nw30 median 74.1k < nw20 105.6k, falling in 6/6 seeds; player ships 7–14 → 2–7 while Hive ships grow ~52 → 76–94 between min 20 and 30; Union collapses ~28 min in seeds 169/186.
 - acceptance:
-  - [ ] Economic 30 min, 9 seeds (`bash scripts/studio/balance_gate.sh void-sovereign economic 30`): net_worth_30 median >= net_worth_20 median, HQ survives >= 7/9
-  - [ ] Economic nw20 median stays 80–130k
-  - [ ] Passive 40 min, 9 seeds (gate in two calls, see balance_gate.sh header): HQ lost median between 20 and 35 min; check.sh PASS
-  - [ ] DESIGN.md tunables updated for any changed constant
-- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS. S0009: after VS-018 (opening wave) the 6-seed baseline is nw20 105.1k / nw30 58.0k, HQ 6/6; the sim is chaotic (one extra randf() moves nw20 ~+30k) — do VS-021 first or use its A/B control. S0010: acceptance switched to 9-seed gates (VS-021). 9-seed baseline: econ30 nw20 107.7k [IQR 103.5–127.0k], nw30 55.9k [39.9–70.2k], nw30 < nw20 in 8/9, HQ 9/9, Union collapse median 27.6, Hive ships @20 median 58; passive40 HQ lost 33.7 [32.1–35.8], survived 2/9 — passive median is 1.3 min under the 35 ceiling, so any added defence must be player-only. Use `--nowave`/`--perturb=1` A/B to separate noise.
+  - [x] Economic 30 min, 9 seeds (`bash scripts/studio/balance_gate.sh void-sovereign economic 30`): net_worth_30 median >= net_worth_20 median, HQ survives >= 7/9
+  - [x] Economic nw20 median stays 80–130k
+  - [x] Passive 40 min, 9 seeds (gate in two calls, see balance_gate.sh header): HQ lost median between 20 and 35 min; check.sh PASS
+  - [x] DESIGN.md tunables updated for any changed constant
+- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS. S0009: after VS-018 (opening wave) the 6-seed baseline is nw20 105.1k / nw30 58.0k, HQ 6/6; the sim is chaotic (one extra randf() moves nw20 ~+30k) — do VS-021 first or use its A/B control. S0010: acceptance switched to 9-seed gates (VS-021). 9-seed baseline: econ30 nw20 107.7k [IQR 103.5–127.0k], nw30 55.9k [39.9–70.2k], nw30 < nw20 in 8/9, HQ 9/9, Union collapse median 27.6, Hive ships @20 median 58; passive40 HQ lost 33.7 [32.1–35.8], survived 2/9 — passive median is 1.3 min under the 35 ceiling, so any added defence must be player-only. Use `--nowave`/`--perturb=1` A/B to separate noise. S0011: started (rollback point 7adb4e3).
+- done: S0011 — player-only raid deterrent after 20 min (go-chance 0.25^n per player Defense Platform in target sector); econ30 9 seeds nw20 107.7k → nw30 122.3k, HQ 9/9 (perturb 126k→160k); passive40 unchanged 33.7 (QA PASS first round)
 
 ## VS-021 · Balance gates robust to sim chaos (9 seeds + no-wave A/B control)
 - status: done
@@ -369,3 +370,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0010, QA) selftest: assert main.get_child(0) is PauseGate so the _input order can't silently break (P3).
 - (S0010, QA) Pause text says "click or press a key" on touch — say "tap" in touch mode; SND is dimmed under the overlay though it still works (P3).
 - (S0010, dev) Verify on a real phone browser that browser-generated touch→mouse events are flagged as emulated (device -1) in the web export (P3).
+- (S0011, QA VS-020) Raid deterrent is strong: 2 player platforms → 6.25% late-raid chance, 3 → 1.6%; cancelled raids aren't redirected, so a turtled HQ is near-immune after min 20. Consider a go-chance floor, a 20–25 min ramp, or redirecting the raid (P2 candidate for the S0012 planning round).
+- (S0011, QA VS-020) Tail risk remains: plain econ seed 186 112k→37k; perturbed seeds 118 (52k→9.9k), 169, 220 still lose net worth 20→30 (P3, investigate HQ-sector losses).
+- (S0011, QA VS-020) "Hive raid on X turned back…" HUD message fires on every deterred raid (~every 75–80 s late game) — merge/throttle (P3).
+- (S0011, QA VS-020) A Defense Platform counts toward its own deterrence when it is the raid target (P3, design call).
+- (S0011, QA VS-020) selftest leaves its 2 spawned player Defense Platforms in the world for later assertions — remove them after the deterrent asserts (P3).

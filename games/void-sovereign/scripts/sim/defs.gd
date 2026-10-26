@@ -112,6 +112,10 @@ const RAID_INTERVAL_MIN := 75.0
 const RAID_SIZE_START := 3
 const RAID_SIZE_GROWTH := 90.0
 const RAID_SIZE_MAX := 16
+# VS-020: from RAID_DETER_FROM on, each player Defense Platform in a raid target's sector multiplies the chance the raid
+# goes ahead (otherwise it is called off; the timer still resets). Union targets unaffected.
+const RAID_DETER_PER_PLATFORM := 0.25
+const RAID_DETER_FROM := 1200.0   # s; before this the Hive raids regardless (early game unchanged)
 const RAVAGER_TIME := 300.0
 const DREAD_TIME := 900.0
 const NEST_SPAWN_START := 30.0

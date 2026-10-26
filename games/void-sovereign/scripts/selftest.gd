@@ -137,6 +137,22 @@ func _init() -> void:
 	assert(union_ships > 5, "Union fleet should survive and be replenished")
 	print("credits after 8 min: %d, net worth %d, union ships %d, raids %d" % [u.credits, u.net_worth(), union_ships, u.director.raid_count])
 
+	# VS-020: player Defense Platforms deter raids on their sector; undefended / Union targets don't.
+	var dir := u.director
+	var t_save := u.time
+	assert(dir.raid_go_chance(u.hq) == 1.0, "an undefended HQ is always raided")
+	u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(-900, 0, 700))
+	u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(900, 0, 900))
+	u.time = Defs.RAID_DETER_FROM - 1.0
+	assert(dir.raid_go_chance(u.hq) == 1.0, "no deterrence before RAID_DETER_FROM")
+	u.time = Defs.RAID_DETER_FROM
+	assert(absf(dir.raid_go_chance(u.hq) - pow(Defs.RAID_DETER_PER_PLATFORM, 2)) < 0.001, "two platforms deter raids on the HQ")
+	for e: SimEntity in u.entities.values():
+		if e.alive and e is StationData and e.faction == Defs.Faction.UNION:
+			assert(dir.raid_go_chance(e as StationData) == 1.0, "Union targets are never deterred")
+			break
+	u.time = t_save
+
 	# Core destruction exposes the nest.
 	u.core_destroyed(4)
 	assert(u.sectors[4].planet_state == "colony")
