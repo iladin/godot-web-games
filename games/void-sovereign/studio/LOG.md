@@ -53,3 +53,8 @@
 - Task(s): VS-021 balance gates robust to sim chaos — done (QA PASS first round). VS-014 touch/mouse input on the pause screen — done (QA PASS first round).
 - Check: PASS · Git: committed cbb8fdf (VS-021), e6126dd (VS-014) + wrap-up commit
 - Notes: 9-seed baselines: econ30 nw20 107.7k / nw30 55.9k (nw30 < nw20 in 8/9), HQ 9/9; passive40 HQ lost median 33.7 [32.1–35.8]. Econ gate fits one 180 s call (154 s); passive needs two. VS-020 acceptance moved to 9-seed gates. ~40 min wall time.
+
+## S0011 — 2026-10-26 23:08 — BUILD
+- Task(s): VS-020 late-game Hive pressure — done (QA PASS first round). Lever: player-only raid deterrent after min 20 (go-chance 0.25^n per player Defense Platform in the target sector).
+- Check: PASS · Git: committed 15b724b (VS-020) + wrap-up commit
+- Notes: econ30 9 seeds nw20 107.7k → nw30 122.3k (was 55.9k), HQ 9/9; --perturb=1 126k → 160k; passive40 identical to baseline (33.7, 2/9). QA flags the deterrent as strong (2 platforms ≈ 6% late raids) → planning round next (builds_since_review = 6). ~35 min wall time.
