@@ -1,17 +1,19 @@
 class_name Director
 extends RefCounted
 ## Faction-level brains: starting fleets, Hive nests + raids (the difficulty ramp),
-## Union fleet upkeep and station rebuilding.
+## Union fleet upkeep and station rebuilding. The one-off opening wave lives in opening_wave.gd.
 
 var u: Universe
 var raid_t: float = Defs.FIRST_RAID
 var union_t: float = Defs.UNION_SPAWN_TIME
 var raid_count: int = 0
 var rebuild_queue: Array[Dictionary] = []
+var opening: OpeningWave          # VS-018 one-off First Sortie wave
 
 
 func _init(p_u: Universe) -> void:
 	u = p_u
+	opening = OpeningWave.new(p_u)
 
 
 func seed_fleets() -> void:
@@ -42,6 +44,7 @@ func seed_fleets() -> void:
 
 
 func step(delta: float) -> void:
+	opening.step(delta)
 	_nests(delta)
 	_raids(delta)
 	_union(delta)

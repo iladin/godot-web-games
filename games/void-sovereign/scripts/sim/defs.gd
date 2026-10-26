@@ -116,6 +116,18 @@ const RAVAGER_TIME := 300.0
 const DREAD_TIME := 900.0
 const NEST_SPAWN_START := 30.0
 const NEST_SPAWN_MIN := 12.0
+# First Sortie (VS-018, opening_wave.gd): once per run, OPENING_WAVE_TIME s of play in,
+# OPENING_WAVE_SIZE scouts appear OPENING_WAVE_RANGE ahead of the player (leaning toward Ember's
+# orbit, OPENING_WAVE_ORBIT above its surface) and hunt the player's wing. Stations and Union ships
+# ignore them for OPENING_WAVE_LINGER s, so the fight is the player's. Hull/dps scale a drone.
+# Not a raid: the raid timer (FIRST_RAID) is unaffected.
+const OPENING_WAVE_TIME := 60.0
+const OPENING_WAVE_SIZE := 3
+const OPENING_WAVE_HULL := 3.0
+const OPENING_WAVE_DPS := 0.5
+const OPENING_WAVE_ORBIT := 700.0
+const OPENING_WAVE_RANGE := 1300.0
+const OPENING_WAVE_LINGER := 240.0
 
 # --- Union upkeep --------------------------------------------------------------------
 const UNION_QUOTA: Dictionary = {"fighter": 10, "trader": 8, "miner": 6}

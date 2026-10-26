@@ -261,7 +261,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0008 — tips skip uncompletable steps (target waits for a hostile), "No hostiles in range" on R/TGT, one instruction line at t=3 s, touch SKIP TIPS chip, H documented; QA PASS (re-verify)
 
 ## VS-018 · First Sortie: a small opening wave near Ember
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -269,11 +269,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0007
 - why: S0007 critic #2 and bold idea: the opening has no threat (seed 7: every raider dies in Cinder Belt, HQ and player hull untouched for 95 s), so the first 10 minutes teach nothing about combat and the target tip has nothing to lock. Scout proposal 2.
 - acceptance:
-  - [ ] Once per run, at about t=60 s of play, a wave of 3 weak Hive drones appears near Ember orbit in or next to the home sector, announced by a HUD message; constants (time, size, strength) in defs.gd
-  - [ ] The starting escorts plus the player beat the wave in all of seeds 7, 101, 118 without the player ship dying (autoplay/probe log)
-  - [ ] After the wave is destroyed a message points the player to land on Ember (objective unchanged); selftest asserts the wave spawns once and only once
-  - [ ] Balance gates unchanged: economic 30 min 3 seeds nw20 within ±15% of the S0007 baseline (139k median); passive 40 min HQ lost 20–35 min; check.sh PASS
-- notes: Do after VS-015 (title time must not count). Raid first-arrival (3.3 min) is separate — the wave must not reset or delay the raid timer. S0008: the 139k baseline is stale (pre-VS-016, old policy); use the VS-019 harness baseline instead (6 seeds nw20 median 105.6k).
+  - [x] Once per run, at about t=60 s of play, a wave of 3 weak Hive drones appears near Ember orbit in or next to the home sector, announced by a HUD message; constants (time, size, strength) in defs.gd
+  - [x] The starting escorts plus the player beat the wave in all of seeds 7, 101, 118 without the player ship dying (autoplay/probe log)
+  - [x] After the wave is destroyed a message points the player to land on Ember (objective unchanged); selftest asserts the wave spawns once and only once
+  - [x] Balance gates unchanged: economic 30 min 3 seeds nw20 within ±15% of the S0007 baseline (139k median); passive 40 min HQ lost 20–35 min; check.sh PASS
+- notes: Do after VS-015 (title time must not count). Raid first-arrival (3.3 min) is separate — the wave must not reset or delay the raid timer. S0008: the 139k baseline is stale (pre-VS-016, old policy); use the VS-019 harness baseline instead (6 seeds nw20 median 105.6k). S0009: built; QA FAIL round 1 (Union/HQ guns killed scouts in 4–7 s, player not involved) → fix: scouts spawn 1300 ahead of the player, "sortie" flag (OpeningWave.allows in universe.valid_target) limits them to fighting the player wing, hull 3x / dps 0.5x, linger 240 s then normal drones. Passive gate seeds 33.7 / not lost / 32.1 — inside the median band but seed 118 survives 40 min; QA control shows one extra global randf() at t=60 moves no-wave seeds 24.4→39.0, so n=3 cannot separate noise from a small real shift (see VS-021).
+- done: S0009 — 3 sortie scouts at t=60 s ahead of the player hunt only the player wing (15–17 s fights, all kills by Sovereign fighters, player alive in 7/101/118); HUD arrival + "land on Ember" messages; selftest once-only + targeting asserts; econ nw20 105.1k HQ 6/6, passive median 33.7; QA PASS (re-verify)
 
 ## VS-019 · Balance harness: seed offset, honest medians, defending economic policy
 - status: done
@@ -304,7 +305,22 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Economic nw20 median stays 80–130k
   - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
   - [ ] DESIGN.md tunables updated for any changed constant
-- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS.
+- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS. S0009: after VS-018 (opening wave) the 6-seed baseline is nw20 105.1k / nw30 58.0k, HQ 6/6; the sim is chaotic (one extra randf() moves nw20 ~+30k) — do VS-021 first or use its A/B control.
+
+## VS-021 · Balance gates robust to sim chaos (9 seeds + no-wave A/B control)
+- status: todo
+- priority: P2
+- type: tech
+- size: S
+- source: qa
+- created: S0009
+- why: S0009 QA: the sim is chaotic — one extra global randf() at t=60 moves passive HQ-lost on the gate seeds from 24.4–29.5 to as far as 39.0 min and econ nw20 by ±30k, so 3-seed passive gates and 6-seed nw30 medians can flip on any change (VS-018 passed passive at 33.7 vs a 35 ceiling, seed 118 survived 40 min). QA's `.tools/s0009_qa2/balance_nw.gd --perturb=N` reproduces the baseline exactly and is a ready A/B tool.
+- acceptance:
+  - [ ] `scripts/studio/balance.sh` (or balance.gd) supports `--perturb=N` (N extra global randf() at a fixed time) and an opening-wave off switch, documented in the script header
+  - [ ] A helper (e.g. `scripts/studio/balance_gate.sh <slug> <policy> <minutes>`) runs 9 seeds (offsets 0/3/6) in one device call within 180 s or documents a two-call split, and prints medians + IQR
+  - [ ] New baselines recorded in metrics.csv: economic 30 min 9 seeds (nw20, nw30, HQ) and passive 40 min 9 seeds (HQ lost median, IQR), both with the current game
+  - [ ] ai-studio/roles/balance-analyst.md and the VS-020 acceptance text reference the 9-seed medians instead of 3/6 seeds; check.sh PASS
+- notes: Global randf() is seeded in universe.gd:30 and used by director, ShipData.setup and retarget (u.rng is not the chaotic stream). Passive 40 min × 9 seeds may exceed one 180 s call — measure first.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -340,3 +356,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0007, QA) `shots.sh dock` only shows the HQ (no trade grid) — add a trade-hub dock scenario for visual coverage of Buy/Sell (P3).
 - S0008 QA: on touch the OBJECTIVE line still says "press F to land" — use ACT wording on touch (small polish task).
 - S0008 QA: VS-017 SKIP TIPS chip is ~13 px from THR- at 1280x720; recheck at narrow widths (<700 px).
+- S0009 QA (P3): opening_wave.gd comment "wave-only RNG keeps the main stream untouched" is misleading — ShipData.setup and the retarget cooldown still draw global randf(); fix the comment.
+- S0009 QA (P3): after OPENING_WAVE_LINGER (240 s) surviving scouts become 3x-hull normal drones that can hit the miner/stations; consider reverting hull to 1x on unmark.
+- S0009 dev: `--shot=sortie` scenario (autoplay never reaches t=60, so the wave has no visual coverage in check.sh); Sfx alert cue on scout arrival.

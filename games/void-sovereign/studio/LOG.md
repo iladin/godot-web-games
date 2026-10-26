@@ -43,3 +43,8 @@
 - Task(s): VS-011 → split: VS-019 (harness seed offset + defending econ policy, done, QA PASS on criteria 1/3/4) + VS-020 (nw30 >= nw20, todo P1 M — QA FAIL, needs a game lever). VS-017 tutorial tips follow the world — done (1 fix round; QA PASS on re-verify).
 - Check: PASS · Git: committed 03a1c16 (VS-019) + VS-017/wrap-up commit
 - Notes: Harness-only fix gives HQ 6/6 and nw30 median 33.6k→74.1k but nw30 < nw20 in 6/6 seeds. Global raid nerf and Defense Platform buff both broke the passive gate (platform is shared with Union stations).
+
+## S0009 — 2026-10-26 17:33 — BUILD
+- Task(s): VS-018 First Sortie — done (QA FAIL round 1: HQ guns/Union killed the scouts in 4–7 s with no player involvement + balance drift; fix round: sortie-only targeting, spawn 1300 ahead of the player, hull 3x; QA PASS on re-verify). New VS-021 (P2 S, balance gates robust to sim chaos).
+- Check: PASS · Git: see commit studio(S0009)
+- Notes: QA proved the sim is chaotic (one extra global randf() at t=60 moves passive HQ-lost up to +14 min); 3-seed gates can't detect small shifts. Passive gate passed at median 33.7 (ceiling 35). ~80 min wall time.

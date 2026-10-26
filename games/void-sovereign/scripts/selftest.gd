@@ -96,10 +96,38 @@ func _init() -> void:
 			trades_before += int((e as StationData).stock["energy"])
 	var raids_seen := false
 	var dt := 1.0 / 20.0
+	var ow := u.director.opening
+	var wave_hostile_seen := false
 	for i in int(480.0 / dt):
 		u.step(dt)
 		if u.director.raid_count > 0:
 			raids_seen = true
+		# VS-018 First Sortie: nothing before OPENING_WAVE_TIME, then exactly one wave in the
+		# home sector, and the raid countdown runs on untouched.
+		if u.time < Defs.OPENING_WAVE_TIME - 0.5:
+			assert(ow.spawn_count == 0, "opening wave waits for OPENING_WAVE_TIME")
+		elif ow.spawn_count == 1 and ow.state == OpeningWave.State.ACTIVE and not wave_hostile_seen:
+			wave_hostile_seen = true
+			assert(ow.ids.size() == Defs.OPENING_WAVE_SIZE, "wave has OPENING_WAVE_SIZE ships")
+			assert(TutorialHints.hostile_in(u, u.hq.sector), "the wave makes the target tip reachable at home")
+			assert(absf(u.director.raid_t - (Defs.FIRST_RAID - u.time)) < 0.2, "the wave does not reset or delay the raid timer")
+		assert(ow.spawn_count <= 1, "the opening wave spawns only once")
+	assert(ow.spawn_count == 1 and wave_hostile_seen, "the opening wave spawned once")
+	# Sortie scouts are the player's fight: only the player and Sovereign warships trade fire with them.
+	var scout := ShipData.new()
+	scout.setup("drone", Defs.Faction.HIVE)
+	scout.sortie = true
+	var mk := func(cls: String, fac: int) -> ShipData:
+		var x := ShipData.new()
+		x.setup(cls, fac)
+		return x
+	assert(u.valid_target(mk.call("fighter", Defs.Faction.PLAYER), scout), "escorts engage scouts")
+	assert(u.valid_target(scout, u.player_ship) and u.valid_target(scout, mk.call("fighter", Defs.Faction.PLAYER)), "scouts hunt the player's wing")
+	assert(not u.valid_target(mk.call("fighter", Defs.Faction.UNION), scout), "Union patrols leave scouts alone")
+	assert(not u.valid_target(u.hq, scout) and not u.valid_target(scout, u.hq), "stations and scouts ignore each other")
+	assert(not u.valid_target(scout, mk.call("miner", Defs.Faction.PLAYER)), "scouts leave the miner alone")
+	assert(ow.state == OpeningWave.State.CLEARED, "HQ + escorts beat the opening wave within 8 min")
+	print("opening wave: spawned once, cleared")
 	assert(raids_seen, "Hive raids should start within 8 minutes")
 	assert(u.time > 479.0)
 	var union_ships := 0
