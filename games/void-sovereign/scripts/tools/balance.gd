@@ -5,8 +5,16 @@ extends SceneTree
 ## Args (after --): --minutes=30 --seeds=3 --policy=passive|economic --first=0
 ## --first=N skips the first N seeds of the fixed list (seed = SEED_BASE + i * 17), so a
 ## 6-seed run can be split into two calls: --seeds=3 --first=0 and --seeds=3 --first=3.
+## A/B and robustness switches (harness-only; game defaults untouched; omitted = identical numbers):
+##   --perturb=N  burn N extra draws of the global randf() stream once, right after the step that
+##                reaches t = PERTURB_AT (60 s) (same as S0009 QA's balance_nw.gd).
+##                The global stream (seeded in Universe.setup) is chaotic: use this to check that
+##                a result survives noise, not just one lucky trajectory.
+##   --nowave     disable the VS-018 opening wave (marks it CLEARED before the first step).
+## 9-seed medians + IQR: scripts/studio/balance_gate.sh.
 
 const DT := 0.05
+const PERTURB_AT := 60.0       # sim seconds; when --perturb=N burns its N global randf() draws
 const CHECKPOINTS: Array[int] = [5, 10, 20, 30]
 const SEED_BASE := 101
 const ECON_TICK := 30.0
@@ -20,6 +28,8 @@ func _init() -> void:
 	var seeds := 3
 	var policy := "passive"
 	var first := 0
+	var perturb := 0
+	var nowave := false
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -29,24 +39,35 @@ func _init() -> void:
 			policy = a.get_slice("=", 1)
 		elif a.begins_with("--first="):
 			first = maxi(0, int(a.get_slice("=", 1)))
+		elif a.begins_with("--perturb="):
+			perturb = maxi(0, int(a.get_slice("=", 1)))
+		elif a == "--nowave":
+			nowave = true
 	var results: Array[Dictionary] = []
 	for i in range(first, first + seeds):
-		var r := _run(SEED_BASE + i * 17, minutes, policy)
+		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
 	print("BALANCE_SUMMARY " + JSON.stringify(_summary(results, policy, minutes)))
 	quit()
 
 
-func _run(rng_seed: int, minutes: int, policy: String) -> Dictionary:
+func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false) -> Dictionary:
 	var u := Universe.new()
 	u.setup(rng_seed)
+	if nowave:
+		u.director.opening.state = OpeningWave.State.CLEARED
 	u.player_ship.hidden = true   # the pilot is "away"; only the economy and fleet act
 	var r: Dictionary = {"seed": rng_seed, "policy": policy, "hq_lost_at": -1.0, "first_raid_at": -1.0, "union_collapse_at": -1.0, "nests_left": 2}
 	var econ_t := 0.0
 	var next_cp := 0
+	var perturb_done := perturb <= 0
 	while u.time < float(minutes) * 60.0:
 		u.step(DT)
+		if not perturb_done and u.time >= PERTURB_AT:
+			perturb_done = true
+			for k in perturb:
+				randf()
 		if policy == "economic":
 			econ_t -= DT
 			if econ_t <= 0.0:

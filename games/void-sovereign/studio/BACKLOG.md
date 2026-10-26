@@ -301,14 +301,14 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0008
 - why: Split from VS-011 criterion 2, still FAIL in S0008 QA: with a defending policy (VS-019) HQ survives 6/6 but nw30 median 74.1k < nw20 105.6k, falling in 6/6 seeds; player ships 7–14 → 2–7 while Hive ships grow ~52 → 76–94 between min 20 and 30; Union collapses ~28 min in seeds 169/186.
 - acceptance:
-  - [ ] Economic 30 min, 6 seeds (101..186 via two offset calls): net_worth_30 median >= net_worth_20 median, HQ survives >= 5/6
+  - [ ] Economic 30 min, 9 seeds (`bash scripts/studio/balance_gate.sh void-sovereign economic 30`): net_worth_30 median >= net_worth_20 median, HQ survives >= 7/9
   - [ ] Economic nw20 median stays 80–130k
-  - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
+  - [ ] Passive 40 min, 9 seeds (gate in two calls, see balance_gate.sh header): HQ lost median between 20 and 35 min; check.sh PASS
   - [ ] DESIGN.md tunables updated for any changed constant
-- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS. S0009: after VS-018 (opening wave) the 6-seed baseline is nw20 105.1k / nw30 58.0k, HQ 6/6; the sim is chaotic (one extra randf() moves nw20 ~+30k) — do VS-021 first or use its A/B control.
+- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS. S0009: after VS-018 (opening wave) the 6-seed baseline is nw20 105.1k / nw30 58.0k, HQ 6/6; the sim is chaotic (one extra randf() moves nw20 ~+30k) — do VS-021 first or use its A/B control. S0010: acceptance switched to 9-seed gates (VS-021). 9-seed baseline: econ30 nw20 107.7k [IQR 103.5–127.0k], nw30 55.9k [39.9–70.2k], nw30 < nw20 in 8/9, HQ 9/9, Union collapse median 27.6, Hive ships @20 median 58; passive40 HQ lost 33.7 [32.1–35.8], survived 2/9 — passive median is 1.3 min under the 35 ceiling, so any added defence must be player-only. Use `--nowave`/`--perturb=1` A/B to separate noise.
 
 ## VS-021 · Balance gates robust to sim chaos (9 seeds + no-wave A/B control)
-- status: todo
+- status: done
 - priority: P2
 - type: tech
 - size: S
@@ -316,11 +316,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0009
 - why: S0009 QA: the sim is chaotic — one extra global randf() at t=60 moves passive HQ-lost on the gate seeds from 24.4–29.5 to as far as 39.0 min and econ nw20 by ±30k, so 3-seed passive gates and 6-seed nw30 medians can flip on any change (VS-018 passed passive at 33.7 vs a 35 ceiling, seed 118 survived 40 min). QA's `.tools/s0009_qa2/balance_nw.gd --perturb=N` reproduces the baseline exactly and is a ready A/B tool.
 - acceptance:
-  - [ ] `scripts/studio/balance.sh` (or balance.gd) supports `--perturb=N` (N extra global randf() at a fixed time) and an opening-wave off switch, documented in the script header
-  - [ ] A helper (e.g. `scripts/studio/balance_gate.sh <slug> <policy> <minutes>`) runs 9 seeds (offsets 0/3/6) in one device call within 180 s or documents a two-call split, and prints medians + IQR
-  - [ ] New baselines recorded in metrics.csv: economic 30 min 9 seeds (nw20, nw30, HQ) and passive 40 min 9 seeds (HQ lost median, IQR), both with the current game
-  - [ ] ai-studio/roles/balance-analyst.md and the VS-020 acceptance text reference the 9-seed medians instead of 3/6 seeds; check.sh PASS
-- notes: Global randf() is seeded in universe.gd:30 and used by director, ShipData.setup and retarget (u.rng is not the chaotic stream). Passive 40 min × 9 seeds may exceed one 180 s call — measure first.
+  - [x] `scripts/studio/balance.sh` (or balance.gd) supports `--perturb=N` (N extra global randf() at a fixed time) and an opening-wave off switch, documented in the script header
+  - [x] A helper (e.g. `scripts/studio/balance_gate.sh <slug> <policy> <minutes>`) runs 9 seeds (offsets 0/3/6) in one device call within 180 s or documents a two-call split, and prints medians + IQR
+  - [x] New baselines recorded in metrics.csv: economic 30 min 9 seeds (nw20, nw30, HQ) and passive 40 min 9 seeds (HQ lost median, IQR), both with the current game
+  - [x] ai-studio/roles/balance-analyst.md and the VS-020 acceptance text reference the 9-seed medians instead of 3/6 seeds; check.sh PASS
+- notes: Global randf() is seeded in universe.gd:30 and used by director, ShipData.setup and retarget (u.rng is not the chaotic stream). Passive 40 min × 9 seeds may exceed one 180 s call — measure first. S0010: started (Producer chose VS-021 before VS-020 per S0009 handover).
+- done: S0010 — balance.gd --perturb=N / --nowave (no-arg output byte-identical), scripts/studio/balance_gate.sh 9 seeds (offsets 0/3/6) with median+IQR, econ30 one call 154 s, passive40 two calls; baselines econ30 nw20 107.7k [103.5–127.0k] nw30 55.9k [39.9–70.2k] HQ 9/9, passive40 HQ lost 33.7 [32.1–35.8] survived 2/9; QA PASS first round
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -359,3 +360,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0009 QA (P3): opening_wave.gd comment "wave-only RNG keeps the main stream untouched" is misleading — ShipData.setup and the retarget cooldown still draw global randf(); fix the comment.
 - S0009 QA (P3): after OPENING_WAVE_LINGER (240 s) surviving scouts become 3x-hull normal drones that can hit the miner/stations; consider reverting hull to 1x on unmark.
 - S0009 dev: `--shot=sortie` scenario (autoplay never reaches t=60, so the wave has no visual coverage in check.sh); Sfx alert cue on scout arrival.
+- (S0010, QA) balance_gate.sh: tag ignores game version, so a split run after a code change silently merges stale first_N.txt files — add a git-sha/mtime stamp check or warn (P3).
+- (S0010, QA) balance gate: nw30 counts 0 when HQ fell before 30 min; exclude or mark like hq_lost (P3, only matters for passive).
+- (S0010, QA) metrics.csv S0003 row has unquoted commas in notes (20 fields vs 15 header) — quote it so strict CSV parsers work (P3).

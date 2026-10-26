@@ -9,3 +9,5 @@ S0008,2026-10-26,economic,30,6,6/6,-1,,,,105600,55,,,VS-019 new harness policy (
 S0008,2026-10-26,passive,40,3,0/3,25.4,,,,,,,,unchanged (HQ lost 25.4/29.5/24.4)
 S0009,2026-10-26,economic,30,6,6/6,-1,3.3,,,105100,,,,VS-018 opening wave (sortie scouts); nw30 median 58.0k (was 74.1k; chaos — 1 extra randf() alone gives 69.1k); first raid 3.3 in all seeds
 S0009,2026-10-26,passive,40,3,1/3,33.7,,,,,,,,VS-018: HQ lost 33.7/not lost/32.1 (seeds 101/118/135); no-wave +1 randf control 28.7/33.3/29.2; 12 no-wave perturbations span 24.4-39.0
+S0010,2026-10-26,economic,30,9,9/9,-1,3.3,27.6,93194,107685,58,12,,S0010 9-seed baseline (balance_gate.sh; seeds 101..237; wave on; no perturb): nw20 median 107685 IQR 103498-126954; nw30 median 55869 IQR 39866-70172; nw30<nw20 in 8/9; HQ survived 9/9
+S0010,2026-10-26,passive,40,9,2/9,33.7,3.3,28.4,61644,67426,53,11,,S0010 9-seed baseline (balance_gate.sh 2-call split; seeds 101..237; wave on; no perturb): HQ lost median 33.7 IQR 32.1-35.8 (not lost counted as >40); per seed 33.7/-/32.1/33.0/35.4/28.4/35.8/27.3/-
