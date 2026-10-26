@@ -46,8 +46,7 @@ func tick() -> void:
 
 func _exercise_audio() -> void:
 	# Autoplay never sends real input: everything played so far must have been blocked.
-	if g.sfx.played != 0:
-		push_error("sfx played before first input")
+	assert(g.sfx.played == 0, "sfx played before first input")  # SCRIPT ERROR -> check.sh FAIL
 	g.sfx.unlock()   # stands in for the first click/key/tap
 	for n: String in Sfx.NAMES:
 		g.sfx.play(n)
@@ -84,6 +83,7 @@ func _shot_script(t: float) -> void:
 				g.touch.active = true
 				g.touch.set_layout("none")
 				g.touch.set_layout("flight")
+				g.u.message.emit("Sound on", Color("8fd8ff"))   # two stacked messages vs top row
 			"hints":
 				g.space.autoplay = false   # keep the ship still under the first tip
 				g.space.target_id = 0

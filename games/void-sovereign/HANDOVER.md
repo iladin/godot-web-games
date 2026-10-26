@@ -1,70 +1,47 @@
 # Void Sovereign — Handover
-_Last updated: S0005 · 2026-10-26 11:50 UTC · mode: BUILD_
+_Last updated: S0006 · 2026-10-26 12:10 UTC · mode: BUILD_
 
 ## TL;DR
-Void Sovereign is playable end to end, `check.sh` passes, and it now has sound. S0005 shipped VS-003: six procedural sound effects made in code, silent until the first input, with N / SND to mute. The sounds haven't been heard in a real browser yet. The open balance problem is still the slide from minute 20 to 30 (VS-011).
+Void Sovereign is playable end to end with sound and now a guided start: six contextual tips (steer → throttle → target → dock → map → land on Ember), skippable with H or a tap. S0006 shipped VS-004 and VS-012 (touch button row, N-while-paused, sfx guard is a real assert). `check.sh` passes. A PLANNING round is now due (builds_since_review = 6), and the late-game slide (VS-011) is still the top build task.
 
 ## Next session should
-1. **Preflight** per `ai-studio/studio-cycle.md`.
-   - Request delete permission for the repo root (granted in S0001/S0003/S0005, so git commits work).
-   - Use `git -c core.fileMode=false …` for status/add; the Windows mount shows mode-change noise.
-   - **Check the wall clock (`date -u`) after each subagent returns.** S0005 took ≈4h15m of wall time for one build, so the 4 h stale-lock rule is close to misfiring. Refresh `lock.since` in state.json if a session runs long.
-2. **BUILD `VS-004`** (guided first 10 minutes, P1 S). It is what `backlog.py next` returns.
-   - Hints live in the HUD/overlay (`scripts/ui/hud.gd`, `overlay.gd`).
-   - Touch wording via `touch_controls.gd`.
-   - Add a `--shot=` scenario in `scripts/test_driver.gd` for two hint states.
-3. **Then `VS-011`** (P1 M: the economic player keeps growing from minute 20 to 30).
-   - Its first acceptance item is a seed-offset option for `scripts/studio/balance.sh` / `scripts/tools/balance.gd`, so the 6-seed run can be split across two device_bash calls.
-   - `balance.sh void-sovereign 30 6 economic` takes ~174 s against the 180 s cap. Use 3-seed runs (~70 s) for exploration, timeout_ms=180000, one Godot run per call, and never background processes.
-4. **`VS-012`** (P2 S): SND button overlap, N while paused, and the autoplay sfx guard that check.sh doesn't catch.
-5. A **PLANNING round** is due at builds_since_review ≥ 6 (now 4).
+1. **Preflight** per `ai-studio/studio-cycle.md`. Request delete permission for the repo root (granted S0001/3/5/6 → git works). Use `git -c core.fileMode=false …` for status/add. In the commit helper, pass the identity as `git -c "user.name=Claude Studio" -c user.email=studio@localhost` (a shell variable holding the command broke on the space in S0006). Check `date -u` after each subagent and refresh `lock.since` if the session runs long.
+2. **Run PLANNING first** — the health rule fires (`builds_since_review` = 6). Critic + QA sweep + Balance Analyst in parallel, then Feature Scout; triage to 4–8 tasks. Ask the Critic to play through the new tips (`shots.sh void-sovereign hints hints_touch touch`) and judge the first 10 minutes. Balance Analyst: 3-seed runs only (6 seeds ≈174 s vs the 180 s cap) unless VS-011's seed-offset option exists.
+3. **Then BUILD `VS-011`** (P1 M, economic player keeps growing from minute 20 to 30) if budget remains. First acceptance item: seed-offset option for `scripts/studio/balance.sh` / `scripts/tools/balance.gd`, so 6 seeds can be split across two device_bash calls.
+4. Small P2 follow-ups ready: `VS-014` (taps on SND/MAP/TRVL while paused also unpause via emulated mouse; first desktop click on the pause screen is eaten by mouse capture), `VS-013` (tip box overlaps the touch steer zone so a steer drag skips all tips; document H).
 
 ## Last session
 - Did:
-  - S0004 took the lock at 03:32Z and left no other trace: no LOG entry, no file changes. S0005 took over the stale lock.
-  - **VS-003 done.** Developer and QA ran as independent subagents; QA PASS on all 4 criteria, with its own probes.
-  - New `games/void-sovereign/scripts/audio/sfx.gd` (class Sfx):
-    - Synthesises laser, rifle, hit, explosion, gate and click into AudioStreamWAV (22050 Hz, mono, 16-bit, ~5 ms at startup).
-    - Pool of 10 players, `MIN_INTERVAL` 0.045 s, `MASTER_DB` / `VOLUME_DB` / `PITCH_JITTER` 0.08.
-    - `play()` refuses until `unlock()`, which the first key, mouse button or touch press calls. N is the "mute" action.
-  - Edits:
-    - The views emit `sfx` signals (space_view.gd, surface_view.gd), and main.gd wires them.
-    - SND touch button added in touch_controls.gd.
-    - test_driver.gd gets `_exercise_audio()` and prints an `sfx:` stats line; selftest.gd gets `_test_sfx()`.
-    - DESIGN.md has a new Audio section; overlay.gd and game.json list the controls.
-  - Added VS-012, plus 3 items in the parking lot.
-- Check: PASS · Git: committed `studio(S0005)` (see git log) · Roles collapsed: none
+  - S0004's late resume: S0004 took the lock at 03:32Z, its device calls stalled ~8 h, S0005 took over the stale lock. The same run woke at 11:49Z after S0005 had released the lock, and ran as S0006.
+  - **VS-004 done** (commit 77a703a). New `scripts/ui/tutorial_hints.gd` (class TutorialHints): `update(ctx)` latches steps, `current()` returns the first unfinished, `hint_text(step, touch, planet)`. Shown only in flight while playing. Skip: H (`skip_hints` in controls.gd) or tap the tip box; skip persists across restarts in a page load. Selftest `_test_hints`, autoplay `_exercise_hints`, shot scenarios `hints` / `hints_touch`. QA PASS with real-input probes and an assert mutation.
+  - **VS-012 done.** touch_controls.gd `TOP_ROW_Y` 190 (SND/TRVL/MAP below up to ~5 messages; surface SND moved beside the flight one). New `Controls.resumes_from_pause(event)`: N/mute and key releases never unpause (P key-up no longer unpauses either). test_driver's pre-input sfx guard is now an `assert`, so check.sh FAILs (mutation-verified by Dev and QA). QA PASS.
+  - New tasks VS-013, VS-014; 8 QA/dev P3 items in the parking lot.
+- Check: PASS · Git: committed `studio(S0006)` VS-004 and VS-012 · Roles collapsed: none
 
 ## In-flight / uncommitted work
-none. Left uncommitted on purpose: Windows file-mode noise and Daniel's edits outside this game.
+none. Left uncommitted on purpose: Windows file-mode noise and Daniel's edits outside this game. QA left a throwaway `.tools/shots/void-sovereign/touch_900.png` (gitignored tools dir) and a probe at `$HOME/probe/` outside the repo.
 
 ## Build health
-- check.sh: PASS (~15 s).
-- selftest: SELFTEST OK, no assertion lines; "sfx: 6 streams generated"; credits after 8 min 43684, the same as S0003. Sfx uses its own RNG, so the sim is unaffected.
-- autoplay: "sfx: played 15, blocked before first input 63, muted false".
-- Known noise (not bugs): "ObjectDB instances leaked at exit" / "resources still in use", which now includes AudioStreamPlaybackWAV entries; ALSA errors under xvfb.
-- Latest metrics: no balance change this session. S0003 economic 30 min, 6 seeds: HQ 5/6, nw20 139k; net worth falls from minute 20 to 30 in 4/6 seeds.
+- check.sh: PASS (~15–17 s). Selftest: SELFTEST OK, plus "hints: step order, latch and skip OK"; autoplay "hints: done map, dock, land, skipped true" and the sfx line.
+- Known noise (not bugs): "ObjectDB instances leaked" / "N resources still in use at exit"; ALSA errors under xvfb.
+- Latest metrics: no balance change since S0003 (economic 30 min, 6 seeds: HQ 5/6, nw20 139k; net worth falls from minute 20 to 30 in 4/6 seeds).
 
 ## Backlog snapshot
-todo 8 · in-progress 0 · done 4 · blocked 0 · split 0 · ready 7 · Top ready: VS-004 guided first 10 minutes, VS-011 grow from minute 20 to 30, VS-012 audio/touch follow-ups
+todo 8 · in-progress 0 · done 6 · blocked 0 · split 0 · ready 7 · Top ready: VS-011 grow from minute 20 to 30, VS-013 tip follow-ups, VS-014 pause-screen input
 
 ## Watch out for
-- **Audio**
-  - Headless Godot uses a dummy audio driver, so loudness and harshness are untested by ear.
-  - Every sound must go through `Sfx.play()` so the first-input gate holds.
-  - touch_controls marks button taps as handled before Sfx `_input` sees them. This is fine today: the title tap unlocks, and SND calls `unlock()` itself.
-- `check.sh` doesn't fail on `push_error` lines, only on "SCRIPT ERROR" (asserts). Use `assert` for guards (VS-012).
-- **Patrol in the HQ sector means "guard HQ"** (`ship_ai.gd` `_home_guard`). The UI doesn't explain this.
-- Dock repair is free for any automated Sovereign ship near the HQ.
-- Below 2000 credits, automated player ships don't buy (VS-010).
-- A failed `assert` in `selftest.gd` still prints "SELFTEST OK". Read the whole output.
+- **Tutorial tips**: the box rect depends on viewport size; headless runs without `--resolution` place it off-screen (y≈742), so touch probes must use xvfb with `--resolution 1280x720`. TutorialHints is added after TouchControls, so its `_input` sees touches first (that is why it steals steer drags — VS-013). The "land" step latches on any planet.
+- `project.godot` has `emulate_mouse_from_touch=true`: every tap also produces an InputEventMouseButton that reaches `_unhandled_input` even when TouchControls handled the touch (VS-014).
+- **Audio**: headless Godot uses a dummy driver; loudness untested by ear. Every sound must go through `Sfx.play()`.
+- `check.sh` fails on "SCRIPT ERROR" (failed asserts), not on `push_error`. Use `assert` for guards. A failed assert in selftest still prints "SELFTEST OK" — read the whole output.
+- **Patrol in the HQ sector means "guard HQ"** (`ship_ai.gd` `_home_guard`); dock repair is free near HQ; below 2000 credits automated player ships don't buy (VS-010).
 - Use ≥ 6 seeds for survival gates. The world is one data sim in `scripts/sim/`. Keep `--autoplay` / `--shot=` working.
-- main.gd is ~325 lines (over the ~300 guideline); split it before adding more.
+- main.gd is ~329 lines (over the ~300 guideline); split it before adding more (parking lot).
 - The default font has no arrow glyphs. Only one WorldEnvironment may exist at a time.
 - Git needs delete permission (lock files). Never stage the `games/starfall`, `template/`, `.claude/`, `.github/` mode noise.
 
 ## Open questions for Daniel
-- Please listen to the new sound effects in a browser build (press N to mute). Are they too loud or harsh? The explosion is the loudest.
+- Please try the new tips and sounds in a browser build (H skips tips, N mutes). Should tips come back after a page reload, or be remembered in the save file?
 - After VS-001 the economy may be too generous early (credits at 10 min are 10–27k). Is a faster early game OK?
 - Keep committing to local `main`, or push to GitHub so sessions can open PRs?
 - Target session length: the design assumes 30–40 minutes. Shorter?
@@ -73,8 +50,9 @@ todo 8 · in-progress 0 · done 4 · blocked 0 · split 0 · ready 7 · Top read
 - none (INBOX empty)
 
 ## Session history (newest first, keep 10)
+- S0006 2026-10-26 BUILD — VS-004 tutorial tips + VS-012 touch row/pause-mute/sfx assert done (both QA PASS); VS-013, VS-014 added
 - S0005 2026-10-26 BUILD — took over stale S0004 lock; VS-003 procedural SFX done (QA PASS); VS-012 added
-- S0004 2026-10-26 ABORTED — took the lock at 03:32Z, then nothing; no log, no handover
+- S0004 2026-10-26 SUPERSEDED — took lock 03:32Z, device calls stalled ~8 h; resumed later as S0006
 - S0003 2026-10-26 BUILD — cleaned up hung S0002; VS-001 mid-game rebalance done (nw20 8k→139k, HQ 5/6); VS-011 added
 - S0002 2026-10-26 ABORTED — hung during VS-001, cancelled by Daniel; diff salvaged, no handover
 - S0001 2026-10-26 BUILD — baseline commit; VS-002 trader reserve + VS-008 AI-journey selftest done; VS-010 added

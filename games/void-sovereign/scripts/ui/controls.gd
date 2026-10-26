@@ -23,3 +23,17 @@ static func register() -> void:
 			var ev := InputEventKey.new()
 			ev.physical_keycode = k as Key
 			InputMap.action_add_event(action, ev)
+
+
+## While paused: does this event resume the game? Clicks, taps, ui_accept and fresh key presses
+## do; key releases/echoes don't (P's own release would unpause), and neither does the mute key
+## (N toggles sound only — Sfx handles it — so muting from the pause screen stays paused).
+static func resumes_from_pause(event: InputEvent) -> bool:
+	if InputMap.has_action("mute") and event.is_action("mute"):
+		return false
+	if event is InputEventKey:
+		var k := event as InputEventKey
+		return k.pressed and not k.echo
+	return (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) \
+		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed) \
+		or event.is_action_pressed("ui_accept")

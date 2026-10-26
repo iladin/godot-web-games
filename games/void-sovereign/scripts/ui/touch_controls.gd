@@ -7,6 +7,9 @@ const BTN_RADIUS := 46.0
 const BG := Color(1, 1, 1, 0.08)
 const FG := Color(1, 1, 1, 0.35)
 const ACTIVE := Color(1.0, 0.7, 0.28, 0.55)
+## Utility row (SND/TRVL/MAP) sits below the HUD message log (top-right, 24 px per line from
+## y=30): clear of 4 stacked messages, above ACT, and right of the centred tutorial tip box.
+const TOP_ROW_Y := 190.0
 
 var active: bool = false          # a touch has ever been seen
 var layout: String = "none"       # none | flight | surface
@@ -25,11 +28,11 @@ const LAYOUTS: Dictionary = {
 	"flight": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["boost", "BOOST", Vector2(-250, -90), 0.0],
 		["thr_up", "THR+", Vector2(-110, -290), 0.0], ["thr_dn", "THR-", Vector2(-230, -230), 0.0],
 		["target", "TGT", Vector2(-360, -80), 0.0], ["act", "ACT", Vector2(-120, -420), 0.0],
-		["map", "MAP", Vector2(-80, 80), 0.0], ["travel", "TRVL", Vector2(-200, 80), 0.0],
-		["mute", "SND", Vector2(-320, 80), 0.0]],
+		["map", "MAP", Vector2(-80, TOP_ROW_Y), 0.0], ["travel", "TRVL", Vector2(-200, TOP_ROW_Y), 0.0],
+		["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0]],
 	"surface": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["jump", "JUMP", Vector2(-250, -90), 0.0],
 		["reload", "RLD", Vector2(-120, -290), 0.0], ["act", "ACT", Vector2(-260, -230), 0.0],
-		["sprint", "RUN", Vector2(-380, -80), 0.0], ["mute", "SND", Vector2(-80, 80), 0.0]],
+		["sprint", "RUN", Vector2(-380, -80), 0.0], ["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0]],
 }
 
 

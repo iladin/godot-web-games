@@ -204,6 +204,22 @@ func _test_sfx() -> void:
 	assert(not s.play("explosion"), "muted audio does not play")
 	s.toggle_mute()
 	assert(s.play("hit"))
+	# VS-012: N on the pause screen toggles mute only; P's own release doesn't end the pause.
+	s._ready()   # registers the "mute" action
+	Controls.register()
+	var n := InputEventKey.new()
+	n.physical_keycode = Sfx.MUTE_KEY
+	n.pressed = true
+	assert(n.is_action_pressed("mute") and not Controls.resumes_from_pause(n), "N while paused only mutes")
+	var k := InputEventKey.new()
+	k.physical_keycode = KEY_P
+	k.pressed = true
+	assert(Controls.resumes_from_pause(k), "a fresh key press resumes")
+	k.pressed = false
+	assert(not Controls.resumes_from_pause(k), "a key release does not resume")
+	var tap := InputEventScreenTouch.new()
+	tap.pressed = true
+	assert(Controls.resumes_from_pause(tap), "a tap resumes")
 	print("sfx: %d streams generated in %d ms" % [streams.size(), gen_ms])
 	s.free()
 

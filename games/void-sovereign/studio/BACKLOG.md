@@ -162,18 +162,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics).
 
 ## VS-012 · Audio/touch follow-ups from VS-003 QA
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
 - source: qa
 - created: S0005
 - why: S0005 QA of VS-003: the SND touch button overlaps the second message line in surface mode (touch_surface.png), N while paused both unpauses and toggles mute, and the autoplay guard `push_error("sfx played before first input")` in test_driver.gd would not fail check.sh.
+- notes: S0006 started (rollback HEAD 77a703a).
 - acceptance:
-  - [ ] `shots.sh void-sovereign touch_surface` and `touch` show SND/TRVL/MAP clear of the message log, even with two stacked messages
-  - [ ] Pressing N while paused toggles mute only (game stays paused), or unpauses only — not both
-  - [ ] Playing a sound before first input makes check.sh FAIL (assert or a pattern check.sh matches); verified by a temporary mutation, then reverted
-  - [ ] check.sh PASS
+  - [x] `shots.sh void-sovereign touch_surface` and `touch` show SND/TRVL/MAP clear of the message log, even with two stacked messages
+  - [x] Pressing N while paused toggles mute only (game stays paused), or unpauses only — not both
+  - [x] Playing a sound before first input makes check.sh FAIL (assert or a pattern check.sh matches); verified by a temporary mutation, then reverted
+  - [x] check.sh PASS
+- done: S0006 — touch utility row at TOP_ROW_Y 190 (clear of 2+ messages); Controls.resumes_from_pause ignores mute/key-up; autoplay sfx guard is an assert (mutation → check FAIL) (QA PASS)
 
 ## VS-013 · Tutorial tip follow-ups (touch skip overlap, docs)
 - status: todo
@@ -188,6 +190,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Tips are still skippable on touch with one dedicated tap target that does not overlap the stick zone or the touch buttons (screenshot hints_touch reviewed)
   - [ ] "H: skip tips" appears in the title/help controls, game.json controls and DESIGN.md controls
   - [ ] check.sh PASS
+
+## VS-014 · Touch/mouse input on the pause screen
+- status: todo
+- priority: P2
+- type: bug
+- size: S
+- source: qa
+- created: S0006
+- why: S0006 QA of VS-012: with emulate_mouse_from_touch on, tapping SND/MAP/TRVL while paused also unpauses (the emulated mouse click reaches main._unhandled_input → Controls.resumes_from_pause); on desktop the first click on the pause screen is eaten by mouse capture in space_view/fps_player and the game stays paused.
+- acceptance:
+  - [ ] Touch probe (xvfb --resolution 1280x720): P, then tap SND → muted toggles, game stays paused; same for MAP/TRVL taps (no resume)
+  - [ ] A tap elsewhere on the pause screen still resumes
+  - [ ] Desktop: P, then one left click → game resumes on that click (mouse is not captured while paused)
+  - [ ] selftest/probe assertion covers emulated-mouse events in resumes_from_pause; check.sh PASS
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -211,3 +227,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0006, QA) The "land" tip completes on any planet, not Ember specifically (harmless on the current map).
 - (S0006, dev/QA) Touch OBJECTIVE line says "press F to land"; use ACT wording in touch mode.
 - (S0006, dev) Persist "tips completed/skipped" in user://save.cfg so returning players don't see them.
+- (S0006, QA) With 6 stacked HUD messages the last line grazes the touch MAP/TRVL outlines; TOP_ROW_Y≈200 or MAX_MSGS=5 on touch.
+- (S0006, dev) Scale touch layout offsets with viewport height for unusual aspect ratios.

@@ -25,3 +25,11 @@
 - Task(s): took over stale S0004 lock (03:32Z, no other trace); VS-003 Procedural sound effects — done (QA PASS); new VS-012 (P2 S, audio/touch follow-ups) + 3 parking-lot items.
 - Check: PASS · Git: committed studio(S0005) (see git log)
 - Notes: wall clock ran to ~11:50Z (≈4h15m, mostly tool/subagent latency), so no second build. sfx: 6 AudioStreamWAVs in ~5 ms; autoplay played 15, blocked 63 before first input. Not yet heard in a real browser.
+
+## S0004 — 2026-10-26 03:32 — SUPERSEDED (late)
+- Took the lock at 03:32Z, then its device calls stalled for ~8 h; S0005 rightly took the stale lock. The same run resumed at 11:49Z, found the lock free and continued as S0006. No S0004 file changes.
+
+## S0006 — 2026-10-26 11:49 — BUILD
+- Task(s): VS-004 Guided first 10 minutes — done (QA PASS, commit 77a703a); VS-012 Audio/touch follow-ups — done (QA PASS); new VS-013 (P2 S tip box steals steer touches + H docs), VS-014 (P2 S pause-screen tap/click bugs) + 8 parking-lot items.
+- Check: PASS · Git: committed studio(S0006) x2 (see git log)
+- Notes: two S builds in ~20 min wall time. builds_since_review now 6 → next session must run PLANNING first.

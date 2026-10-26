@@ -271,7 +271,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed) \
 		or event.is_action_pressed("ui_accept")
 	if paused:
-		if press or event is InputEventKey:
+		if Controls.resumes_from_pause(event):
 			paused = false
 			overlay.screen = "none"
 		return
