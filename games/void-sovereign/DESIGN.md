@@ -23,9 +23,9 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 ## Controls
 | | Keyboard / mouse | Touch |
 |---|---|---|
-| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G fleet attacks target · F dock/land · M map · X stop · P pause | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP buttons |
+| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G fleet attacks target · F dock/land · M map · X stop · P pause · N mute | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP, SND buttons |
 | Map | LMB select (drag = box) · RMB order · wheel zoom · click galaxy to switch sector | Tap select · toggle ORDER, then tap to order |
-| Surface | WASD · mouse look · LMB fire · R reload · Space jump · Shift sprint · F board ship | Left stick move · drag right half to look · FIRE / JUMP / RELOAD / ACT |
+| Surface | WASD · mouse look · LMB fire · R reload · Space jump · Shift sprint · F board ship · N mute | Left stick move · drag right half to look · FIRE / JUMP / RELOAD / ACT / SND |
 
 ## Win / lose / score
 - **Win:** both Hive Nests destroyed.
@@ -41,6 +41,9 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 
 ## Juice
 Screen shake on hits, explosion flashes + debris, hit markers, damage vignette, shield shimmer, floating bounty text, travel-drive streaks.
+
+## Audio
+`scripts/audio/sfx.gd` (owned by main.gd, no autoload) synthesises six effects at startup into `AudioStreamWAV` (22050 Hz mono 16-bit, ~2 s total, a few ms): laser, rifle, hit, explosion, gate jump, UI click. No files, no `AudioStreamGenerator`. Nothing plays before the first key/click/tap (browser autoplay rule). N or the SND touch button toggles mute. Volumes and pitch jitter (±8 %) are constants at the top of the script; explosions are audible within 2.5 km in flight.
 
 ## Testing hooks
 `scripts/check.sh void-sovereign` runs import, title smoke, a 15 s `--autoplay` that walks flight → map orders/buy/build → dock → landing + FPS → evacuation, and `scripts/selftest.gd` (routing, pricing, transactions, production, 8 simulated minutes, Core→Nest unlock).

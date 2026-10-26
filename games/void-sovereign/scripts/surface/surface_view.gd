@@ -8,6 +8,7 @@ signal player_died()
 signal core_killed()
 signal hit_something()
 signal player_damaged(amount: float)
+signal sfx(sound: String)
 
 const GRID := 72
 const SPACING := 7.0
@@ -463,6 +464,7 @@ func _on_fired(origin: Vector3, dir: Vector3) -> void:
 			best_t = t
 			best = f
 	var impact := origin + dir * best_t
+	sfx.emit("rifle")
 	_tracer(fps.flash.global_position, impact)
 	if best:
 		if best.kind == "core" and pylons_left() > 0:
@@ -479,6 +481,7 @@ func _on_fired(origin: Vector3, dir: Vector3) -> void:
 
 func _kill(f: Foe) -> void:
 	f.alive = false
+	sfx.emit("explosion")
 	var big := f.kind == "core"
 	_explode(f.node.position, 14.0 if big else (4.0 if f.kind == "pylon" else 2.0))
 	f.node.queue_free()

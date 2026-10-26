@@ -34,6 +34,7 @@ var autoplay: bool = false
 var shot_mode: String = ""
 var shot_file: String = ""
 var driver: TestDriver
+var sfx: Sfx
 
 
 func _ready() -> void:
@@ -46,6 +47,9 @@ func _ready() -> void:
 			shot_file = a.trim_prefix("--shotfile=")
 	autoplay = "--autoplay" in OS.get_cmdline_user_args() or shot_mode != ""
 	driver = TestDriver.new(self)
+	sfx = Sfx.new()
+	add_child(sfx)
+	sfx.mute_changed.connect(func(m: bool) -> void: u.message.emit("Sound off (N)" if m else "Sound on", Color("8fd8ff")))
 	_build_ui()
 	_new_world()
 	if autoplay:
@@ -108,7 +112,8 @@ func _new_world() -> void:
 	space.spawn_player()
 	space.dock_requested.connect(_on_dock)
 	space.land_requested.connect(_on_land)
-	space.player_hit_something.connect(func() -> void: hud.hit())
+	space.player_hit_something.connect(func() -> void: hud.hit(); sfx.play("hit"))
+	space.sfx.connect(func(n: String) -> void: sfx.play(n))
 	space.player_damaged.connect(func(a: float) -> void: hud.damaged(a))
 	u.player_died.connect(func() -> void: respawn_t = RESPAWN_DELAY)
 	u.finished.connect(_on_finished)
@@ -132,6 +137,7 @@ func _start_game() -> void:
 	state = State.PLAYING
 	state_time = 0.0
 	overlay.screen = "none"
+	sfx.play("click")
 	_set_mode("flight")
 	u.message.emit("Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map", Color("ffb347"))
 
@@ -179,6 +185,8 @@ func _process(delta: float) -> void:
 func _set_mode(m: String) -> void:
 	var prev := mode
 	mode = m
+	if m != prev and (m == "map" or m == "dock" or prev == "map" or prev == "dock"):
+		sfx.play("click")
 	map.visible = m == "map"
 	dock.visible = m == "dock"
 	if prev == "dock" and m != "dock" and docked_at:
@@ -211,7 +219,8 @@ func _on_land(sector_idx: int) -> void:
 	surface.setup(u, touch, sector_idx)
 	surface.takeoff_requested.connect(_leave_surface.bind(false))
 	surface.player_died.connect(func() -> void: _leave_surface.call_deferred(true))
-	surface.hit_something.connect(func() -> void: hud.hit())
+	surface.hit_something.connect(func() -> void: hud.hit(); sfx.play("hit"))
+	surface.sfx.connect(func(n: String) -> void: sfx.play(n))
 	surface.player_damaged.connect(func(a: float) -> void: hud.damaged(a))
 	hud.surface = surface
 	_set_mode("surface")
@@ -287,6 +296,8 @@ func _physics_process(_delta: float) -> void:
 	# Touch MAP button is polled (it doesn't produce an InputEvent action).
 	if state == State.PLAYING and mode == "flight" and touch.pressed("map"):
 		_set_mode("map")
+	if touch.pressed("mute"):
+		sfx.toggle_mute()
 
 
 func _pause() -> void:

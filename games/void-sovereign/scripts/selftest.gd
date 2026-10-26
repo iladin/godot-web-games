@@ -115,6 +115,7 @@ func _init() -> void:
 	u.director = null  # break the ref cycle so nothing leaks at exit
 
 	_test_ai_journeys()
+	_test_sfx()
 	print("SELFTEST OK")
 	quit()
 
@@ -179,3 +180,28 @@ func _test_ai_journeys() -> void:
 	assert(u.credits > credits0, "player miner's ore sale earns credits")
 	print("journeys: trade plan %s x%d profit %.0f, travel %d jumps in %.0f/%.0f s, miner sold ore in %.0f/%.0f s" % [pware, int(plan["qty"]), float(plan["profit"]), jumps, travel_t, travel_bound, t, mine_bound])
 	u.director = null
+
+
+## Procedural audio: every stream is generated and non-empty; nothing plays before input; mute works.
+func _test_sfx() -> void:
+	var t0 := Time.get_ticks_msec()
+	var streams := Sfx.generate_all()
+	var gen_ms := Time.get_ticks_msec() - t0
+	for n: String in Sfx.NAMES:
+		assert(streams.has(n), "sfx stream generated: %s" % n)
+		var w := streams[n] as AudioStreamWAV
+		assert(w != null and w.data.size() > 400, "sfx stream non-empty: %s" % n)
+		assert(w.format == AudioStreamWAV.FORMAT_16_BITS and w.mix_rate == Sfx.MIX_RATE and not w.stereo)
+		assert(Sfx.VOLUME_DB.has(n), "volume constant for %s" % n)
+	var s := Sfx.new()
+	s.streams = streams
+	assert(not s.play("laser"), "audio is gated until the first input")
+	assert(s.blocked == 1 and s.played == 0)
+	s.unlock()
+	assert(s.play("laser"), "audio plays after the first input")
+	s.toggle_mute()
+	assert(not s.play("explosion"), "muted audio does not play")
+	s.toggle_mute()
+	assert(s.play("hit"))
+	print("sfx: %d streams generated in %d ms" % [streams.size(), gen_ms])
+	s.free()

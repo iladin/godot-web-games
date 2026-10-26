@@ -25,10 +25,11 @@ const LAYOUTS: Dictionary = {
 	"flight": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["boost", "BOOST", Vector2(-250, -90), 0.0],
 		["thr_up", "THR+", Vector2(-110, -290), 0.0], ["thr_dn", "THR-", Vector2(-230, -230), 0.0],
 		["target", "TGT", Vector2(-360, -80), 0.0], ["act", "ACT", Vector2(-120, -420), 0.0],
-		["map", "MAP", Vector2(-80, 80), 0.0], ["travel", "TRVL", Vector2(-200, 80), 0.0]],
+		["map", "MAP", Vector2(-80, 80), 0.0], ["travel", "TRVL", Vector2(-200, 80), 0.0],
+		["mute", "SND", Vector2(-320, 80), 0.0]],
 	"surface": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["jump", "JUMP", Vector2(-250, -90), 0.0],
 		["reload", "RLD", Vector2(-120, -290), 0.0], ["act", "ACT", Vector2(-260, -230), 0.0],
-		["sprint", "RUN", Vector2(-380, -80), 0.0]],
+		["sprint", "RUN", Vector2(-380, -80), 0.0], ["mute", "SND", Vector2(-80, 80), 0.0]],
 }
 
 

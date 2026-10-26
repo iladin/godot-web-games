@@ -20,3 +20,8 @@
 - Task(s): cleanup of hung S0002 (diff saved to studio/salvage/, code reverted to aaee72c); VS-001 Rebalance mid-game — done (QA PASS); new VS-011 (late-game slide, P1 M) + 4 QA P3 items to parking lot.
 - Check: PASS · Git: committed (see git log, studio(S0003))
 - Notes: econ 6 seeds nw20 139k (was 8k), HQ 5/6; passive HQ lost 25.4 min. Net worth still collapses 20->30 min in 4/6 seeds -> VS-011. 6-seed run takes ~174 s (near 180 s device cap).
+
+## S0005 — 2026-10-26 07:34 — BUILD
+- Task(s): took over stale S0004 lock (03:32Z, no other trace); VS-003 Procedural sound effects — done (QA PASS); new VS-012 (P2 S, audio/touch follow-ups) + 3 parking-lot items.
+- Check: PASS · Git: committed studio(S0005) (see git log)
+- Notes: wall clock ran to ~11:50Z (≈4h15m, mostly tool/subagent latency), so no second build. sfx: 6 AudioStreamWAVs in ~5 ms; autoplay played 15, blocked 63 before first input. Not yet heard in a real browser.

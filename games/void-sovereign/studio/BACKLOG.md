@@ -35,7 +35,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0001: TRADER_RESERVE=2000 clamp in Universe.transact() for all automated player assets; QA verified (credits_10 4088/2104/3865, HQ 2/3). Seed 118 margin only ~104 cr.
 
 ## VS-003 · Procedural sound effects (web-safe)
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -43,10 +43,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0000
 - why: The game is silent; combat feedback relies on visuals alone. Flagged as the top next step after the first build.
 - acceptance:
-  - [ ] Laser, rifle, hit, explosion, gate jump and UI click sounds generated in code into `AudioStreamWAV` at startup (no `AudioStreamGenerator`, no downloaded assets)
-  - [ ] No sound plays before the first click/key/tap (browser autoplay rule); a mute toggle exists (key + touch)
-  - [ ] Volume constants at the top of the audio script; pitch varies slightly per shot
-  - [ ] check.sh PASS; `--autoplay` exercises sound playback without errors
+  - [x] Laser, rifle, hit, explosion, gate jump and UI click sounds generated in code into `AudioStreamWAV` at startup (no `AudioStreamGenerator`, no downloaded assets)
+  - [x] No sound plays before the first click/key/tap (browser autoplay rule); a mute toggle exists (key + touch)
+  - [x] Volume constants at the top of the audio script; pitch varies slightly per shot
+  - [x] check.sh PASS; `--autoplay` exercises sound playback without errors
+- notes: S0005 started (rollback HEAD 935f699). S0004 took the lock at 03:32Z and left no other trace.
+- done: S0005 — scripts/audio/sfx.gd synthesises 6 AudioStreamWAVs at startup, gated on first input, N/SND mute, ±8% pitch; autoplay plays 15 / blocks 63 pre-input (QA PASS)
 
 ## VS-004 · Guided first 10 minutes
 - status: todo
@@ -157,6 +159,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
 - notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics).
 
+## VS-012 · Audio/touch follow-ups from VS-003 QA
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0005
+- why: S0005 QA of VS-003: the SND touch button overlaps the second message line in surface mode (touch_surface.png), N while paused both unpauses and toggles mute, and the autoplay guard `push_error("sfx played before first input")` in test_driver.gd would not fail check.sh.
+- acceptance:
+  - [ ] `shots.sh void-sovereign touch_surface` and `touch` show SND/TRVL/MAP clear of the message log, even with two stacked messages
+  - [ ] Pressing N while paused toggles mute only (game stays paused), or unpauses only — not both
+  - [ ] Playing a sound before first input makes check.sh FAIL (assert or a pattern check.sh matches); verified by a temporary mutation, then reverted
+  - [ ] check.sh PASS
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -170,3 +186,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - Dock repair heals ships on manual orders too and is free/uncapped; limit to automated ships or charge REPAIR_COST (S0003 QA, P3)
 - `route(..., avoid_hive)` still avoids only Nest sectors; use `sector_unsafe` so civilians don't path through raids (S0003 QA, P3)
 - `_home_nest_sector`: empty route counted as 0 hops would pick an unreachable nest (S0003 QA, P3, no effect on current map)
+- (S0005, QA) Explosion SFX peaks at full scale and is hard-clipped by clampf — lower its gain or soft-clip.
+- (S0005, QA) main.gd is ~325 lines (> ~300 guideline) — split input/pause handling out.
+- (S0005, dev) Click sounds on map/dock buttons; HUD mute indicator; persist mute in user://save.cfg; distance-scaled explosion volume; NPC weapon sounds.

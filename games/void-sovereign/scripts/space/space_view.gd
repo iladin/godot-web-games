@@ -8,6 +8,7 @@ signal land_requested(sector_idx: int)
 signal sector_entered(sector_idx: int)
 signal player_hit_something()
 signal player_damaged(amount: float)
+signal sfx(sound: String)
 
 const BOLT_SPEED := 2600.0
 const BOLT_LIFE := 1.1
@@ -19,6 +20,7 @@ const CAM_SMOOTH := 9.0
 const GATE_TRIGGER := 95.0
 const DUST_COUNT := 160
 const DUST_BOX := 300.0
+const EXPLOSION_HEAR_RANGE := 2500.0
 
 var u: Universe
 var touch: TouchControls
@@ -279,6 +281,7 @@ func _check_gates() -> void:
 			u.player_ship.pos = player.position
 			cam.global_transform = player.global_transform.translated_local(CAM_OFFSET)
 			shake = 0.6
+			sfx.emit("gate")
 			u.message.emit("Entered %s" % u.sectors[to].name, Color("8fd8ff"))
 			return
 
@@ -354,6 +357,7 @@ func _sync_proxies(delta: float) -> void:
 # --- Weapons + FX ------------------------------------------------------------------------------
 func _on_player_fired(origin: Vector3, dir: Vector3) -> void:
 	_spawn_bolt(origin, dir * BOLT_SPEED + player.vel, Defs.faction_color(Defs.Faction.PLAYER), true, BOLT_LIFE)
+	sfx.emit("laser")
 
 
 func _spawn_bolt(origin: Vector3, v: Vector3, col: Color, is_player: bool, life: float) -> void:
@@ -425,6 +429,8 @@ func _on_destroyed(ent: SimEntity, _killer: int) -> void:
 		return
 	var size := ent.radius * (2.5 if ent.is_station else 3.0)
 	explode(ent.pos, size, Defs.faction_color(ent.faction))
+	if player and ent.pos.distance_to(player.position) < EXPLOSION_HEAR_RANGE:
+		sfx.emit("explosion")
 	if player and ent.pos.distance_to(player.position) < 900.0:
 		shake = minf(shake + 0.4, 1.2)
 	if ent.id == target_id:

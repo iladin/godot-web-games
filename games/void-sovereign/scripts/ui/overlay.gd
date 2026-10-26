@@ -47,7 +47,7 @@ func _draw() -> void:
 				"Earn credits trading, mining and with stations. Keep your HQ alive.",
 				"",
 				"FLIGHT  mouse/arrows steer · W/S throttle · LMB/Space fire · R target · G fleet attack · F dock/land · T travel · M map",
-				"FOOT  WASD · mouse look · LMB fire · R reload · Space jump · F board ship",
+				"FOOT  WASD · mouse look · LMB fire · R reload · Space jump · F board ship · N sound on/off",
 				"MAP  LMB select · drag box · RMB order · buy ships & build stations",
 			]
 			var y := h * 0.25 + 100

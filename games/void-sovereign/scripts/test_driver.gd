@@ -20,6 +20,7 @@ func tick() -> void:
 		return
 	if _ap_step == 0 and t > 4.0:
 		_ap_step = 1
+		_exercise_audio()
 		g._set_mode("map")
 		g.map.selected.clear()
 		g.map._order_button("all")
@@ -37,7 +38,20 @@ func tick() -> void:
 		g._on_land(0)
 	elif _ap_step == 3 and t > 14.0 and g.surface:
 		_ap_step = 4
+		print("sfx: played %d, blocked before first input %d, muted %s" % [g.sfx.played, g.sfx.blocked, g.sfx.muted])
 		g.surface.fps.take_damage(1000.0)
+
+
+func _exercise_audio() -> void:
+	# Autoplay never sends real input: everything played so far must have been blocked.
+	if g.sfx.played != 0:
+		push_error("sfx played before first input")
+	g.sfx.unlock()   # stands in for the first click/key/tap
+	for n: String in Sfx.NAMES:
+		g.sfx.play(n)
+	g.sfx.toggle_mute()
+	g.sfx.play("explosion")   # muted: dropped
+	g.sfx.toggle_mute()
 
 
 func _shot_script(t: float) -> void:
