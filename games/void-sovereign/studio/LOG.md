@@ -48,3 +48,8 @@
 - Task(s): VS-018 First Sortie — done (QA FAIL round 1: HQ guns/Union killed the scouts in 4–7 s with no player involvement + balance drift; fix round: sortie-only targeting, spawn 1300 ahead of the player, hull 3x; QA PASS on re-verify). New VS-021 (P2 S, balance gates robust to sim chaos).
 - Check: PASS · Git: see commit studio(S0009)
 - Notes: QA proved the sim is chaotic (one extra global randf() at t=60 moves passive HQ-lost up to +14 min); 3-seed gates can't detect small shifts. Passive gate passed at median 33.7 (ceiling 35). ~80 min wall time.
+
+## S0010 — 2026-10-26 21:40 — BUILD
+- Task(s): VS-021 balance gates robust to sim chaos — done (QA PASS first round). VS-014 touch/mouse input on the pause screen — done (QA PASS first round).
+- Check: PASS · Git: committed cbb8fdf (VS-021), e6126dd (VS-014) + wrap-up commit
+- Notes: 9-seed baselines: econ30 nw20 107.7k / nw30 55.9k (nw30 < nw20 in 8/9), HQ 9/9; passive40 HQ lost median 33.7 [32.1–35.8]. Econ gate fits one 180 s call (154 s); passive needs two. VS-020 acceptance moved to 9-seed gates. ~40 min wall time.
