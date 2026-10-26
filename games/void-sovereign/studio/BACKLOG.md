@@ -79,7 +79,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] `shots.sh void-sovereign surface touch_surface` shows readable markers
 
 ## VS-006 · Web performance guard for late-game ship counts
-- status: todo
+- status: blocked
 - priority: P2
 - type: perf
 - size: M
@@ -91,9 +91,10 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Flight view hides or simplifies ship proxies beyond a distance constant
   - [ ] Economic balance run: hive_ships_30 ≤ 60 in all seeds
   - [ ] No visible popping within 2 km in a combat screenshot
+- notes: S0007: blocked on VS-011 — its raid-size/interval changes move the Hive ship count (S0007 balance: hive_20 median 59, max 65). Re-measure after VS-011 lands, then unblock or close.
 
 ## VS-007 · Wing commands from the cockpit
-- status: todo
+- status: blocked
 - priority: P2
 - type: feature
 - size: S
@@ -104,6 +105,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Keys + touch buttons for: wing attack my target (existing G), wing return/escort me, wing hold position
   - [ ] HUD shows a one-line wing status (count, current order)
   - [ ] DESIGN.md controls table and title screen updated
+- notes: S0007: parked by Producer to keep open todo ≤ 8 (no review finding asks for it this round). Daniel can reprioritise via INBOX.
 
 ## VS-008 · Selftest coverage for ship AI journeys
 - status: done
@@ -122,7 +124,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0001: _test_ai_journeys() (seed 7; goto 0->3 in 82/288 s, miner sale 64/289 s, plan_trade munitions x80 profit 1787); QA mutation-tested all 3. Bundled balance change: start stock inputs 1/3, outputs 1/2 (Defs.START_FILL_INPUT/OUTPUT) — plan_trade was empty on the starting universe.
 
 ## VS-009 · Save and continue a run
-- status: todo
+- status: blocked
 - priority: P2
 - type: feature
 - size: L
@@ -131,7 +133,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - why: A full game takes 30–40 minutes; browser players close tabs. Only the best score persists today.
 - acceptance:
   - [ ] The Producer splits this into S/M tasks before work (serialize Universe → user://, restore on title "Continue", autosave cadence, versioning)
-- notes: Size L on purpose — exercises the split rule.
+- notes: Size L on purpose — exercises the split rule. S0007: parked by Producer to keep open todo ≤ 8; needs Daniel to confirm save/continue is wanted (see HANDOVER open questions) before it is split.
 
 ## VS-010 · NPC traders must not get stuck at a player station that can't pay
 - status: todo
@@ -159,7 +161,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Economic 30 min, 6 seeds: net_worth_30 median >= net_worth_20 median, and HQ survives >= 5/6
   - [ ] Economic 30 min, 6 seeds: net_worth_20 median between 80k and 130k (trim the overshoot, e.g. TRADE_HUB_EXPORT 50-60 or TARGET_FILL 0.15)
   - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
-- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics).
+- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics). S0007 balance (reviews/S0007-balance.md): unchanged since S0003, nw30 falls in 5/6 seeds (median 42.9k vs nw20 139k). Raids hit RAID_SIZE_MAX 16 at ~19.5 min and RAID_INTERVAL_MIN 75 s at ~21 min while the econ policy stops buying after ~10 min. Suggested: RAID_INTERVAL_MIN 75→100, RAID_SIZE_MAX 16→13, TRADE_HUB_EXPORT 80→60; harness: policy replaces lost fighters + builds a Defense Platform after 10 min. Seed-offset prototype: .tools/s0007/balance_offset.gd (adds --first=).
 
 ## VS-012 · Audio/touch follow-ups from VS-003 QA
 - status: done
@@ -178,7 +180,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0006 — touch utility row at TOP_ROW_Y 190 (clear of 2+ messages); Controls.resumes_from_pause ignores mute/key-up; autoplay sfx guard is an assert (mutation → check FAIL) (QA PASS)
 
 ## VS-013 · Tutorial tip follow-ups (touch skip overlap, docs)
-- status: todo
+- status: split
 - priority: P2
 - type: polish
 - size: S
@@ -190,6 +192,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Tips are still skippable on touch with one dedicated tap target that does not overlap the stick zone or the touch buttons (screenshot hints_touch reviewed)
   - [ ] "H: skip tips" appears in the title/help controls, game.json controls and DESIGN.md controls
   - [ ] check.sh PASS
+- notes: S0007: superseded by VS-017 (tips follow the world), which carries all four acceptance items.
 
 ## VS-014 · Touch/mouse input on the pause screen
 - status: todo
@@ -204,6 +207,69 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] A tap elsewhere on the pause screen still resumes
   - [ ] Desktop: P, then one left click → game resumes on that click (mouse is not captured while paused)
   - [ ] selftest/probe assertion covers emulated-mouse events in resumes_from_pause; check.sh PASS
+- notes: S0007 QA: dock and map buttons also stay clickable under the pause overlay — fix in the same pass.
+
+## VS-015 · Freeze the world on the title screen and close overlays when a run ends
+- status: done
+- priority: P1
+- type: bug
+- size: S
+- source: qa
+- created: S0007
+- why: S0007 QA sweep (reviews/S0007-qa.md bugs 1 and 3): main._process steps the Universe whenever state != OVER, so the sim runs behind the title (idle 1653 s → "HQ LOST" without starting; first-raid countdown and win time bonus eaten by title time; flight HUD and "F: Dock"/capture prompts render on the title). If a run ends while the command map is open, the full-screen MapView (mouse_filter STOP) eats clicks/taps, so only Space restarts — a touch softlock on the most likely win path.
+- acceptance:
+  - [x] Universe time does not advance while on the title screen; new selftest/autoplay assertion (e.g. u.time == 0 after N title frames) — mutation-checked
+  - [x] Title screen shows no flight HUD lines, dock prompt or capture-mouse prompt (`shots.sh void-sovereign title` reviewed)
+  - [x] Ending a run (win or loss) while the map or dock is open returns to the end overlay, and a click or tap at (400,400) restarts (probe, xvfb --resolution 1280x720)
+  - [x] Map/dock buttons are not usable on the end screen; if the run ends during the landing fade, no surface is built afterwards (state guard after the await)
+  - [x] check.sh PASS
+- notes: QA suggested _set_mode("flight") in _on_finished. main.gd is ~329 lines — move the touched state/overlay handling into a helper script rather than growing it. S0007 started (rollback HEAD b8744ab).
+- done: S0007 — sim steps only while PLAYING (RunFlow.sim_runs), title shows no HUD/prompts, finish() closes map/dock and frees mouse, land/dock guards; autoplay title assert + over_map shot (QA PASS, 2 mutations)
+
+## VS-016 · Stop buy/sell arbitrage at the same station
+- status: todo
+- priority: P1
+- type: bug
+- size: S
+- source: qa
+- created: S0007
+- why: S0007 QA sweep (reviews/S0007-qa.md bug 2): Universe.transact() prices a whole batch at the pre-trade price and Trade Hubs buy and sell at the same price, so Buy 10 ×4 → Sell all at one hub nets credits forever (50 cycles: munitions +11,333 cr, alloy +5,333 cr, no game time). Breaks the economy pillar for the player.
+- acceptance:
+  - [ ] Buying N units then selling N units of the same ware at the same station never increases player credits, for every ware a station both buys and sells and for N in {1, 10, 40} (new selftest assertion, mutation-checked)
+  - [ ] Batches are priced per unit along the price curve, or stations apply a buy/sell spread constant in defs.gd (documented in DESIGN.md)
+  - [ ] ShipAI.plan_trade still returns a profitable plan on the starting universe (existing selftest) and NPC/automated traders still trade (autoplay)
+  - [ ] Economic balance run (3 seeds, 30 min) recorded in notes: credits_10 > TRADER_RESERVE in all seeds; check.sh PASS
+
+## VS-017 · Tutorial tips follow the world (one voice on screen)
+- status: todo
+- priority: P1
+- type: polish
+- size: S
+- source: critic
+- created: S0007
+- why: S0007 critic #1/#3 and QA sweep bug 4: tip 3 ("lock onto a Hive ship") cannot be done in Haven's Reach — 0 Hive ships there for the first 10 min in 3/3 seeds — so tips 4–6 never appear; at t=3 s five directives compete (welcome, tip, "F: Dock", duplicate capture prompt, objective) and the tip order contradicts the objective. Absorbs VS-013 (touch skip overlaps steer zone; H undocumented).
+- acceptance:
+  - [ ] A tip is only current when it can be completed now (e.g. the target tip waits until a hostile is in the sector, later tips are not blocked by it); headless probe: steer + throttle, then dock/map/land tips appear within the first 5 min in seeds 7, 101, 118
+  - [ ] Pressing R / TGT with nothing to lock shows a short "no hostiles in range" message instead of failing silently
+  - [ ] While a tip is shown, the duplicate HUD capture-mouse line is hidden; screenshot `hints` at t≈3 s shows at most one instruction line plus the objective
+  - [ ] Touch: a drag starting in the steering zone while a tip shows steers and does not skip tips; tips remain skippable via one dedicated tap target clear of the stick and buttons (xvfb --resolution 1280x720, `hints_touch` reviewed)
+  - [ ] "H: skip tips" in title/help controls, game.json and DESIGN.md; check.sh PASS
+- notes: Scout proposal 1 (reviews/S0007-scout.md). If VS-018 (First Sortie) lands first, the target tip can point at that wave.
+
+## VS-018 · First Sortie: a small opening wave near Ember
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: critic
+- created: S0007
+- why: S0007 critic #2 and bold idea: the opening has no threat (seed 7: every raider dies in Cinder Belt, HQ and player hull untouched for 95 s), so the first 10 minutes teach nothing about combat and the target tip has nothing to lock. Scout proposal 2.
+- acceptance:
+  - [ ] Once per run, at about t=60 s of play, a wave of 3 weak Hive drones appears near Ember orbit in or next to the home sector, announced by a HUD message; constants (time, size, strength) in defs.gd
+  - [ ] The starting escorts plus the player beat the wave in all of seeds 7, 101, 118 without the player ship dying (autoplay/probe log)
+  - [ ] After the wave is destroyed a message points the player to land on Ember (objective unchanged); selftest asserts the wave spawns once and only once
+  - [ ] Balance gates unchanged: economic 30 min 3 seeds nw20 within ±15% of the S0007 baseline (139k median); passive 40 min HQ lost 20–35 min; check.sh PASS
+- notes: Do after VS-015 (title time must not count). Raid first-arrival (3.3 min) is separate — the wave must not reset or delay the raid timer.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -229,3 +295,9 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0006, dev) Persist "tips completed/skipped" in user://save.cfg so returning players don't see them.
 - (S0006, QA) With 6 stacked HUD messages the last line grazes the touch MAP/TRVL outlines; TOP_ROW_Y≈200 or MAX_MSGS=5 on touch.
 - (S0006, dev) Scale touch layout offsets with viewport height for unusual aspect ratios.
+- (S0007, scout/critic) Credit ledger: route all credit changes through earn(category, amount); HUD cr/min, map panel last-60 s breakdown, HQ dock "how to earn" line. Critic: Economy legibility 3/10 — top candidate for the next planning round (P2, M).
+- (S0007, scout/critic) Honest raid reports: track each raid to its end, "intercepted in X (k/n destroyed)" or "RAID ARRIVING", mark active raids on the map inset (P2, S).
+- (S0007, scout/balance) Standing HQ reinforcement order "keep N fighters" — a late-game credit sink and defence; revisit with VS-011 (P2, M).
+- (S0007, QA) build_station() accepts positions inside a planet (0 m from centre, PLANET_RADIUS 1500); reject placements within the planet radius (P3).
+- (S0007, QA) Title backdrop: player-ship model sits behind the controls text (y≈400–450); shot runs share user://save.cfg best score with real play (win shot sets best 170997) — use a separate save path in shot/autoplay modes (P3).
+- (S0007, dev) Autoplay step that ends a run from the map and restarts (15 s autoplay window nearly full) (P3).
