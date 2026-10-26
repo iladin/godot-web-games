@@ -4,7 +4,6 @@ extends Node
 ## the three play layers: flight (SpaceView), command map (MapView), surface (SurfaceView).
 ## State machine: TITLE -> PLAYING -> OVER -> (restart). Keeps the --autoplay hook for check.sh.
 
-const SAVE_PATH := "user://save.cfg"
 const RESTART_DELAY := 0.8
 const RESPAWN_DELAY := 2.5
 const EVAC_HULL_LOSS := 0.4
@@ -36,11 +35,13 @@ var shot_mode: String = ""
 var shot_file: String = ""
 var driver: TestDriver
 var sfx: Sfx
+var flow: RunFlow
 
 
 func _ready() -> void:
 	Controls.register()
-	best = _load_best()
+	flow = RunFlow.new(self)
+	best = flow.load_best()
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="):
 			shot_mode = a.trim_prefix("--shot=")
@@ -53,7 +54,9 @@ func _ready() -> void:
 	sfx.mute_changed.connect(func(m: bool) -> void: u.message.emit("Sound off (N)" if m else "Sound on", Color("8fd8ff")))
 	_build_ui()
 	_new_world()
-	if autoplay:
+	# Plain --autoplay starts from the title (TestDriver checks the world is frozen there first);
+	# shot scenarios other than "title" start a run straight away.
+	if shot_mode != "" and shot_mode != "title":
 		_start_game()
 
 
@@ -138,38 +141,18 @@ func _new_world() -> void:
 
 # --- State machine ---------------------------------------------------------------------------
 func _start_game() -> void:
-	state = State.PLAYING
-	state_time = 0.0
-	overlay.screen = "none"
-	sfx.play("click")
-	_set_mode("flight")
-	u.message.emit("Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map", Color("ffb347"))
+	flow.start()
 
 
 func _on_finished(won: bool) -> void:
-	state = State.OVER
-	state_time = 0.0
-	var score := u.score(won)
-	overlay.new_best = score > best
-	if score > best:
-		best = score
-		_save_best(best)
-	overlay.screen = "over"
-	overlay.won = won
-	overlay.score = score
-	overlay.best = best
-	overlay.t = 0.0
-	overlay.stats = "Time %d:%02d  ·  Kills %d  ·  Colonies %d  ·  Net worth %s" % [int(u.time / 60.0), int(u.time) % 60, u.kills, u.colonies(), Hud._fmt(u.net_worth())]
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	hud.mode = "none"
-	touch.set_layout("none")
+	flow.finish(won)
 
 
 func _process(delta: float) -> void:
 	if paused:
 		return
 	state_time += delta
-	if state != State.OVER:
+	if RunFlow.sim_runs(state):   # frozen behind the title and end screens
 		u.step(delta)
 	if state == State.PLAYING and respawn_t >= 0.0:
 		respawn_t -= delta
@@ -196,9 +179,10 @@ func _set_mode(m: String) -> void:
 	if prev == "dock" and m != "dock" and docked_at:
 		space.set_docked(false, docked_at)
 		docked_at = null
-	space.flight_enabled = m == "flight" and state == State.PLAYING
-	hud.mode = "flight" if m == "flight" else ("surface" if m == "surface" else "none")
-	touch.set_layout("flight" if m == "flight" else ("surface" if m == "surface" else "none"))
+	var live := state == State.PLAYING
+	space.flight_enabled = m == "flight" and live
+	hud.mode = ("flight" if m == "flight" else ("surface" if m == "surface" else "none")) if live else "none"
+	touch.set_layout(("flight" if m == "flight" else ("surface" if m == "surface" else "none")) if live else "none")
 	if m == "map":
 		map.open(space.sector_idx)
 	if m == "map" or m == "dock":
@@ -206,6 +190,8 @@ func _set_mode(m: String) -> void:
 
 
 func _on_dock(st: StationData) -> void:
+	if state != State.PLAYING:
+		return
 	docked_at = st
 	space.set_docked(true)
 	dock.open(u, st)
@@ -213,7 +199,13 @@ func _on_dock(st: StationData) -> void:
 
 
 func _on_land(sector_idx: int) -> void:
+	if state != State.PLAYING:
+		return
+	var run_u := u
 	await _fade_to(1.0)
+	if state != State.PLAYING or u != run_u:   # run ended (or restarted) during the fade
+		_fade_to(0.0)
+		return
 	u.player_ship.hidden = true
 	space.visible = false
 	space.remove_child(space.env)   # only one WorldEnvironment may be active
@@ -305,25 +297,10 @@ func _physics_process(_delta: float) -> void:
 
 
 func _pause() -> void:
-	paused = true
-	overlay.screen = "pause"
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	flow.pause()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == State.PLAYING and not autoplay:
 		_pause()
 
-
-# --- Save -----------------------------------------------------------------------------------------
-func _load_best() -> int:
-	var cfg := ConfigFile.new()
-	if cfg.load(SAVE_PATH) != OK:
-		return 0
-	return int(cfg.get_value("score", "best", 0))
-
-
-func _save_best(value: int) -> void:
-	var cfg := ConfigFile.new()
-	cfg.set_value("score", "best", value)
-	cfg.save(SAVE_PATH)

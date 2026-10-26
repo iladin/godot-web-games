@@ -2,11 +2,14 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: title map dock surface touch touch_surface over win death combat hints hints_touch
-## (+ _long variants).
+## Scenarios: title map dock surface touch touch_surface over over_map win death combat hints
+## hints_touch (+ _long variants).
+
+const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
 
 var g: VoidMain
 var _ap_step: int = 0
+var _title_frames: int = 0
 
 
 func _init(p_g: VoidMain) -> void:
@@ -16,6 +19,16 @@ func _init(p_g: VoidMain) -> void:
 func tick() -> void:
 	# Exercises every layer in ~15 s: fight -> map orders/buy/build -> dock -> land + FPS.
 	var t := g.state_time
+	if g.state == VoidMain.State.TITLE:
+		_title_frames += 1
+		# The world must be frozen behind the title: no sim time, no raids, no HUD.
+		assert(g.u.time == 0.0, "Universe stepped on the title screen (u.time=%.2f)" % g.u.time)
+		assert(g.hud.mode == "none" and not g.space.flight_enabled, "flight HUD/input live on the title")
+		if g.shot_mode == "" and _title_frames >= TITLE_HOLD_FRAMES:
+			print("title: %d frames, u.time %.1f — world frozen" % [_title_frames, g.u.time])
+			g._start_game()
+		elif g.shot_mode == "":
+			return
 	if g.shot_mode != "":
 		_shot_script(t)
 		return
@@ -69,9 +82,7 @@ func _shot_script(t: float) -> void:
 		_ap_step = 1
 		match g.shot_mode:
 			"title":
-				g.state = VoidMain.State.TITLE
-				g.overlay.screen = "title"
-				g.space.flight_enabled = false
+				pass   # main stays on the real title screen for this scenario
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")
@@ -99,6 +110,11 @@ func _shot_script(t: float) -> void:
 			"over":
 				g.u.hq.take_damage(1e9)
 				g.u._on_killed(g.u.hq, 0)
+			"over_map":   # run ends while the command map is open: map must close
+				g._set_mode("map")
+				g.u.hq.take_damage(1e9)
+				g.u._on_killed(g.u.hq, 0)
+				assert(not g.map.visible and not g.dock.visible and g.mode == "flight", "end screen closes the map")
 			"win":
 				for n: StationData in g.u.alive_nests():
 					n.shield_locked = false

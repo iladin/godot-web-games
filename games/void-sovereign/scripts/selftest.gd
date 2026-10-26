@@ -117,6 +117,7 @@ func _init() -> void:
 	_test_ai_journeys()
 	_test_sfx()
 	_test_hints()
+	_test_run_flow()
 	print("SELFTEST OK")
 	quit()
 
@@ -248,3 +249,11 @@ func _test_hints() -> void:
 	print("hints: step order, latch and skip OK")
 	h.free()
 	h2.free()
+
+
+func _test_run_flow() -> void:
+	# The Universe only simulates during a run: never behind the title or the end screen.
+	assert(not RunFlow.sim_runs(VoidMain.State.TITLE), "world frozen on the title screen")
+	assert(RunFlow.sim_runs(VoidMain.State.PLAYING), "world runs while playing")
+	assert(not RunFlow.sim_runs(VoidMain.State.OVER), "world frozen on the end screen")
+	print("run flow: sim gating OK")

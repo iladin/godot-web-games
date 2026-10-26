@@ -42,12 +42,15 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 ## Juice
 Screen shake on hits, explosion flashes + debris, hit markers, damage vignette, shield shimmer, floating bounty text, travel-drive streaks.
 
+## Run flow
+`scripts/run_flow.gd` (RunFlow, owned by main.gd) handles title → play → end → restart. The universe only simulates while a run is in progress. It is frozen behind the title screen (no raid countdown, no time charged against the win bonus) and behind the end screen. When a run ends, the command map and dock close and the HUD and touch buttons hide, so any click, tap or Space restarts. If a run ends during the landing fade, no surface is built.
+
 ## Audio
 `scripts/audio/sfx.gd` (owned by main.gd, no autoload) synthesises six effects at startup into `AudioStreamWAV` (22050 Hz mono 16-bit, ~2 s total, a few ms): laser, rifle, hit, explosion, gate jump, UI click. No files, no `AudioStreamGenerator`. Nothing plays before the first key/click/tap (browser autoplay rule). N or the SND touch button toggles mute. Volumes and pitch jitter (±8 %) are constants at the top of the script; explosions are audible within 2.5 km in flight.
 
 ## Testing hooks
-`scripts/check.sh void-sovereign` runs import, title smoke, a 15 s `--autoplay` that walks flight → map orders/buy/build → dock → landing + FPS → evacuation, and `scripts/selftest.gd` (routing, pricing, transactions, production, 8 simulated minutes, Core→Nest unlock).
-`scripts/test_driver.gd` also supports `-- --shot=<map|dock|surface|touch|over|win|death|combat> --shotfile=out.png` for rendered screenshots (run without `--headless`).
+`scripts/check.sh void-sovereign` runs import, title smoke, a 15 s `--autoplay` that first idles 10 frames on the title (asserting the world is frozen) and then walks flight → map orders/buy/build → dock → landing + FPS → evacuation, and `scripts/selftest.gd` (routing, pricing, transactions, production, 8 simulated minutes, Core→Nest unlock).
+`scripts/test_driver.gd` also supports `-- --shot=<title|map|dock|surface|touch|over|over_map|win|death|combat> --shotfile=out.png` for rendered screenshots (run without `--headless`).
 
 ## Out of scope
 Ship interiors, boarding, research tree, diplomacy, save-anywhere (only best score persists), multiplayer, audio assets.
