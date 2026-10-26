@@ -71,7 +71,7 @@ func raid_interval() -> float:
 
 
 func raid_size() -> int:
-	return mini(3 + int(u.time / 90.0), 16)
+	return mini(Defs.RAID_SIZE_START + int(u.time / Defs.RAID_SIZE_GROWTH), Defs.RAID_SIZE_MAX)
 
 
 func _raids(delta: float) -> void:

@@ -75,6 +75,8 @@ func room(ware: String) -> int:
 func produce(delta: float) -> bool:
 	var ins := inputs()
 	var outs := outputs()
+	if kind == "trade":
+		return _export(delta)
 	if outs.is_empty():
 		return false
 	cycle_t += delta
@@ -91,6 +93,20 @@ func produce(delta: float) -> bool:
 		stock[w] = int(stock[w]) - int(ins[w])
 	for w: String in outs:
 		stock[w] = int(stock[w]) + int(outs[w])
+	return true
+
+
+## Trade Hub sink (Defs.TRADE_HUB_*): ships surplus stock off-map each cycle so hubs keep buying.
+func _export(delta: float) -> bool:
+	cycle_t += delta
+	if cycle_t < Defs.CYCLE_TIME:
+		return false
+	cycle_t -= Defs.CYCLE_TIME
+	var target := int(float(capacity) * Defs.TRADE_HUB_TARGET_FILL)
+	for w: String in Defs.WARES:
+		var surplus := int(stock[w]) - target
+		if surplus > 0:
+			stock[w] = int(stock[w]) - mini(surplus, Defs.TRADE_HUB_EXPORT)
 	return true
 
 

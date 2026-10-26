@@ -1,0 +1,443 @@
+diff --git a/games/void-sovereign/scripts/sim/defs.gd b/games/void-sovereign/scripts/sim/defs.gd
+index b593f28..e77fb0d 100644
+--- a/games/void-sovereign/scripts/sim/defs.gd
++++ b/games/void-sovereign/scripts/sim/defs.gd
+@@ -17,15 +17,29 @@ const PRICE_LOW := 0.6           # ... and when full
+ const CYCLE_TIME := 10.0         # seconds per production cycle
+ const STATION_CAPACITY := 300    # per ware
+ const TRADE_HUB_CAPACITY := 600
++# Trade Hubs export to the wider galaxy: each production cycle a hub ships out up to
++# TRADE_HUB_EXPORT units of every ware it holds above TRADE_HUB_TARGET_FILL. Without this sink
++# hubs fill up, prices bottom out and miner/trader income stalls by minute ~8.
++const TRADE_HUB_EXPORT := 40
++const TRADE_HUB_TARGET_FILL := 0.2
+ # Starting stock as a fraction of capacity. Outputs start fuller than inputs so producer ->
+ # consumer runs are profitable on minute one (price falls as fill rises).
+ const START_FILL_INPUT := 1.0 / 3.0
+ const START_FILL_OUTPUT := 0.5
+ const START_CREDITS := 30000.0
+ const TRADER_RESERVE := 2000.0  # player-owned auto ships/stations never spend credits below this
++# Miners only haul ore out of their sector when the price there beats the local one by this
++# many credits per unit (a jump costs them ~a minute through raid lanes).
++const MINER_HOP_PENALTY := 6.0
+ const COLONY_INCOME := 450.0     # credits per minute per colony
+ const BOUNTY: Dictionary = {"drone": 150.0, "ravager": 600.0, "dreadnought": 4000.0}
+ const RESPAWN_PENALTY := 0.25    # fraction of credits lost when your ship dies
++# Fleet repair: automated Sovereign ships within REPAIR_RANGE of one of your stations, and not
++# hit for SHIELD_DELAY, patch REPAIR_RATE of max hull per second at REPAIR_COST credits per hull
++# point (same price as the dock). Respects TRADER_RESERVE. Stations themselves never repair.
++const REPAIR_RANGE := 1600.0
++const REPAIR_RATE := 0.02
++const REPAIR_COST := 3.0
+ 
+ # --- Combat --------------------------------------------------------------------
+ const SENSOR_RANGE := 2400.0
+@@ -40,11 +54,17 @@ const PLANET_DIST := 5600.0
+ const PLANET_RADIUS := 1500.0
+ const LAND_MARGIN := 650.0
+ 
++# Civilian shelter: an unarmed Sovereign/Union miner or freighter with a Hive warship within
++# SHELTER_THREAT_RANGE runs for the nearest friendly station in its sector and docks there
++# (untargetable) until no Hive ship is within SHELTER_CLEAR_RANGE of that station.
++const SHELTER_THREAT_RANGE := 4500.0
++const SHELTER_CLEAR_RANGE := 3000.0
++
+ # --- Ships ---------------------------------------------------------------------
+ # role: player | combat | miner | trader
+ const SHIP: Dictionary = {
+ 	"interceptor": {"name": "Interceptor", "role": "player", "hull": 600.0, "shield": 400.0, "speed": 280.0, "dps": 0.0, "range": 0.0, "cargo": 40, "cost": 0, "radius": 16.0},
+-	"fighter": {"name": "Fighter", "role": "combat", "hull": 180.0, "shield": 90.0, "speed": 230.0, "dps": 26.0, "range": 950.0, "cargo": 0, "cost": 4500, "radius": 14.0},
++	"fighter": {"name": "Fighter", "role": "combat", "hull": 240.0, "shield": 120.0, "speed": 230.0, "dps": 30.0, "range": 950.0, "cargo": 0, "cost": 4500, "radius": 14.0},
+ 	"corvette": {"name": "Corvette", "role": "combat", "hull": 700.0, "shield": 350.0, "speed": 150.0, "dps": 70.0, "range": 1300.0, "cargo": 0, "cost": 16000, "radius": 30.0},
+ 	"miner": {"name": "Miner", "role": "miner", "hull": 300.0, "shield": 80.0, "speed": 140.0, "dps": 0.0, "range": 0.0, "cargo": 80, "cost": 6000, "radius": 22.0},
+ 	"trader": {"name": "Freighter", "role": "trader", "hull": 300.0, "shield": 120.0, "speed": 150.0, "dps": 0.0, "range": 0.0, "cargo": 80, "cost": 7000, "radius": 24.0},
+@@ -62,7 +82,7 @@ const STATION: Dictionary = {
+ 	"trade": {"name": "Trade Hub", "hull": 7000.0, "shield": 2500.0, "in": {}, "out": {}, "cost": 0, "dps": 30.0, "range": 1300.0, "radius": 170.0},
+ 	"shipyard": {"name": "Shipyard", "hull": 9000.0, "shield": 3000.0, "in": {"alloy": 4, "munitions": 2}, "out": {}, "cost": 0, "dps": 50.0, "range": 1500.0, "radius": 190.0},
+ 	"defense": {"name": "Defense Platform", "hull": 4500.0, "shield": 2500.0, "in": {}, "out": {}, "cost": 30000, "dps": 95.0, "range": 1700.0, "radius": 90.0},
+-	"hq": {"name": "Sovereign HQ", "hull": 14000.0, "shield": 5000.0, "in": {}, "out": {}, "cost": 0, "dps": 70.0, "range": 1600.0, "radius": 200.0},
++	"hq": {"name": "Sovereign HQ", "hull": 14000.0, "shield": 5000.0, "in": {}, "out": {}, "cost": 0, "dps": 50.0, "range": 1600.0, "radius": 200.0},
+ 	"nest": {"name": "Hive Nest", "hull": 9000.0, "shield": 5000.0, "in": {}, "out": {}, "cost": 0, "dps": 75.0, "range": 1700.0, "radius": 200.0},
+ }
+ const PLAYER_BUILDABLE: Array[String] = ["solar", "refinery", "factory", "defense"]
+@@ -91,8 +111,13 @@ const LINKS: Array[Vector2i] = [Vector2i(0, 1), Vector2i(0, 2), Vector2i(1, 3),
+ const FIRST_RAID := 200.0
+ const RAID_INTERVAL_START := 180.0
+ const RAID_INTERVAL_MIN := 75.0
++# Raid size = RAID_SIZE_START + t / RAID_SIZE_GROWTH (ships), capped at RAID_SIZE_MAX.
++const RAID_SIZE_START := 3
++const RAID_SIZE_GROWTH := 90.0
++const RAID_SIZE_MAX := 16
+ const RAVAGER_TIME := 300.0
+ const DREAD_TIME := 900.0
++const RAID_DREAD_EVERY := 2      # after DREAD_TIME, every Nth raid is led by a Dreadnought
+ const NEST_SPAWN_START := 30.0
+ const NEST_SPAWN_MIN := 12.0
+ 
+diff --git a/games/void-sovereign/scripts/sim/director.gd b/games/void-sovereign/scripts/sim/director.gd
+index 6172797..f4cbe3d 100644
+--- a/games/void-sovereign/scripts/sim/director.gd
++++ b/games/void-sovereign/scripts/sim/director.gd
+@@ -71,7 +71,7 @@ func raid_interval() -> float:
+ 
+ 
+ func raid_size() -> int:
+-	return mini(3 + int(u.time / 90.0), 16)
++	return mini(Defs.RAID_SIZE_START + int(u.time / Defs.RAID_SIZE_GROWTH), Defs.RAID_SIZE_MAX)
+ 
+ 
+ func _raids(delta: float) -> void:
+@@ -92,7 +92,7 @@ func _raids(delta: float) -> void:
+ 		var cls := "drone"
+ 		if u.time > Defs.RAVAGER_TIME and i % 3 == 0:
+ 			cls = "ravager"
+-		if u.time > Defs.DREAD_TIME and i == 0 and raid_count % 3 == 0:
++		if u.time > Defs.DREAD_TIME and i == 0 and raid_count % Defs.RAID_DREAD_EVERY == 0:
+ 			cls = "dreadnought"
+ 		var s := u.spawn_ship(cls, Defs.Faction.HIVE, nest.sector, nest.pos + _rand_dir() * (nest.radius + 150.0))
+ 		s.order = "raid"
+diff --git a/games/void-sovereign/scripts/sim/ship_ai.gd b/games/void-sovereign/scripts/sim/ship_ai.gd
+index 36d09e5..52b891d 100644
+--- a/games/void-sovereign/scripts/sim/ship_ai.gd
++++ b/games/void-sovereign/scripts/sim/ship_ai.gd
+@@ -6,10 +6,13 @@ const ACCEL := 220.0
+ const MINE_RATE := 3.5           # ore per second while inside a field
+ const ESCORT_LEASH := 1800.0
+ const PATROL_RADIUS := 2600.0
++const GUARD_LEASH := 0.0         # home-guard patrols engage up to this far past station gun range
+ const TRADE_HOPS := 2
+ 
+ 
+ static func update(u: Universe, s: ShipData, delta: float) -> void:
++	if (s.role == "miner" or s.role == "trader") and s.faction != Defs.Faction.HIVE and _shelter(u, s, delta):
++		return
+ 	if s.hidden:
+ 		return
+ 	var t := u.get_ent(s.target_id)
+@@ -31,12 +34,7 @@ static func update(u: Universe, s: ShipData, delta: float) -> void:
+ 			else:
+ 				_engage(s, at, delta)
+ 		"patrol":
+-			if has_target:
+-				_engage(s, t, delta)
+-			elif s.sector != s.order_sector:
+-				_travel(u, s, s.order_sector, Vector3.ZERO, 600.0, delta)
+-			else:
+-				_wander(s, delta)
++			_patrol(u, s, t, has_target, delta)
+ 		"escort":
+ 			_escort(u, s, t, has_target, delta)
+ 		"raid":
+@@ -52,6 +50,50 @@ static func update(u: Universe, s: ShipData, delta: float) -> void:
+ 				_brake(s, delta)
+ 
+ 
++## Civilian shelter (see Defs.SHELTER_*). Returns true while the ship is fleeing or docked,
++## so its trade/mining order is paused, not lost.
++static func _shelter(u: Universe, s: ShipData, delta: float) -> bool:
++	var st := u.get_ent(s.shelter_id) as StationData
++	if s.hidden:
++		if st != null and st.alive and st.sector == s.sector and u.nearest_hostile(st, Defs.SHELTER_CLEAR_RANGE) != null:
++			s.pos = st.pos
++			return true
++		s.hidden = false
++		s.shelter_id = 0
++		if st != null:
++			s.pos = st.pos + Vector3(0, 30, st.radius + 60.0)
++		return false
++	if st == null or not st.alive or st.sector != s.sector:
++		s.shelter_id = 0
++		var threat := u.nearest_hostile(s, Defs.SHELTER_THREAT_RANGE)
++		if threat == null:
++			return false
++		st = _safe_station(u, s, threat)
++		if st == null:
++			# Nowhere to hide in time: run directly away from the threat.
++			var away := (s.pos - threat.pos).normalized()
++			_accel_to(s, away * s.speed, delta)
++			return true
++		s.shelter_id = st.id
++	if fly_to(s, st.pos, Defs.DOCK_DIST, delta):
++		s.hidden = true
++		s.vel = Vector3.ZERO
++	return true
++
++
++## Nearest friendly station in the sector that this ship reaches before the threat does.
++static func _safe_station(u: Universe, s: ShipData, threat: SimEntity) -> StationData:
++	var best: StationData = null
++	var best_d := INF
++	for e: SimEntity in u.ents_in(s.sector):
++		if e is StationData and e.alive and not Defs.hostile(s.faction, e.faction):
++			var d := e.pos.distance_to(s.pos)
++			if d < best_d and d < e.pos.distance_to(threat.pos):
++				best_d = d
++				best = e as StationData
++	return best
++
++
+ # --- Movement primitives ------------------------------------------------------------------
+ static func fly_to(s: ShipData, target: Vector3, arrive: float, delta: float, speed_mul: float = 1.0) -> bool:
+ 	var to := target - s.pos
+@@ -122,24 +164,57 @@ static func _engage(s: ShipData, t: SimEntity, delta: float) -> void:
+ 	_accel_to(s, desired, delta)
+ 
+ 
+-static func _wander(s: ShipData, delta: float) -> void:
++static func _patrol(u: Universe, s: ShipData, t: SimEntity, has_target: bool, delta: float) -> void:
++	var anchor := guard_anchor(u, s) if s.sector == s.order_sector else null
++	if has_target and (anchor == null or guarded(u, s.faction, s.sector, t.pos)):
++		_engage(s, t, delta)
++	elif s.sector != s.order_sector:
++		_travel(u, s, s.order_sector, Vector3.ZERO, 600.0, delta)
++	elif anchor != null:
++		_wander(s, delta, anchor.pos, anchor.weapon_range * 0.5)
++	else:
++		_wander(s, delta, Vector3.ZERO, PATROL_RADIUS)
++
++
++static func _wander(s: ShipData, delta: float, center: Vector3, radius: float) -> void:
+ 	s.ai_timer -= delta
+ 	if s.ai_timer <= 0.0 or s.plan.get("wp") == null:
+ 		var a := randf() * TAU
+-		var r := randf_range(400.0, PATROL_RADIUS)
+-		s.plan["wp"] = Vector3(cos(a) * r, randf_range(-200.0, 200.0), sin(a) * r)
++		var r := randf_range(minf(400.0, radius * 0.5), radius)
++		s.plan["wp"] = center + Vector3(cos(a) * r, randf_range(-200.0, 200.0), sin(a) * r)
+ 		s.ai_timer = randf_range(12.0, 25.0)
+ 	if fly_to(s, s.plan["wp"], 120.0, delta, 0.6):
+ 		s.ai_timer = minf(s.ai_timer, 1.0)
+ 
+ 
++## Home guard: Sovereign/Union patrols in a sector with one of their own armed stations hold
++## under its guns and only engage hostiles inside GUARD_LEASH of station weapon range, instead
++## of being picked off one by one across the sector. Returns the strongest such station.
++static func guard_anchor(u: Universe, s: ShipData) -> StationData:
++	if s.faction == Defs.Faction.HIVE:
++		return null
++	var best: StationData = null
++	for e: SimEntity in u.ents_in(s.sector):
++		if e is StationData and e.faction == s.faction and e.armed():
++			if best == null or e.dps > best.dps:
++				best = e as StationData
++	return best
++
++
++static func guarded(u: Universe, faction: int, sector: int, p: Vector3) -> bool:
++	for e: SimEntity in u.ents_in(sector):
++		if e is StationData and e.faction == faction and e.armed():
++			if e.pos.distance_to(p) < e.weapon_range + GUARD_LEASH:
++				return true
++	return false
++
++
+ static func _escort(u: Universe, s: ShipData, t: SimEntity, has_target: bool, delta: float) -> void:
+ 	var lead: ShipData = u.player_ship
+ 	if lead == null or not lead.alive or lead.hidden:
+-		if has_target:
+-			_engage(s, t, delta)
+-		else:
+-			_brake(s, delta)
++		# No one to escort (pilot docked/landed/dead): guard the current sector meanwhile.
++		s.order_sector = s.sector
++		_patrol(u, s, t, has_target, delta)
+ 		return
+ 	if lead.sector != s.sector:
+ 		_travel(u, s, lead.sector, lead.pos, 200.0, delta)
+@@ -157,17 +232,34 @@ static func _escort(u: Universe, s: ShipData, t: SimEntity, has_target: bool, de
+ 
+ 
+ static func _raid(u: Universe, s: ShipData, t: SimEntity, has_target: bool, delta: float) -> void:
+-	if has_target and (s.sector == s.order_sector or s.pos.distance_to(t.pos) < 1400.0):
+-		_engage(s, t, delta)
+-		return
+ 	var goal := u.get_ent(s.order_target)
+ 	if goal == null or not goal.alive:
+-		s.order = "patrol"
+-		s.order_sector = s.sector
++		# Target down: the raid party falls back to the nearest Nest instead of squatting in
++		# the sector forever (lingering raiders used to snowball into permanent infestations).
++		s.order = "goto"   # travel without chasing; becomes a nest patrol on arrival
++		s.order_sector = nearest_nest_sector(u, s.sector)
+ 		return
++	if goal.sector == s.sector:
++		# On site the raid presses its objective (Universe._combat aims at it when in range),
++		# so defenders get to shoot raiders that are busy with the station.
++		_engage(s, goal, delta)
++		return
++	# In transit the raid does not break off: whatever it passes gets shot (Universe._combat)
++	# but nothing is chased down, so raids arrive in force and civilians can run.
+ 	_travel(u, s, goal.sector, goal.pos, s.weapon_range * 0.6, delta)
+ 
+ 
++static func nearest_nest_sector(u: Universe, from: int) -> int:
++	var best := from
++	var best_hops := 1 << 30
++	for nest: StationData in u.alive_nests():
++		var hops := 0 if nest.sector == from else u.route(from, nest.sector).size()
++		if hops < best_hops:
++			best_hops = hops
++			best = nest.sector
++	return best
++
++
+ # --- Economy AI -----------------------------------------------------------------------------
+ static func _trade(u: Universe, s: ShipData, delta: float) -> void:
+ 	match s.ai_state:
+@@ -246,7 +338,7 @@ static func plan_trade(u: Universe, s: ShipData) -> Dictionary:
+ 	return best
+ 
+ 
+-static func best_buyer(u: Universe, s: ShipData, ware: String) -> StationData:
++static func best_buyer(u: Universe, s: ShipData, ware: String, hop_penalty: float = 150.0 / 60.0) -> StationData:
+ 	var best: StationData = null
+ 	var best_p := 0.0
+ 	for idx: int in u.sectors_within(s.sector, TRADE_HOPS, true):
+@@ -254,7 +346,7 @@ static func best_buyer(u: Universe, s: ShipData, ware: String) -> StationData:
+ 			if e is StationData and e.faction != Defs.Faction.HIVE:
+ 				var st := e as StationData
+ 				if st.buys(ware) and st.room(ware) > 5:
+-					var p := st.price(ware) - (150.0 / 60.0 if st.sector != s.sector else 0.0)
++					var p := st.price(ware) - (hop_penalty if st.sector != s.sector else 0.0)
+ 					if p > best_p:
+ 						best_p = p
+ 						best = st
+@@ -281,7 +373,7 @@ static func _mine(u: Universe, s: ShipData, delta: float) -> void:
+ 		"sell":
+ 			var buyer := u.get_ent(int(s.plan.get("to", 0))) as StationData
+ 			if buyer == null or not buyer.alive:
+-				buyer = best_buyer(u, s, "ore")
++				buyer = best_buyer(u, s, "ore", Defs.MINER_HOP_PENALTY)
+ 				if buyer == null:
+ 					_brake(s, delta)
+ 					return
+diff --git a/games/void-sovereign/scripts/sim/ship_data.gd b/games/void-sovereign/scripts/sim/ship_data.gd
+index d0030be..a80c1f7 100644
+--- a/games/void-sovereign/scripts/sim/ship_data.gd
++++ b/games/void-sovereign/scripts/sim/ship_data.gd
+@@ -20,6 +20,7 @@ var ai_state: String = ""
+ var ai_timer: float = 0.0
+ var plan: Dictionary = {}         # trade plan / mining target
+ var orbit_sign: float = 1.0
++var shelter_id: int = 0           # station this civilian is running to / docked at during a raid
+ 
+ 
+ func setup(p_cls: String, p_faction: int) -> void:
+diff --git a/games/void-sovereign/scripts/sim/station_data.gd b/games/void-sovereign/scripts/sim/station_data.gd
+index 518ffb2..bfab4f7 100644
+--- a/games/void-sovereign/scripts/sim/station_data.gd
++++ b/games/void-sovereign/scripts/sim/station_data.gd
+@@ -75,12 +75,15 @@ func room(ware: String) -> int:
+ func produce(delta: float) -> bool:
+ 	var ins := inputs()
+ 	var outs := outputs()
+-	if outs.is_empty():
++	if outs.is_empty() and kind != "trade":
+ 		return false
+ 	cycle_t += delta
+ 	if cycle_t < Defs.CYCLE_TIME:
+ 		return false
+ 	cycle_t -= Defs.CYCLE_TIME
++	if kind == "trade":
++		_export()
++		return true
+ 	for w: String in ins:
+ 		if int(stock[w]) < int(ins[w]):
+ 			return false
+@@ -94,5 +97,14 @@ func produce(delta: float) -> bool:
+ 	return true
+ 
+ 
++## Trade Hub sink: ship surplus above the target fill off-cluster (see Defs.TRADE_HUB_EXPORT).
++func _export() -> void:
++	var keep := int(float(capacity) * Defs.TRADE_HUB_TARGET_FILL)
++	for w: String in Defs.WARES:
++		var surplus := int(stock[w]) - keep
++		if surplus > 0:
++			stock[w] = int(stock[w]) - mini(surplus, Defs.TRADE_HUB_EXPORT)
++
++
+ func value() -> float:
+ 	return float(Defs.STATION[kind]["cost"]) * hull_frac()
+diff --git a/games/void-sovereign/scripts/sim/universe.gd b/games/void-sovereign/scripts/sim/universe.gd
+index 792ba2b..35c504b 100644
+--- a/games/void-sovereign/scripts/sim/universe.gd
++++ b/games/void-sovereign/scripts/sim/universe.gd
+@@ -22,6 +22,7 @@ var kills: int = 0
+ var over: bool = false
+ var director: Director
+ var rng := RandomNumberGenerator.new()
++var income_log: Dictionary = {}
+ 
+ 
+ func setup(p_seed: int = 7) -> void:
+@@ -271,6 +272,8 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
+ 	if ship_player != st_player:
+ 		var player_pays2 := (buy and ship_player) or (not buy and st_player)
+ 		credits += -total if player_pays2 else total
++		var key := "%s_%s_%s" % [ship.cls if ship_player else st.kind, "buy" if buy else "sell", ware]
++		income_log[key] = float(income_log.get(key, 0.0)) + (-total if player_pays2 else total)
+ 	if buy:
+ 		st.stock[ware] = int(st.stock[ware]) - qty
+ 		ship.cargo[ware] = int(ship.cargo.get(ware, 0)) + qty
+@@ -342,12 +345,34 @@ func step(delta: float) -> void:
+ 			(e as StationData).produce(delta)
+ 		elif not (e as ShipData).is_player:
+ 			ShipAI.update(self, e as ShipData, delta)
++			if e.faction == Defs.Faction.PLAYER and e.hull < e.hull_max:
++				_auto_repair(e as ShipData, delta)
+ 		if e.armed():
+ 			_combat(e, delta)
+ 	director.step(delta)
+ 	_reap()
+ 
+ 
++## Fleet repair near your own stations (see Defs.REPAIR_*).
++func _auto_repair(s: ShipData, delta: float) -> void:
++	if s.since_hit < Defs.SHIELD_DELAY:
++		return
++	var near := false
++	for o: SimEntity in sector_ents[s.sector]:
++		if o is StationData and o.alive and o.faction == Defs.Faction.PLAYER and o.pos.distance_to(s.pos) < Defs.REPAIR_RANGE:
++			near = true
++			break
++	if not near:
++		return
++	var hp := minf(s.hull_max * Defs.REPAIR_RATE * delta, s.hull_max - s.hull)
++	hp = minf(hp, maxf(credits - Defs.TRADER_RESERVE, 0.0) / Defs.REPAIR_COST)
++	if hp <= 0.0:
++		return
++	s.hull += hp
++	credits -= hp * Defs.REPAIR_COST
++	income_log["repair"] = float(income_log.get("repair", 0.0)) - hp * Defs.REPAIR_COST
++
++
+ func _rebuild_cache() -> void:
+ 	for arr: Array in sector_ents:
+ 		arr.clear()
+@@ -367,8 +392,11 @@ func _combat(e: SimEntity, delta: float) -> void:
+ 		t = null
+ 		if e is ShipData:
+ 			var forced := get_ent((e as ShipData).order_target)
+-			if (e as ShipData).order == "attack" and valid_target(e, forced) and e.pos.distance_to(forced.pos) < Defs.SENSOR_RANGE:
++			var order := (e as ShipData).order
++			if order == "attack" and valid_target(e, forced) and e.pos.distance_to(forced.pos) < Defs.SENSOR_RANGE:
+ 				t = forced
++			elif order == "raid" and valid_target(e, forced) and e.pos.distance_to(forced.pos) < e.weapon_range + forced.radius:
++				t = forced   # raiders focus their objective once it is in gun range
+ 		if t == null:
+ 			t = nearest_hostile(e, Defs.SENSOR_RANGE if not e.is_station else e.weapon_range)
+ 		e.target_id = t.id if t else 0
+diff --git a/games/void-sovereign/scripts/ui/dock_panel.gd b/games/void-sovereign/scripts/ui/dock_panel.gd
+index dfc075f..d6282f6 100644
+--- a/games/void-sovereign/scripts/ui/dock_panel.gd
++++ b/games/void-sovereign/scripts/ui/dock_panel.gd
+@@ -4,7 +4,7 @@ extends PanelContainer
+ 
+ signal undock_pressed()
+ 
+-const REPAIR_COST := 3.0   # credits per hull point
++const REPAIR_COST := Defs.REPAIR_COST   # credits per hull point (shared with fleet repair)
+ const TRADE_STEP := 10
+ 
+ var u: Universe

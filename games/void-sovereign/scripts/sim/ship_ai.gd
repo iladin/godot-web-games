@@ -31,7 +31,9 @@ static func update(u: Universe, s: ShipData, delta: float) -> void:
 			else:
 				_engage(s, at, delta)
 		"patrol":
-			if has_target:
+			if _home_guard(u, s, t, has_target, delta):
+				pass
+			elif has_target:
 				_engage(s, t, delta)
 			elif s.sector != s.order_sector:
 				_travel(u, s, s.order_sector, Vector3.ZERO, 600.0, delta)
@@ -162,10 +164,38 @@ static func _raid(u: Universe, s: ShipData, t: SimEntity, has_target: bool, delt
 		return
 	var goal := u.get_ent(s.order_target)
 	if goal == null or not goal.alive:
+		# Raid done: withdraw to the nearest Nest instead of camping the sector forever.
 		s.order = "patrol"
-		s.order_sector = s.sector
+		s.order_sector = _home_nest_sector(u, s)
 		return
 	_travel(u, s, goal.sector, goal.pos, s.weapon_range * 0.6, delta)
+
+
+## Sovereign warships patrolling the HQ sector fight under the HQ's guns: they engage only
+## targets within HQ range + Defs.GUARD_LEASH and otherwise hold station around the HQ.
+static func _home_guard(u: Universe, s: ShipData, t: SimEntity, has_target: bool, delta: float) -> bool:
+	var hq := u.hq
+	if s.faction != Defs.Faction.PLAYER or hq == null or not hq.alive or s.sector != hq.sector or s.order_sector != hq.sector:
+		return false
+	var leash := hq.weapon_range + Defs.GUARD_LEASH
+	if has_target and t.pos.distance_to(hq.pos) < leash:
+		_engage(s, t, delta)
+	elif s.pos.distance_to(hq.pos) > hq.weapon_range * 0.6:
+		fly_to(s, hq.pos, hq.weapon_range * 0.4, delta)
+	else:
+		_brake(s, delta)
+	return true
+
+
+static func _home_nest_sector(u: Universe, s: ShipData) -> int:
+	var best := s.sector
+	var best_hops := 999
+	for nest: StationData in u.alive_nests():
+		var hops := 0 if nest.sector == s.sector else u.route(s.sector, nest.sector, false).size()
+		if hops < best_hops:
+			best_hops = hops
+			best = nest.sector
+	return best
 
 
 # --- Economy AI -----------------------------------------------------------------------------
@@ -254,7 +284,7 @@ static func best_buyer(u: Universe, s: ShipData, ware: String) -> StationData:
 			if e is StationData and e.faction != Defs.Faction.HIVE:
 				var st := e as StationData
 				if st.buys(ware) and st.room(ware) > 5:
-					var p := st.price(ware) - (150.0 / 60.0 if st.sector != s.sector else 0.0)
+					var p := st.price(ware) - (Defs.CROSS_SECTOR_SELL_PENALTY if st.sector != s.sector else 0.0)
 					if p > best_p:
 						best_p = p
 						best = st

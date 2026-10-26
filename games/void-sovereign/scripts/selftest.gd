@@ -71,6 +71,21 @@ func _init() -> void:
 	ref.produce(Defs.CYCLE_TIME + 0.01)
 	assert(int(ref.stock["alloy"]) == 3 and int(ref.stock["ore"]) == 92)
 
+	# VS-001: Trade Hubs export surplus above TRADE_HUB_TARGET_FILL each cycle (never below it).
+	var hub := StationData.new()
+	hub.setup("trade", Defs.Faction.UNION)
+	var hub_target := int(float(hub.capacity) * Defs.TRADE_HUB_TARGET_FILL)
+	hub.stock["ore"] = hub.capacity
+	hub.stock["energy"] = hub_target + 5
+	hub.cycle_t = 0.0
+	hub.produce(Defs.CYCLE_TIME + 0.01)
+	assert(int(hub.stock["ore"]) == hub.capacity - Defs.TRADE_HUB_EXPORT, "hub exports surplus ore")
+	assert(int(hub.stock["energy"]) == hub_target, "hub never exports below its target fill")
+	# VS-001: civilians plan around sectors holding a Hive pack.
+	u._rebuild_cache()
+	assert(not u.sector_unsafe(0), "Haven's Reach starts safe")
+	assert(u.sector_unsafe(3), "Cinder Belt starts infested")
+
 	# Run 8 minutes of simulated time and make sure the world keeps working.
 	var trades_before := 0
 	for e: SimEntity in u.entities.values():

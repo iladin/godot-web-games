@@ -2,3 +2,5 @@ session,date,policy,minutes,seeds,hq_survived,hq_lost_at_median,first_raid_at_me
 S0000,2026-10-25,economic,30,3,1/3,26.7,3.3,24.1,41262,8032,56,6,,baseline after v1
 S0000,2026-10-25,passive,40,3,0/3,26.4,3.3,21.9,47730,38154,54,3,core at 44% when bot died (pylons down at ~48s),baseline after v1
 S0001,2026-10-26,economic,30,3,0/3,24.9,3.3,21.5,46364,8022,61,3,,after VS-002 reserve + VS-008 start stock (QA run; 6-seed HQ 3/6)
+S0003,2026-10-26,economic,30,6,5/6,-1,3.3,24.3,101183,139289,59,10,,after VS-001 (hub export, civ avoidance, home guard, dock repair, raid withdraw, fighter/HQ buffs); nw30 falls in 4/6 seeds -> VS-011
+S0003,2026-10-26,passive,40,3,0/3,25.4,3.3,-1,58243,64884,49,14,,after VS-001

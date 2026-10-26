@@ -12,6 +12,7 @@ signal finished(won: bool)
 var sectors: Array[SectorData] = []
 var entities: Dictionary = {}          # id -> SimEntity
 var sector_ents: Array = []            # per sector: Array[SimEntity], rebuilt each step
+var hive_presence: Array[int] = []     # per sector: live Hive warships, rebuilt each step
 var next_id: int = 1
 var credits: float = Defs.START_CREDITS
 var time: float = 0.0
@@ -77,6 +78,7 @@ func _build_sectors() -> void:
 			var d := rng.randf_range(1400.0, 2800.0)
 			s.fields.append({"pos": Vector3(cos(ang) * d, rng.randf_range(-300.0, 300.0), sin(ang) * d), "radius": rng.randf_range(350.0, 600.0)})
 		sector_ents.append([])
+		hive_presence.append(0)
 
 
 func _add_gate(a: int, b: int) -> void:
@@ -171,6 +173,11 @@ func sector_has_nest(idx: int) -> bool:
 	return false
 
 
+## Civilian planners (trade, mining) skip sectors with a Nest or a Hive pack (Defs.CIVILIAN_AVOID_HIVE).
+func sector_unsafe(idx: int) -> bool:
+	return sector_has_nest(idx) or hive_presence[idx] >= Defs.CIVILIAN_AVOID_HIVE
+
+
 ## BFS over gates. Returns the hops after `from` (empty if same sector or unreachable).
 func route(from: int, to: int, avoid_hive: bool = false) -> Array[int]:
 	var out: Array[int] = []
@@ -207,7 +214,7 @@ func sectors_within(from: int, hops: int, avoid_hive: bool) -> Array[int]:
 		for c: int in frontier:
 			for g: Dictionary in sectors[c].gates:
 				var n: int = g["to"]
-				if n in out or (avoid_hive and sector_has_nest(n)):
+				if n in out or (avoid_hive and sector_unsafe(n)):
 					continue
 				out.append(n)
 				nf.append(n)
@@ -338,6 +345,8 @@ func step(delta: float) -> void:
 		if not e.alive:
 			continue
 		e.regen(delta)
+		if e.faction == Defs.Faction.PLAYER and e is ShipData:
+			_dock_repair(e as ShipData, delta)
 		if e is StationData:
 			(e as StationData).produce(delta)
 		elif not (e as ShipData).is_player:
@@ -348,12 +357,23 @@ func step(delta: float) -> void:
 	_reap()
 
 
+## HQ dock crews (Defs.REPAIR_*): idle automated ships near the HQ slowly regain hull.
+func _dock_repair(s: ShipData, delta: float) -> void:
+	if s.is_player or hq == null or not hq.alive or s.sector != hq.sector or s.hull >= s.hull_max:
+		return
+	if s.since_hit > Defs.SHIELD_DELAY and s.pos.distance_to(hq.pos) < Defs.REPAIR_RANGE:
+		s.hull = minf(s.hull_max, s.hull + s.hull_max * Defs.REPAIR_RATE * delta)
+
+
 func _rebuild_cache() -> void:
 	for arr: Array in sector_ents:
 		arr.clear()
+	hive_presence.fill(0)
 	for e: SimEntity in entities.values():
 		if e.alive:
 			sector_ents[e.sector].append(e)
+			if e.faction == Defs.Faction.HIVE and e is ShipData:
+				hive_presence[e.sector] += 1
 
 
 func _combat(e: SimEntity, delta: float) -> void:

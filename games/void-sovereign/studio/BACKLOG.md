@@ -4,7 +4,7 @@ Format and rules: `scripts/studio/backlog.py` (header docstring) and `ai-studio/
 One task per `##` heading. The Producer owns this file; `python3 scripts/studio/backlog.py validate` must pass.
 
 ## VS-001 · Rebalance so an economic player survives and grows past minute 20
-- status: todo
+- status: done
 - priority: P1
 - type: balance
 - size: M
@@ -12,11 +12,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0000
 - why: Baseline (S0000, 3 seeds): economic policy net worth 41k at 10 min collapses to 8k at 20 min (fleet wiped by raids), HQ survives only 1/3 seeds (median loss 26.7 min), Union collapses ~24 min. A passive player ends minute 20 richer (38k) than one who invests — the mid-game punishes building an economy.
 - acceptance:
-  - [ ] `bash scripts/studio/balance.sh void-sovereign 30 3 economic` → net_worth_20 median ≥ 90,000 and HQ survives in ≥ 2/3 seeds
-  - [ ] `bash scripts/studio/balance.sh void-sovereign 40 3 passive` → HQ lost between 20 and 35 min (median)
-  - [ ] Changes are constants in `scripts/sim/defs.gd` (or a clearly named new mechanic) and DESIGN.md "Ramp" is updated
-  - [ ] selftest still passes (raids still start within 8 minutes)
-- notes: S0001 new baseline (after VS-002 reserve + VS-008 start stock), economic 30 min: 3 seeds credits_10 3716/4364/7692, nw10 med 46364, nw20 med 8022, HQ 0/3 (6 seeds 101-186: 3/6), Union collapse med 21.5. Use 6 seeds for survival metrics — 3 is noisy. Likely levers: raid targeting (non-combat ships are free kills), RAID_INTERVAL ramp, raid size cap, defence platform cost, union quota. Measure before/after.
+  - [x] `bash scripts/studio/balance.sh void-sovereign 30 3 economic` → net_worth_20 median ≥ 90,000 and HQ survives in ≥ 2/3 seeds
+  - [x] `bash scripts/studio/balance.sh void-sovereign 40 3 passive` → HQ lost between 20 and 35 min (median)
+  - [x] Changes are constants in `scripts/sim/defs.gd` (or a clearly named new mechanic) and DESIGN.md "Ramp" is updated
+  - [x] selftest still passes (raids still start within 8 minutes)
+- notes: S0001 new baseline (after VS-002 reserve + VS-008 start stock), economic 30 min: 3 seeds credits_10 3716/4364/7692, nw10 med 46364, nw20 med 8022, HQ 0/3 (6 seeds 101-186: 3/6), Union collapse med 21.5. Use 6 seeds for survival metrics — 3 is noisy. Likely levers: raid targeting (non-combat ships are free kills), RAID_INTERVAL ramp, raid size cap, defence platform cost, union quota. Measure before/after. S0002 hung mid-task (cancelled); its unverified diff is in studio/salvage/S0002-VS-001-abandoned.patch. S0003 restarted it.
+- done: S0003 — hub export sink, civilian raid avoidance, home guard, free HQ dock repair, raid withdrawal, fighter/HQ buffs; econ 6 seeds nw20 139k HQ 5/6, passive HQ lost 25.4 min (QA PASS)
 
 ## VS-002 · Player auto-traders must not drain credits to zero
 - status: done
@@ -141,6 +142,21 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] New selftest assertion: with credits <= TRADER_RESERVE an NPC seller docked at a player station picks a different buyer instead of retrying
   - [ ] check.sh PASS; economic balance run credits_10 still > TRADER_RESERVE in all seeds
 
+## VS-011 · Economic player keeps growing from minute 20 to 30
+- status: todo
+- priority: P1
+- type: balance
+- size: M
+- source: qa
+- created: S0003
+- why: S0003 QA verify of VS-001: nw20 median 139k but net worth falls sharply by min 30 in 4/6 seeds (e.g. 106k -> 6k, player ships 14 -> 0-6), HQ lost at 27.4 in seed 118, Union collapses ~24 min in 3/6 seeds. Early economy also overshoots (credits_10 10-27k).
+- acceptance:
+  - [ ] `balance.sh` gains a seed-offset option so a 6-seed 30-min run can be split into two calls under the 180 s device cap (current 6-seed run takes ~174 s)
+  - [ ] Economic 30 min, 6 seeds: net_worth_30 median >= net_worth_20 median, and HQ survives >= 5/6
+  - [ ] Economic 30 min, 6 seeds: net_worth_20 median between 80k and 130k (trim the overshoot, e.g. TRADE_HUB_EXPORT 50-60 or TARGET_FILL 0.15)
+  - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
+- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics).
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -150,3 +166,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - Per-planet surface biomes (palette, props, Hive structure layouts) for levels 2–3
 - Dreadnought "boss" encounter with weak points the player can target
 - Escort/convoy missions from Union stations for credits and reputation
+- Home guard (VS-001) silently overrides manual Patrol in the HQ sector; explain in UI or apply only to auto patrols (S0003 QA, P3)
+- Dock repair heals ships on manual orders too and is free/uncapped; limit to automated ships or charge REPAIR_COST (S0003 QA, P3)
+- `route(..., avoid_hive)` still avoids only Nest sectors; use `sector_unsafe` so civilians don't path through raids (S0003 QA, P3)
+- `_home_nest_sector`: empty route counted as 0 hops would pick an unreachable nest (S0003 QA, P3, no effect on current map)
