@@ -161,7 +161,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Economic 30 min, 6 seeds: net_worth_30 median >= net_worth_20 median, and HQ survives >= 5/6
   - [ ] Economic 30 min, 6 seeds: net_worth_20 median between 80k and 130k (trim the overshoot, e.g. TRADE_HUB_EXPORT 50-60 or TARGET_FILL 0.15)
   - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
-- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics). S0007 balance (reviews/S0007-balance.md): unchanged since S0003, nw30 falls in 5/6 seeds (median 42.9k vs nw20 139k). Raids hit RAID_SIZE_MAX 16 at ~19.5 min and RAID_INTERVAL_MIN 75 s at ~21 min while the econ policy stops buying after ~10 min. Suggested: RAID_INTERVAL_MIN 75→100, RAID_SIZE_MAX 16→13, TRADE_HUB_EXPORT 80→60; harness: policy replaces lost fighters + builds a Defense Platform after 10 min. Seed-offset prototype: .tools/s0007/balance_offset.gd (adds --first=).
+- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics). S0007 balance (reviews/S0007-balance.md): unchanged since S0003, nw30 falls in 5/6 seeds (median 42.9k vs nw20 139k). Raids hit RAID_SIZE_MAX 16 at ~19.5 min and RAID_INTERVAL_MIN 75 s at ~21 min while the econ policy stops buying after ~10 min. Suggested: RAID_INTERVAL_MIN 75→100, RAID_SIZE_MAX 16→13, TRADE_HUB_EXPORT 80→60; harness: policy replaces lost fighters + builds a Defense Platform after 10 min. Seed-offset prototype: .tools/s0007/balance_offset.gd (adds --first=). S0007 VS-016 (curve batch pricing) lowered income: econ 3 seeds (101/118/135) credits_10 17.4k/21.2k/10.3k (was 23.9k/27.2k/20.7k), nw20 median 129k (was 139k), HQ 2/3 (135 lost 27.6 min; 118 now survives); seed 101 nw30 7.8k with 1 ship. Re-baseline 6 seeds before tuning.
 
 ## VS-012 · Audio/touch follow-ups from VS-003 QA
 - status: done
@@ -227,7 +227,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0007 — sim steps only while PLAYING (RunFlow.sim_runs), title shows no HUD/prompts, finish() closes map/dock and frees mouse, land/dock guards; autoplay title assert + over_map shot (QA PASS, 2 mutations)
 
 ## VS-016 · Stop buy/sell arbitrage at the same station
-- status: todo
+- status: done
 - priority: P1
 - type: bug
 - size: S
@@ -235,10 +235,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0007
 - why: S0007 QA sweep (reviews/S0007-qa.md bug 2): Universe.transact() prices a whole batch at the pre-trade price and Trade Hubs buy and sell at the same price, so Buy 10 ×4 → Sell all at one hub nets credits forever (50 cycles: munitions +11,333 cr, alloy +5,333 cr, no game time). Breaks the economy pillar for the player.
 - acceptance:
-  - [ ] Buying N units then selling N units of the same ware at the same station never increases player credits, for every ware a station both buys and sells and for N in {1, 10, 40} (new selftest assertion, mutation-checked)
-  - [ ] Batches are priced per unit along the price curve, or stations apply a buy/sell spread constant in defs.gd (documented in DESIGN.md)
-  - [ ] ShipAI.plan_trade still returns a profitable plan on the starting universe (existing selftest) and NPC/automated traders still trade (autoplay)
-  - [ ] Economic balance run (3 seeds, 30 min) recorded in notes: credits_10 > TRADER_RESERVE in all seeds; check.sh PASS
+  - [x] Buying N units then selling N units of the same ware at the same station never increases player credits, for every ware a station both buys and sells and for N in {1, 10, 40} (new selftest assertion, mutation-checked)
+  - [x] Batches are priced per unit along the price curve, or stations apply a buy/sell spread constant in defs.gd (documented in DESIGN.md)
+  - [x] ShipAI.plan_trade still returns a profitable plan on the starting universe (existing selftest) and NPC/automated traders still trade (autoplay)
+  - [x] Economic balance run (3 seeds, 30 min) recorded in notes: credits_10 > TRADER_RESERVE in all seeds; check.sh PASS
+- notes: S0007 started (rollback HEAD d16b60d).
+- done: S0007 — StationData.batch_total prices each unit along the stock curve (buy rising, sell falling), transact charges it; selftest round-trip check over every station×ware×N (QA PASS, 2 mutations); econ 3 seeds credits_10 17k/21k/10k, nw20 129k
 
 ## VS-017 · Tutorial tips follow the world (one voice on screen)
 - status: todo
@@ -301,3 +303,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0007, QA) build_station() accepts positions inside a planet (0 m from centre, PLANET_RADIUS 1500); reject placements within the planet radius (P3).
 - (S0007, QA) Title backdrop: player-ship model sits behind the controls text (y≈400–450); shot runs share user://save.cfg best score with real play (win shot sets best 170997) — use a separate save path in shot/autoplay modes (P3).
 - (S0007, dev) Autoplay step that ends a run from the map and restarts (15 s autoplay window nearly full) (P3).
+- (S0007, QA/dev VS-016) Dock panel shows the next-unit price; show the batch cost ("Buy 10 ≈ X cr"); ShipAI.plan_trade could estimate with batch_total (P3).
+- (S0007, QA) `shots.sh dock` only shows the HQ (no trade grid) — add a trade-hub dock scenario for visual coverage of Buy/Sell (P3).

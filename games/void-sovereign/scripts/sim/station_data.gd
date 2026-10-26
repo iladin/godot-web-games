@@ -63,8 +63,25 @@ func fill(ware: String) -> float:
 
 
 func price(ware: String) -> float:
+	return price_at(ware, float(stock.get(ware, 0)))
+
+
+## Unit price if the station held `units` of `ware` (linear in stock, clamped to [0, capacity]).
+func price_at(ware: String, units: float) -> float:
 	var base: float = Defs.BASE_PRICE[ware]
-	return base * lerpf(Defs.PRICE_HIGH, Defs.PRICE_LOW, clampf(fill(ware), 0.0, 1.0))
+	return base * lerpf(Defs.PRICE_HIGH, Defs.PRICE_LOW, clampf(units / float(capacity), 0.0, 1.0))
+
+
+## Total credits for moving `qty` units (buy=true: station sells). VS-016: each unit is priced at
+## the stock level *after* it moves, so a batch walks the price curve and an immediate round trip
+## at one station always loses (buying pays the higher side, selling gets the lower side).
+## The curve is linear, so the sum is qty x price at the mean post-unit stock.
+func batch_total(ware: String, qty: int, buy: bool) -> float:
+	if qty <= 0:
+		return 0.0
+	var s := float(stock.get(ware, 0))
+	var mid := s - float(qty + 1) * 0.5 if buy else s + float(qty + 1) * 0.5
+	return price_at(ware, mid) * float(qty)
 
 
 func room(ware: String) -> int:

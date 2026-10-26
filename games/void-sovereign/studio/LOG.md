@@ -33,3 +33,8 @@
 - Task(s): VS-004 Guided first 10 minutes — done (QA PASS, commit 77a703a); VS-012 Audio/touch follow-ups — done (QA PASS); new VS-013 (P2 S tip box steals steer touches + H docs), VS-014 (P2 S pause-screen tap/click bugs) + 8 parking-lot items.
 - Check: PASS · Git: committed studio(S0006) x2 (see git log)
 - Notes: two S builds in ~20 min wall time. builds_since_review now 6 → next session must run PLANNING first.
+
+## S0007 — 2026-10-26 12:36 — PLANNING + BUILD
+- Task(s): review round (Critic avg 5.1/10, QA sweep 3 P1 bugs, Balance: VS-011 still failing, Scout 5 proposals) → new VS-015..VS-018, VS-013 folded into VS-017, VS-006 blocked on VS-011, VS-007/VS-009 parked (blocked) for the ≤8 todo cap. Then VS-015 title freeze + overlays on run end — done (QA PASS); VS-016 same-station buy/sell arbitrage — done (QA PASS).
+- Check: PASS · Git: committed studio(S0007) review round 3fd3d72, VS-015 d16b60d, VS-016 (see git log)
+- Notes: VS-016 lowers early income (econ 3 seeds credits_10 −25–50%, nw20 129k); VS-011 must re-baseline. ~55 min wall time.

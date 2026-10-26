@@ -272,9 +272,12 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
 			# only the pilot's own ship may spend down to zero.
 			var budget := credits if ship.is_player else credits - Defs.TRADER_RESERVE
 			qty = mini(qty, int(floor(maxf(budget, 0.0) / maxf(p, 0.01))))
+			# Batches walk the price curve (StationData.batch_total), so trim to what the budget covers.
+			while qty > 0 and st.batch_total(ware, qty, buy) > budget:
+				qty -= 1
 	if qty <= 0:
 		return 0
-	var total := p * float(qty)
+	var total := st.batch_total(ware, qty, buy)
 	if ship_player != st_player:
 		var player_pays2 := (buy and ship_player) or (not buy and st_player)
 		credits += -total if player_pays2 else total

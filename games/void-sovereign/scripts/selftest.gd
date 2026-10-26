@@ -39,9 +39,11 @@ func _init() -> void:
 	var seller := u.spawn_station("solar", Defs.Faction.UNION, 0, Vector3(500, 0, 0))
 	var before := u.credits
 	var price := seller.price("energy")
+	var cost10 := seller.batch_total("energy", 10, true)
+	assert(cost10 > price * 10.0, "VS-016: a bought batch walks up the price curve")
 	var got := u.transact(ship, seller, "energy", 10, true)
 	assert(got == 10)
-	assert(is_equal_approx(u.credits, before - price * 10.0))
+	assert(is_equal_approx(u.credits, before - cost10))
 	# Player auto-traders never spend below TRADER_RESERVE.
 	seller.stock["energy"] = 200
 	var price_r := seller.price("energy")
@@ -58,9 +60,10 @@ func _init() -> void:
 	pst.stock["energy"] = 50
 	var npc := u.spawn_ship("trader", Defs.Faction.UNION, 0, Vector3.ZERO)
 	before = u.credits
-	var p2 := pst.price("energy")
+	var p2 := pst.batch_total("energy", 20, true)
 	u.transact(npc, pst, "energy", 20, true)
-	assert(is_equal_approx(u.credits, before + p2 * 20.0))
+	assert(is_equal_approx(u.credits, before + p2))
+	_check_no_round_trip_profit(u)
 
 	# Production cycle consumes inputs, makes outputs.
 	var ref := u.spawn_station("refinery", Defs.Faction.UNION, 1, Vector3.ZERO)
@@ -257,3 +260,34 @@ func _test_run_flow() -> void:
 	assert(RunFlow.sim_runs(VoidMain.State.PLAYING), "world runs while playing")
 	assert(not RunFlow.sim_runs(VoidMain.State.OVER), "world frozen on the end screen")
 	print("run flow: sim gating OK")
+
+
+## VS-016: buying N then selling N of a ware at the same station never increases the player's
+## credits — for every station kind and ware it both buys and sells, N in {1, 10, 40}, at a spread
+## of stock levels (start, near-empty, half, near-full).
+func _check_no_round_trip_profit(u: Universe) -> void:
+	var ps := u.player_ship
+	var saved_cargo := ps.cargo.duplicate()
+	var saved_credits := u.credits
+	var pairs := 0
+	for kind: String in Defs.STATION:
+		var st := StationData.new()
+		st.setup(kind, Defs.Faction.UNION)
+		for w: String in Defs.WARES:
+			if not (st.buys(w) and st.sells(w)):
+				continue
+			for n: int in [1, 10, 40]:
+				for level: int in [int(st.stock[w]), n, st.capacity / 2, st.capacity - 1]:
+					st.stock[w] = level
+					ps.cargo.clear()
+					u.credits = 1.0e6
+					var c0 := u.credits
+					var got := u.transact(ps, st, w, n, true)
+					assert(got == n, "round trip buys %d %s at %s" % [n, w, kind])
+					u.transact(ps, st, w, got, false)
+					assert(u.credits < c0, "VS-016: buy %d / sell %d %s at %s (stock %d) must not profit (%+.2f)" % [n, n, w, kind, level, u.credits - c0])
+					assert(int(st.stock[w]) == level)
+					pairs += 1
+	assert(pairs >= 4 * 3 * 4, "Trade Hub covers every ware")
+	ps.cargo = saved_cargo
+	u.credits = saved_credits
