@@ -1,53 +1,51 @@
 # Void Sovereign — Handover
-_Last updated: S0007 · 2026-10-26 13:33 UTC · mode: PLANNING + BUILD_
+_Last updated: S0008 · 2026-10-26 16:53 UTC · mode: BUILD_
 
 ## TL;DR
-S0007 ran the first full review round (Critic avg 5.1/10; lowest pillars: Economy legibility 3, FPS 4, Pacing 4) and turned it into four new tasks, then shipped two P1 bug fixes from the QA sweep. **VS-015**: the world no longer runs behind the title screen, and ending a run with the map/dock open no longer eats clicks. **VS-016**: no more infinite credits from buy/sell at one Trade Hub. `check.sh` passes. Next up: the tutorial stalls at tip 3 (VS-017), and the late-game slide (VS-011) is still open — now with a lower income baseline after VS-016.
+S0008 shipped two P1 items. **VS-017**: tutorial tips now skip steps that can't be done yet (the "lock a Hive ship" tip waits for a hostile), so dock/map/land tips reach every new player; one instruction line on screen at start; touch SKIP TIPS chip. **VS-011** was split: the balance-harness half (**VS-019**: seed offset, honest medians, an economic policy that builds Defense Platforms) is done and keeps the HQ alive 6/6, but net worth still falls from min 20 to 30 in 6/6 seeds — that is now **VS-020** and needs a change to the game, not the harness. `check.sh` passes.
 
 ## Next session should
-1. **Preflight** per `ai-studio/studio-cycle.md`. Request delete permission for the repo root (granted S0001/3/5/6/7 → git works). Use `git -c core.fileMode=false …` for status/add; commit with `git -c "user.name=Claude Studio" -c user.email=studio@localhost commit -F - <<'EOF'` (inline, not via a shell variable).
-2. **BUILD `VS-017`** (P1 S, tutorial tips follow the world; absorbs VS-013). `backlog.py next` may return VS-011 first (P1 balance, older) — if so, prefer VS-017 only if you justify it in LOG; otherwise do VS-011. Key evidence: tip 3 "lock onto a Hive ship" is uncompletable at home (0 Hive ships in Haven's Reach for 10 min in seeds 7/101/118), so tips 4–6 never show — see `studio/reviews/S0007-critic.md` #1/#3 and `S0007-qa.md` bug 4. File: `games/void-sovereign/scripts/ui/tutorial_hints.gd`.
-3. **VS-011** (P1 M): first add the seed-offset option to `scripts/studio/balance.sh` / `scripts/tools/balance.gd` (a working prototype is `.tools/s0007/balance_offset.gd`, adds `--first=`). Then re-baseline 6 seeds (two 3-seed calls ≈90 s each) — VS-016 lowered income (credits_10 17k/21k/10k, nw20 median 129k on seeds 101/118/135). Balance analyst's suggested levers: `RAID_INTERVAL_MIN` 75→100, `RAID_SIZE_MAX` 16→13 in `scripts/sim/defs.gd`; the harness's economic policy should replace lost fighters / build a Defense Platform after minute 10. Probably no longer need TRADE_HUB_EXPORT trimming — measure first.
-4. **VS-018** First Sortie (P1 M): a one-time 3-drone wave near Ember at ~60 s. VS-015 is done, so title time no longer counts. Ideally after VS-017 so the target tip can point at the wave.
-5. Then P2s: VS-014 (pause-screen input; also dock/map buttons stay clickable under the pause overlay), VS-005, VS-010. VS-006 is blocked until VS-011 lands (re-measure Hive count).
+1. **Preflight** per `ai-studio/studio-cycle.md`. Request delete permission for the repo root (granted S0001/3/5/6/7/8 → git works). Use `git -c core.fileMode=false …` for status/add; commit with `git -c "user.name=Claude Studio" -c user.email=studio@localhost commit -F - <<'EOF'`.
+2. **BUILD `VS-018`** First Sortie (P1 M) — `backlog.py next` returns it. VS-017 is done, so the target tip will become current when the wave appears (`TutorialHints.hostile_in`). Balance gate in its acceptance cites a stale 139k baseline — use the VS-019 baseline instead: economic 30 min seeds 101..186 nw20 median 105.6k (±15%), via `bash scripts/studio/balance.sh void-sovereign 30 3 economic 0 & bash scripts/studio/balance.sh void-sovereign 30 3 economic 3 & wait` (one device call, ~101 s).
+3. **VS-020** (P1 M, late-game Hive pressure). Read its notes first: do NOT globally nerf raids (RAID_INTERVAL_MIN 75→100 + RAID_SIZE_MAX 16→13 made passive HQ survive 3/3) or buff the Defense Platform (shared with Union stations → passive median 37.6). Candidate levers: slow/cap Hive production after ~20 min (Hive 52 → 76–94 ships min 20→30), player-only platform variant, raids avoid platform sectors, miners flee the HQ sector during raids. Results swing ±50k per seed; consider 9 seeds (offset 6) before calling PASS.
+4. Then P2s: VS-014 (pause-screen input; dock/map buttons clickable under pause overlay), VS-005 (surface marker declutter — QA saw overlapping pylon labels), VS-010, VS-007. VS-009 is size L — split it before building. VS-006 stays blocked until VS-020 lands (hive_20 median 52/58, max 65).
+5. Health rule: builds_since_review = 2; a review round is due at 6.
 
 ## Last session
 - Did:
-  - **PLANNING** (health rule, builds_since_review was 6). Reports in `games/void-sovereign/studio/reviews/S0007-{critic,qa,balance,scout}.md`; metrics row appended (sim unchanged since S0003: econ 6 seeds nw20 139k, nw30 median 42.9k — falls in 5/6 seeds).
-  - New tasks: VS-015, VS-016, VS-017 (absorbs VS-013 → `split`), VS-018. VS-006 → blocked on VS-011; VS-007 and VS-009 → blocked ("parked by Producer", ≤8 todo cap — Daniel can revive via INBOX). ~10 parking-lot items added (credit ledger cr/min, honest raid reports, HQ "keep N fighters" order, station-in-planet, dock batch-price readout, trade-hub dock shot…).
-  - **VS-015 done** (commit d16b60d): new `scripts/run_flow.gd` (class RunFlow: start/finish/close_overlays/pause/save, `sim_runs(state)` = PLAYING only). main.gd 329→306 lines. Title shows no HUD/prompts; finish closes map/dock; land/dock guards (no surface after a run ends mid-fade). Autoplay idles 10 title frames and asserts u.time == 0; `--shot=title` is now the real title; new `over_map` shot. QA PASS with 2 mutations.
-  - **VS-016 done**: `StationData.price_at` / `batch_total` price each unit along the stock curve; `Universe.transact` charges it (automated player trades shrink qty to fit budget/reserve). Selftest `_check_no_round_trip_profit` (every station × ware × N∈{1,10,40} × 4 stock levels). QA PASS with 2 mutations, real dock-button probe, reserve clamp re-checked.
-- Check: PASS · Git: committed `studio(S0007)` review round (3fd3d72), VS-015 (d16b60d), VS-016 + wrap-up · Roles collapsed: none
+  - **VS-011 → split.** **VS-019 done** (commit 03a1c16): `scripts/studio/balance.sh` 5th arg `first` / `scripts/tools/balance.gd --first=N`; summary has net_worth_30_median; a lost HQ counts as nw 0 afterwards; econ policy builds a Defense Platform at HQ from 10 min and a second from 18 min (rebuys fighters only if wing < 4 while saving). No game code changed. 6 seeds 101..186: nw20 105.6k, nw30 74.1k (was 33.6k), HQ 6/6; passive 40 min HQ lost 25.4/29.5/24.4. **VS-020** created for the unmet criterion (nw30 ≥ nw20).
+  - **VS-017 done**: `scripts/ui/tutorial_hints.gd` (ready flags, `current()` skips not-ready steps, static `hostile_in`, static `on_screen`), `hud.gd` (capture line hidden during any tip; F/ACT prompt hidden only during steer/throttle tips), `space_view.gd` ("No hostiles in range" on manual R/TGT), `run_flow.gd` (welcome is just "Welcome, Sovereign." while a tip is pending), `overlay.gd` (title "P pause · H skip tips"), selftest h3 tip-order asserts, game.json, DESIGN.md. Touch: tip box no longer skips on tap; dedicated SKIP TIPS chip. QA FAIL once (welcome line was a 2nd instruction), fixed, re-verify PASS.
+- Check: PASS · Git: 03a1c16 (VS-019) + `studio(S0008): VS-017 …` wrap-up commit · Roles collapsed: none
 
 ## In-flight / uncommitted work
-none. Left uncommitted on purpose: Windows mount noise (nearly every file shows modified with 0-line diffs, incl. template/.github/starfall) and Daniel's edits outside this game. Probes outside the repo: `$HOME/probe/` (QA p1–p9, q1, qa16*), `$HOME/critic/`; balance raw output in `.tools/s0007/`.
+none. Left uncommitted on purpose: Windows mount mode noise and Daniel's edits outside this game. Scratch: `.tools/s0008_*` (balance runs, diag scripts), `.tools/s0008_qa/`; device-VM probes in `$HOME/probe/`, `$HOME/probe_qa/` (not in the repo).
 
 ## Build health
-- check.sh: PASS (~17 s). Selftest adds "run flow: sim gating OK" and the VS-016 round-trip check; autoplay prints "title: 10 frames, u.time 0.0 — world frozen".
+- check.sh: PASS (~19 s). Selftest now includes h3 tip-order asserts (mutation-tested by QA: removing the `can_do` check fails check.sh).
 - Known noise (not bugs): "ObjectDB instances leaked" / "resources still in use at exit"; ALSA errors under xvfb.
-- Latest metrics: S0007 economic 30 min 6 seeds (pre-VS-016): HQ 5/6, nw10 101k, nw20 139k, nw30 median 42.9k, hive_20 59 (max 65). Post-VS-016 (3 seeds, not in metrics.csv): credits_10 17.4k/21.2k/10.3k, nw20 129k, HQ 2/3.
+- Latest metrics: S0008 economic 30 min 6 seeds (new policy): HQ 6/6, nw20 105.6k, nw30 74.1k, hive_20 ~55; passive HQ lost median 25.4.
 
 ## Backlog snapshot
-todo 8 · in-progress 0 · done 8 · blocked 1 · split 1 · ready 7 · Top ready: VS-011 grow from minute 20 to 30, VS-017 tips follow the world, VS-018 First Sortie
+todo 7 · in-progress 0 · done 10 · blocked 1 · split 2 · ready 6 · Top ready: VS-018 First Sortie, VS-020 late-game Hive pressure, VS-014 pause-screen input
 
 ## Watch out for
-- **Run flow**: the Universe steps only while PLAYING (`RunFlow.sim_runs`). `_on_finished` / `RunFlow.finish()` are ignored unless PLAYING. The title backdrop is now a still scene. `_set_mode` keeps HUD/touch at "none" when not PLAYING.
-- **Trade pricing**: batches are priced per unit along the curve; the dock still shows the next-unit (spot) price, so Buy 10 costs slightly more than 10× shown. ShipAI.plan_trade still estimates with spot prices.
-- Shot/autoplay runs share `user://save.cfg` best score with real play (win shot sets best 170997).
-- Tutorial tips: box rect depends on viewport; touch probes need xvfb `--resolution 1280x720`. TutorialHints `_input` runs before TouchControls (steals steer drags). `emulate_mouse_from_touch=true` → every tap is also a mouse click (VS-014).
-- `check.sh` fails on "SCRIPT ERROR" only; a failed selftest assert still prints "SELFTEST OK" — read the whole output. Use ≥ 6 seeds for survival gates; balance runs > 3 seeds exceed the 180 s device cap without seed offsets.
-- Every sound goes through `Sfx.play()`. Only one WorldEnvironment at a time. Default font has no arrow glyphs. main.gd is 306 lines — split further before adding to it.
+- **Balance harness**: economic numbers from S0008 on are not comparable with S0003/S0007 (new defending policy; lost HQ = 0 nw). Fixed seed list 101,118,135 (first=0) + 152,169,186 (first=3). Background jobs die when a device call returns — run both halves with `& … & wait` in one call.
+- **Defense Platform stats are shared with Union stations** — changing them moves passive HQ survival.
+- **Tips**: `TutorialHints.on_screen` is a static read by hud.gd (prompt visibility depends on tip state). The target tip only becomes current when a Hive entity is in the player's sector (anywhere in it, not just in view). Touch SKIP TIPS chip sits ~13 px left of THR- at 1280x720; recheck narrow screens. TutorialHints `_input` runs before TouchControls. `emulate_mouse_from_touch=true` → every tap is also a click (VS-014).
+- **Run flow**: the Universe steps only while PLAYING (`RunFlow.sim_runs`). Title backdrop is a still scene.
+- **Trade pricing**: batches priced per unit along the curve; dock shows the spot price.
+- `check.sh` fails on "SCRIPT ERROR" only (selftest assert failures do surface as "selftest errors" FAIL now — still read the whole output). main.gd is 306 lines — split before adding. Every sound via `Sfx.play()`. Default font has no arrow glyphs.
 - Git needs delete permission (lock files). Never stage template/.github/starfall/.claude mode noise.
 
 ## Open questions for Daniel
+- VS-020: if no clean lever is found, is a mild late decline acceptable (e.g. nw30 ≥ 0.7 × nw20 with HQ ≥ 5/6) instead of strict growth?
 - Still open: should tutorial tips be remembered in the save file? Target session length (design assumes 30–40 min)?
 
 ## Answers to Daniel
-- (from Daniel, after S0007) A slower early game after VS-016 is fine. VS-011 should not try to restore early income; aim its nw20 band at the new baseline.
-- (from Daniel) VS-007 (wing commands) and VS-009 (save and continue) are back to `todo`. That makes 8 open todo tasks; Daniel's call overrides the cap. VS-009 is size L, so split it into S/M tasks before anyone builds it (`backlog.py next` skips L).
-- (from Daniel) The repo is now pushed to GitHub (`origin` = https://github.com/iladin/godot-web-games, branch `main`). Studio sessions still never push on their own unless Daniel asks.
+- none new this session (INBOX was empty). Earlier rulings still apply: slower early game after VS-016 is fine; VS-007/VS-009 restored to todo; studio never pushes unless asked.
 
 ## Session history (newest first, keep 10)
+- S0008 2026-10-26 BUILD — VS-011 split → VS-019 harness done (HQ 6/6, nw30 74k) + VS-020 open; VS-017 tutorial tips follow the world done (QA PASS after 1 fix round)
 - S0007 2026-10-26 PLANNING+BUILD — first review round (critic 5.1/10) → VS-015..018; VS-015 title freeze/overlay fix + VS-016 trade arbitrage fix done (both QA PASS)
 - S0006 2026-10-26 BUILD — VS-004 tutorial tips + VS-012 touch row/pause-mute/sfx assert done (both QA PASS); VS-013, VS-014 added
 - S0005 2026-10-26 BUILD — took over stale S0004 lock; VS-003 procedural SFX done (QA PASS); VS-012 added

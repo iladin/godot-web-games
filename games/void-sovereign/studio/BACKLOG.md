@@ -244,7 +244,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0007 — StationData.batch_total prices each unit along the stock curve (buy rising, sell falling), transact charges it; selftest round-trip check over every station×ware×N (QA PASS, 2 mutations); econ 3 seeds credits_10 17k/21k/10k, nw20 129k
 
 ## VS-017 · Tutorial tips follow the world (one voice on screen)
-- status: todo
+- status: done
 - priority: P1
 - type: polish
 - size: S
@@ -252,12 +252,13 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0007
 - why: S0007 critic #1/#3 and QA sweep bug 4: tip 3 ("lock onto a Hive ship") cannot be done in Haven's Reach — 0 Hive ships there for the first 10 min in 3/3 seeds — so tips 4–6 never appear; at t=3 s five directives compete (welcome, tip, "F: Dock", duplicate capture prompt, objective) and the tip order contradicts the objective. Absorbs VS-013 (touch skip overlaps steer zone; H undocumented).
 - acceptance:
-  - [ ] A tip is only current when it can be completed now (e.g. the target tip waits until a hostile is in the sector, later tips are not blocked by it); headless probe: steer + throttle, then dock/map/land tips appear within the first 5 min in seeds 7, 101, 118
-  - [ ] Pressing R / TGT with nothing to lock shows a short "no hostiles in range" message instead of failing silently
-  - [ ] While a tip is shown, the duplicate HUD capture-mouse line is hidden; screenshot `hints` at t≈3 s shows at most one instruction line plus the objective
-  - [ ] Touch: a drag starting in the steering zone while a tip shows steers and does not skip tips; tips remain skippable via one dedicated tap target clear of the stick and buttons (xvfb --resolution 1280x720, `hints_touch` reviewed)
-  - [ ] "H: skip tips" in title/help controls, game.json and DESIGN.md; check.sh PASS
-- notes: Scout proposal 1 (reviews/S0007-scout.md). If VS-018 (First Sortie) lands first, the target tip can point at that wave.
+  - [x] A tip is only current when it can be completed now (e.g. the target tip waits until a hostile is in the sector, later tips are not blocked by it); headless probe: steer + throttle, then dock/map/land tips appear within the first 5 min in seeds 7, 101, 118
+  - [x] Pressing R / TGT with nothing to lock shows a short "no hostiles in range" message instead of failing silently
+  - [x] While a tip is shown, the duplicate HUD capture-mouse line is hidden; screenshot `hints` at t≈3 s shows at most one instruction line plus the objective
+  - [x] Touch: a drag starting in the steering zone while a tip shows steers and does not skip tips; tips remain skippable via one dedicated tap target clear of the stick and buttons (xvfb --resolution 1280x720, `hints_touch` reviewed)
+  - [x] "H: skip tips" in title/help controls, game.json and DESIGN.md; check.sh PASS
+- notes: Scout proposal 1 (reviews/S0007-scout.md). If VS-018 (First Sortie) lands first, the target tip can point at that wave. S0008: built (1 fix round: welcome message was a 2nd instruction line). Touch SKIP TIPS chip ~13 px from THR- at 1280x720; check narrow widths. TutorialHints.on_screen is a static read by hud.gd.
+- done: S0008 — tips skip uncompletable steps (target waits for a hostile), "No hostiles in range" on R/TGT, one instruction line at t=3 s, touch SKIP TIPS chip, H documented; QA PASS (re-verify)
 
 ## VS-018 · First Sortie: a small opening wave near Ember
 - status: todo
@@ -337,3 +338,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0007, dev) Autoplay step that ends a run from the map and restarts (15 s autoplay window nearly full) (P3).
 - (S0007, QA/dev VS-016) Dock panel shows the next-unit price; show the batch cost ("Buy 10 ≈ X cr"); ShipAI.plan_trade could estimate with batch_total (P3).
 - (S0007, QA) `shots.sh dock` only shows the HQ (no trade grid) — add a trade-hub dock scenario for visual coverage of Buy/Sell (P3).
+- S0008 QA: on touch the OBJECTIVE line still says "press F to land" — use ACT wording on touch (small polish task).
+- S0008 QA: VS-017 SKIP TIPS chip is ~13 px from THR- at 1280x720; recheck at narrow widths (<700 px).

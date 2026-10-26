@@ -23,9 +23,11 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 ## Controls
 | | Keyboard / mouse | Touch |
 |---|---|---|
-| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G fleet attacks target · F dock/land · M map · X stop · P pause · N mute | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP, SND buttons |
+| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G fleet attacks target · F dock/land · M map · X stop · P pause · N mute · H skip tips | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP, SND buttons · SKIP TIPS chip under the tip box |
 | Map | LMB select (drag = box) · RMB order · wheel zoom · click galaxy to switch sector | Tap select · toggle ORDER, then tap to order |
 | Surface | WASD · mouse look · LMB fire · R reload · Space jump · Shift sprint · F board ship · N mute | Left stick move · drag right half to look · FIRE / JUMP / RELOAD / ACT / SND |
+
+First-run tips (`tutorial_hints.gd`) show one at a time; a tip waits until it can be done now (the target tip waits for a Hive ship in your sector, later tips are not blocked). While a tip shows, the HUD capture-mouse line is hidden. R / TGT with nothing to lock says "No hostiles in range". H (touch: SKIP TIPS chip) hides tips for the run.
 
 ## Win / lose / score
 - **Win:** both Hive Nests destroyed.

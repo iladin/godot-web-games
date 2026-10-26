@@ -38,3 +38,8 @@
 - Task(s): review round (Critic avg 5.1/10, QA sweep 3 P1 bugs, Balance: VS-011 still failing, Scout 5 proposals) → new VS-015..VS-018, VS-013 folded into VS-017, VS-006 blocked on VS-011, VS-007/VS-009 parked (blocked) for the ≤8 todo cap. Then VS-015 title freeze + overlays on run end — done (QA PASS); VS-016 same-station buy/sell arbitrage — done (QA PASS).
 - Check: PASS · Git: committed studio(S0007) review round 3fd3d72, VS-015 d16b60d, VS-016 (see git log)
 - Notes: VS-016 lowers early income (econ 3 seeds credits_10 −25–50%, nw20 129k); VS-011 must re-baseline. ~55 min wall time.
+
+## S0008 — 2026-10-26 16:52 — BUILD
+- Task(s): VS-011 → split: VS-019 (harness seed offset + defending econ policy, done, QA PASS on criteria 1/3/4) + VS-020 (nw30 >= nw20, todo P1 M — QA FAIL, needs a game lever). VS-017 tutorial tips follow the world — done (1 fix round; QA PASS on re-verify).
+- Check: PASS · Git: committed 03a1c16 (VS-019) + VS-017/wrap-up commit
+- Notes: Harness-only fix gives HQ 6/6 and nw30 median 33.6k→74.1k but nw30 < nw20 in 6/6 seeds. Global raid nerf and Defense Platform buff both broke the passive gate (platform is shared with Union stations).

@@ -2,7 +2,8 @@ class_name TutorialHints
 extends Control
 ## Contextual first-run tips (VS-004). One hint at a time, in STEPS order; a step is latched
 ## done the first time its condition holds, so the next one appears. H (or tapping the box)
-## skips all tips for the rest of this page load. Pure step logic lives in update()/current()
+## skips all tips for the rest of this page load. A step whose ctx["ready"][step] is false
+## (e.g. "target" with no Hive ship in the sector) is passed over until it can be done (VS-017). Pure step logic lives in update()/current()
 ## so selftest.gd can drive it with plain dictionaries.
 
 const STEPS: Array[String] = ["steer", "throttle", "target", "dock", "map", "land"]
@@ -13,9 +14,14 @@ const BOX_W := 760.0
 const BOX_H := 66.0
 const BOX_Y_FRAC := 0.58          # top of the box, as a fraction of screen height
 const FADE_IN := 0.4
+const SKIP_W := 140.0             # touch: dedicated skip chip, right of the steer zone
+const SKIP_H := 44.0
+
+static var on_screen: String = ""  # step drawn now; HUD hides its duplicate capture/prompt lines
 
 var main: VoidMain                # null in selftest: no gathering, no drawing
 var done: Dictionary = {}         # step -> true once completed
+var can_do: Dictionary = {}        # step -> false while it cannot be completed (default ready)
 var skipped: bool = false
 var font: Font = ThemeDB.fallback_font
 var _shown: String = ""
@@ -33,14 +39,16 @@ func update(ctx: Dictionary) -> void:
 	for s: String in STEPS:
 		if bool(ctx.get(s, false)):
 			done[s] = true
+	if ctx.has("ready"):
+		can_do = ctx["ready"]
 
 
-## First unfinished step, or "" when all are done or tips were skipped.
+## First unfinished step that can be completed now, or "" when none (or tips were skipped).
 func current() -> String:
 	if skipped:
 		return ""
 	for s: String in STEPS:
-		if not done.has(s):
+		if not done.has(s) and bool(can_do.get(s, true)):
 			return s
 	return ""
 
@@ -72,7 +80,21 @@ static func hint_text(step: String, touch: bool, planet: String) -> String:
 
 
 static func skip_text(touch: bool) -> String:
-	return "Tap this box to skip tips" if touch else "H: skip tips"
+	return "SKIP TIPS" if touch else "H: skip tips"
+
+
+## True when R / TGT has something to lock: a live Hive entity in the sector.
+static func hostile_in(u: Universe, sector_idx: int) -> bool:
+	for e: SimEntity in u.ents_in(sector_idx):
+		if e.faction == Defs.Faction.HIVE and e.alive:
+			return true
+	return false
+
+
+## Touch skip target: inside the right end of the tip box, outside the steer zone (x < 40%)
+## and left of the THR-/THR+ buttons; the rest of the box no longer eats taps or drags.
+func skip_rect() -> Rect2:
+	return Rect2(_box.end.x - SKIP_W - 30.0, _box.position.y + 11.0, SKIP_W, SKIP_H)
 
 
 func _gather() -> Dictionary:
@@ -86,6 +108,7 @@ func _gather() -> Dictionary:
 		"dock": main.mode == "dock",
 		"map": main.mode == "map",
 		"land": main.mode == "surface",
+		"ready": {"target": sp != null and hostile_in(main.u, sp.sector_idx)},
 	}
 
 
@@ -100,6 +123,7 @@ func _process(delta: float) -> void:
 	if main.state == VoidMain.State.PLAYING and main.space and is_instance_valid(main.space.player):
 		update(_gather())
 	var cur := current() if _showing() else ""
+	on_screen = cur
 	if cur != _shown:
 		_shown = cur
 		_age = 0.0
@@ -114,7 +138,8 @@ func _input(event: InputEvent) -> void:
 		skip()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed \
-			and _box.has_point((event as InputEventScreenTouch).position):
+			and _box.size.x > 0.0 and main.touch.active \
+			and skip_rect().has_point((event as InputEventScreenTouch).position):
 		skip()
 		get_viewport().set_input_as_handled()
 
@@ -135,5 +160,11 @@ func _draw() -> void:
 	var x := _box.position.x + 14.0
 	draw_string(font, Vector2(x, _box.position.y + 28), head, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(AMBER, a))
 	var hw := font.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	draw_string(font, Vector2(x + hw, _box.position.y + 28), hint_text(_shown, touch, planet), HORIZONTAL_ALIGNMENT_LEFT, w - 28.0 - hw, 19, Color(1, 1, 1, a))
-	draw_string(font, Vector2(x, _box.position.y + 54), skip_text(touch), HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 15, Color(CYAN, 0.75 * a))
+	draw_string(font, Vector2(x + hw, _box.position.y + 28), hint_text(_shown, touch, planet), HORIZONTAL_ALIGNMENT_LEFT, w - 28.0 - hw - (SKIP_W + 20.0 if touch else 0.0), 19, Color(1, 1, 1, a))
+	if touch:
+		var sr := skip_rect()
+		draw_rect(sr, Color(BOX_BG, BOX_BG.a * a))
+		draw_rect(sr, Color(CYAN, 0.75 * a), false, 1.5)
+		draw_string(font, sr.position + Vector2(0, 28), skip_text(true), HORIZONTAL_ALIGNMENT_CENTER, SKIP_W, 16, Color(CYAN, a))
+	else:
+		draw_string(font, Vector2(x, _box.position.y + 54), skip_text(false), HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 15, Color(CYAN, 0.75 * a))

@@ -159,9 +159,10 @@ func _draw_flight(sz: Vector2) -> void:
 	for w: String in ps.cargo:
 		cargo += "%s %d  " % [Defs.WARE_NAMES[w], int(ps.cargo[w])]
 	_txt(base + Vector2(150, 80), cargo, 14, DIM)
-	if space.prompt != "":
+	if space.prompt != "" and TutorialHints.on_screen not in ["steer", "throttle"]:
 		_txt(Vector2(0, sz.y * 0.72), space.prompt, 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not space.touch.active and not space.docked:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not space.touch.active and not space.docked \
+			and TutorialHints.on_screen == "":
 		_txt(Vector2(0, sz.y * 0.78), "Click to capture mouse for steering", 18, DIM, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 
 

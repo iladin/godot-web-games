@@ -25,7 +25,8 @@ func start() -> void:
 	g.overlay.screen = "none"
 	g.sfx.play("click")
 	g._set_mode("flight")
-	g.u.message.emit("Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map", Color("ffb347"))
+	var tips_on := g.hints != null and g.hints.current() != ""   # tips teach the controls (VS-017)
+	g.u.message.emit("Welcome, Sovereign." if tips_on else "Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map", Color("ffb347"))
 
 
 func finish(won: bool) -> void:
