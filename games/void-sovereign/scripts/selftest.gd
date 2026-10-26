@@ -252,6 +252,14 @@ func _test_sfx() -> void:
 	var tap := InputEventScreenTouch.new()
 	tap.pressed = true
 	assert(Controls.resumes_from_pause(tap), "a tap resumes")
+	# VS-014: the mouse click Godot emulates from a touch never resumes (the touch itself decides);
+	# a real desktop click still does.
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	assert(Controls.resumes_from_pause(click), "a real click resumes")
+	click.device = InputEvent.DEVICE_ID_EMULATION
+	assert(not Controls.resumes_from_pause(click), "an emulated (touch) click does not resume")
 	print("sfx: %d streams generated in %d ms" % [streams.size(), gen_ms])
 	s.free()
 

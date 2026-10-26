@@ -13,6 +13,7 @@ const TOP_ROW_Y := 190.0
 
 var active: bool = false          # a touch has ever been seen
 var layout: String = "none"       # none | flight | surface
+var paused: bool = false          # pause screen up: only SND acts; other taps fall through
 var stick: Vector2 = Vector2.ZERO
 var _stick_idx: int = -1
 var _stick_origin: Vector2 = Vector2.ZERO
@@ -106,10 +107,13 @@ func _input(event: InputEvent) -> void:
 func _touch_down(idx: int, p: Vector2) -> void:
 	for b: Dictionary in _buttons:
 		if p.distance_to(b["c"]) <= float(b["r"]) * 1.15:
-			_held[b["name"]] = idx
-			_pressed[b["name"]] = true
+			if not paused or b["name"] == "mute":   # paused: other buttons are inert (no resume)
+				_held[b["name"]] = idx
+				_pressed[b["name"]] = true
 			get_viewport().set_input_as_handled()
 			return
+	if paused:
+		return   # left unhandled: PauseGate resumes on it; no stick/look grab
 	if p.x < size.x * 0.4 and p.y > size.y * 0.3 and _stick_idx < 0:
 		_stick_idx = idx
 		_stick_origin = p

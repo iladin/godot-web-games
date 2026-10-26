@@ -29,6 +29,8 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 
 First-run tips (`tutorial_hints.gd`) show one at a time; a tip waits until it can be done now (the target tip waits for a Hive ship in your sector, later tips are not blocked). While a tip shows, the HUD capture-mouse line is hidden. R / TGT with nothing to lock says "No hostiles in range". H (touch: SKIP TIPS chip) hides tips for the run.
 
+Pause (P, or focus loss; `ui/pause_gate.gd`): the world freezes and the mouse is released. Any key, one click, or a tap away from the touch buttons resumes (the resume click never fires or captures; the next click does). While paused only N / SND work (mute without resuming); MAP, TRVL, dock and map buttons are inert.
+
 ## Win / lose / score
 - **Win:** both Hive Nests destroyed.
 - **Lose:** your HQ station is destroyed. (Dying in your ship respawns you at HQ for 25% of your credits; dying on foot evacuates you to orbit.)

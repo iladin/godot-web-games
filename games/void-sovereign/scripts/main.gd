@@ -36,11 +36,14 @@ var shot_file: String = ""
 var driver: TestDriver
 var sfx: Sfx
 var flow: RunFlow
+var pause_gate: PauseGate
 
 
 func _ready() -> void:
 	Controls.register()
 	flow = RunFlow.new(self)
+	pause_gate = PauseGate.new(self)
+	add_child(pause_gate)   # first child: its _input runs after TouchControls', before the GUI
 	best = flow.load_best()
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="):
@@ -262,10 +265,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var press := (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) \
 		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed) \
 		or event.is_action_pressed("ui_accept")
-	if paused:
-		if Controls.resumes_from_pause(event):
-			paused = false
-			overlay.screen = "none"
+	if paused:   # PauseGate (_input) owns pause-screen input
 		return
 	match state:
 		State.TITLE:

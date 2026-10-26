@@ -28,8 +28,12 @@ static func register() -> void:
 ## While paused: does this event resume the game? Clicks, taps, ui_accept and fresh key presses
 ## do; key releases/echoes don't (P's own release would unpause), and neither does the mute key
 ## (N toggles sound only — Sfx handles it — so muting from the pause screen stays paused).
+## Mouse clicks emulated from touch don't either: the real InputEventScreenTouch decides, so a
+## tap on the SND/MAP/TRVL buttons (consumed by TouchControls) leaves the game paused (VS-014).
 static func resumes_from_pause(event: InputEvent) -> bool:
 	if InputMap.has_action("mute") and event.is_action("mute"):
+		return false
+	if event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		return false
 	if event is InputEventKey:
 		var k := event as InputEventKey

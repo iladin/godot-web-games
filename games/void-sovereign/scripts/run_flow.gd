@@ -60,9 +60,7 @@ func close_overlays() -> void:
 
 
 func pause() -> void:
-	g.paused = true
-	g.overlay.screen = "pause"
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	g.pause_gate.pause()
 
 
 func load_best() -> int:

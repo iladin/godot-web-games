@@ -196,7 +196,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0007: superseded by VS-017 (tips follow the world), which carries all four acceptance items.
 
 ## VS-014 · Touch/mouse input on the pause screen
-- status: todo
+- status: done
 - priority: P2
 - type: bug
 - size: S
@@ -204,11 +204,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0006
 - why: S0006 QA of VS-012: with emulate_mouse_from_touch on, tapping SND/MAP/TRVL while paused also unpauses (the emulated mouse click reaches main._unhandled_input → Controls.resumes_from_pause); on desktop the first click on the pause screen is eaten by mouse capture in space_view/fps_player and the game stays paused.
 - acceptance:
-  - [ ] Touch probe (xvfb --resolution 1280x720): P, then tap SND → muted toggles, game stays paused; same for MAP/TRVL taps (no resume)
-  - [ ] A tap elsewhere on the pause screen still resumes
-  - [ ] Desktop: P, then one left click → game resumes on that click (mouse is not captured while paused)
-  - [ ] selftest/probe assertion covers emulated-mouse events in resumes_from_pause; check.sh PASS
-- notes: S0007 QA: dock and map buttons also stay clickable under the pause overlay — fix in the same pass.
+  - [x] Touch probe (xvfb --resolution 1280x720): P, then tap SND → muted toggles, game stays paused; same for MAP/TRVL taps (no resume)
+  - [x] A tap elsewhere on the pause screen still resumes
+  - [x] Desktop: P, then one left click → game resumes on that click (mouse is not captured while paused)
+  - [x] selftest/probe assertion covers emulated-mouse events in resumes_from_pause; check.sh PASS
+- notes: S0007 QA: dock and map buttons also stay clickable under the pause overlay — fix in the same pass. S0010: started (second S task of the session).
+- done: S0010 — new scripts/ui/pause_gate.gd (main's first child) owns pointer input while paused: SND tap toggles mute and stays paused, MAP/TRVL/dock/map buttons inert, off-button tap or one real click resumes (mouse not captured; next click captures), emulated clicks never resume; selftest asserts real vs emulated click; QA PASS first round (own probe, flight + surface + map + dock, 20 failures on HEAD control)
 
 ## VS-015 · Freeze the world on the title screen and close overlays when a run ends
 - status: done
@@ -337,7 +338,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - `route(..., avoid_hive)` still avoids only Nest sectors; use `sector_unsafe` so civilians don't path through raids (S0003 QA, P3)
 - `_home_nest_sector`: empty route counted as 0 hops would pick an unreachable nest (S0003 QA, P3, no effect on current map)
 - (S0005, QA) Explosion SFX peaks at full scale and is hard-clipped by clampf — lower its gain or soft-clip.
-- (S0005, QA) main.gd is ~325 lines (> ~300 guideline) — split input/pause handling out.
+- (S0005, QA) main.gd is ~325 lines (> ~300 guideline) — split input/pause handling out. [S0010: pause handling moved to pause_gate.gd; main.gd 306 lines]
 - (S0005, dev) Click sounds on map/dock buttons; HUD mute indicator; persist mute in user://save.cfg; distance-scaled explosion volume; NPC weapon sounds.
 - (S0006, QA) Tutorial tip box sits at 58% height over the player ship model; move higher/side (BOX_Y_FRAC in tutorial_hints.gd).
 - (S0006, QA) Desktop tip 1 duplicates the HUD line "Click to capture mouse for steering"; hide the HUD line while tip 1 shows.
@@ -363,3 +364,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0010, QA) balance_gate.sh: tag ignores game version, so a split run after a code change silently merges stale first_N.txt files — add a git-sha/mtime stamp check or warn (P3).
 - (S0010, QA) balance gate: nw30 counts 0 when HQ fell before 30 min; exclude or mark like hq_lost (P3, only matters for passive).
 - (S0010, QA) metrics.csv S0003 row has unquoted commas in notes (20 fields vs 15 header) — quote it so strict CSV parsers work (P3).
+- (S0010, QA) Game-over screen reached on the surface: first click captures the mouse (fps_player._unhandled_input still live during OVER) instead of restarting; second click restarts. Pre-existing (P3).
+- (S0010, QA) Mouse-wheel scroll while paused resumes the game (resumes_from_pause accepts any real mouse button); restrict to left/right click (P3).
+- (S0010, QA) selftest: assert main.get_child(0) is PauseGate so the _input order can't silently break (P3).
+- (S0010, QA) Pause text says "click or press a key" on touch — say "tap" in touch mode; SND is dimmed under the overlay though it still works (P3).
+- (S0010, dev) Verify on a real phone browser that browser-generated touch→mouse events are flagged as emulated (device -1) in the web export (P3).
