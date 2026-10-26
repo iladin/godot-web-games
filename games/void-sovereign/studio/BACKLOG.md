@@ -94,7 +94,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0007: blocked on VS-011 — its raid-size/interval changes move the Hive ship count (S0007 balance: hive_20 median 59, max 65). Re-measure after VS-011 lands, then unblock or close.
 
 ## VS-007 · Wing commands from the cockpit
-- status: blocked
+- status: todo
 - priority: P2
 - type: feature
 - size: S
@@ -105,7 +105,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Keys + touch buttons for: wing attack my target (existing G), wing return/escort me, wing hold position
   - [ ] HUD shows a one-line wing status (count, current order)
   - [ ] DESIGN.md controls table and title screen updated
-- notes: S0007: parked by Producer to keep open todo ≤ 8 (no review finding asks for it this round). Daniel can reprioritise via INBOX.
+- notes: S0007: parked by Producer to keep open todo ≤ 8 (no review finding asks for it this round). Daniel can reprioritise via INBOX. Daniel (2026-10-26, after S0007): restore to todo.
 
 ## VS-008 · Selftest coverage for ship AI journeys
 - status: done
@@ -124,7 +124,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0001: _test_ai_journeys() (seed 7; goto 0->3 in 82/288 s, miner sale 64/289 s, plan_trade munitions x80 profit 1787); QA mutation-tested all 3. Bundled balance change: start stock inputs 1/3, outputs 1/2 (Defs.START_FILL_INPUT/OUTPUT) — plan_trade was empty on the starting universe.
 
 ## VS-009 · Save and continue a run
-- status: blocked
+- status: todo
 - priority: P2
 - type: feature
 - size: L
@@ -133,7 +133,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - why: A full game takes 30–40 minutes; browser players close tabs. Only the best score persists today.
 - acceptance:
   - [ ] The Producer splits this into S/M tasks before work (serialize Universe → user://, restore on title "Continue", autosave cadence, versioning)
-- notes: Size L on purpose — exercises the split rule. S0007: parked by Producer to keep open todo ≤ 8; needs Daniel to confirm save/continue is wanted (see HANDOVER open questions) before it is split.
+- notes: Size L on purpose — exercises the split rule. S0007: parked by Producer to keep open todo ≤ 8; needs Daniel to confirm save/continue is wanted (see HANDOVER open questions) before it is split. Daniel (2026-10-26, after S0007): restore to todo.
 
 ## VS-010 · NPC traders must not get stuck at a player station that can't pay
 - status: todo

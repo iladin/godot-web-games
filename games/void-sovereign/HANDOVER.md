@@ -28,7 +28,7 @@ none. Left uncommitted on purpose: Windows mount noise (nearly every file shows 
 - Latest metrics: S0007 economic 30 min 6 seeds (pre-VS-016): HQ 5/6, nw10 101k, nw20 139k, nw30 median 42.9k, hive_20 59 (max 65). Post-VS-016 (3 seeds, not in metrics.csv): credits_10 17.4k/21.2k/10.3k, nw20 129k, HQ 2/3.
 
 ## Backlog snapshot
-todo 6 · in-progress 0 · done 8 · blocked 3 · split 1 · ready 6 · Top ready: VS-011 grow from minute 20 to 30, VS-017 tips follow the world, VS-018 First Sortie
+todo 8 · in-progress 0 · done 8 · blocked 1 · split 1 · ready 7 · Top ready: VS-011 grow from minute 20 to 30, VS-017 tips follow the world, VS-018 First Sortie
 
 ## Watch out for
 - **Run flow**: the Universe steps only while PLAYING (`RunFlow.sim_runs`). `_on_finished` / `RunFlow.finish()` are ignored unless PLAYING. The title backdrop is now a still scene. `_set_mode` keeps HUD/touch at "none" when not PLAYING.
@@ -40,12 +40,12 @@ todo 6 · in-progress 0 · done 8 · blocked 3 · split 1 · ready 6 · Top read
 - Git needs delete permission (lock files). Never stage template/.github/starfall/.claude mode noise.
 
 ## Open questions for Daniel
-- Two tasks are parked as `blocked` to respect the 8-todo cap: VS-007 (wing commands from the cockpit), VS-009 (save and continue a run). Do you want either back? Add an INBOX line.
-- VS-016 made early income 25–50% lower (it removed an exploit and changed batch pricing). Is a slower early game OK, or should VS-011 restore some of it?
-- Still open from earlier: should tutorial tips be remembered in the save file? Push to GitHub so sessions can open PRs? Target session length (design assumes 30–40 min)?
+- Still open: should tutorial tips be remembered in the save file? Target session length (design assumes 30–40 min)?
 
 ## Answers to Daniel
-- none (INBOX empty)
+- (from Daniel, after S0007) A slower early game after VS-016 is fine. VS-011 should not try to restore early income; aim its nw20 band at the new baseline.
+- (from Daniel) VS-007 (wing commands) and VS-009 (save and continue) are back to `todo`. That makes 8 open todo tasks; Daniel's call overrides the cap. VS-009 is size L, so split it into S/M tasks before anyone builds it (`backlog.py next` skips L).
+- (from Daniel) The repo is now pushed to GitHub (`origin` = https://github.com/iladin/godot-web-games, branch `main`). Studio sessions still never push on their own unless Daniel asks.
 
 ## Session history (newest first, keep 10)
 - S0007 2026-10-26 PLANNING+BUILD — first review round (critic 5.1/10) → VS-015..018; VS-015 title freeze/overlay fix + VS-016 trade arbitrage fix done (both QA PASS)
