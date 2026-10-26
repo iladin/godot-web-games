@@ -2,19 +2,24 @@ extends SceneTree
 ## Headless balance telemetry for the AI studio (run via scripts/studio/balance.sh).
 ## Simulates the whole cluster with no rendering and prints one BALANCE_JSON line per seed
 ## plus a BALANCE_SUMMARY line with medians.
-## Args (after --): --minutes=30 --seeds=3 --policy=passive|economic
+## Args (after --): --minutes=30 --seeds=3 --policy=passive|economic --first=0
+## --first=N skips the first N seeds of the fixed list (seed = SEED_BASE + i * 17), so a
+## 6-seed run can be split into two calls: --seeds=3 --first=0 and --seeds=3 --first=3.
 
 const DT := 0.05
 const CHECKPOINTS: Array[int] = [5, 10, 20, 30]
 const SEED_BASE := 101
 const ECON_TICK := 30.0
 const RESERVE := 3000.0
+const DEFENSE_AFTER := 600.0    # econ policy builds a Defense Platform at HQ after 10 min...
+const DEFENSE2_AFTER := 1080.0  # ...and a second one after 18 min
 
 
 func _init() -> void:
 	var minutes := 30
 	var seeds := 3
 	var policy := "passive"
+	var first := 0
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -22,8 +27,10 @@ func _init() -> void:
 			seeds = int(a.get_slice("=", 1))
 		elif a.begins_with("--policy="):
 			policy = a.get_slice("=", 1)
+		elif a.begins_with("--first="):
+			first = maxi(0, int(a.get_slice("=", 1)))
 	var results: Array[Dictionary] = []
-	for i in seeds:
+	for i in range(first, first + seeds):
 		var r := _run(SEED_BASE + i * 17, minutes, policy)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
@@ -62,6 +69,11 @@ func _run(rng_seed: int, minutes: int, policy: String) -> Dictionary:
 		if u.over:
 			if u.hq == null or not u.hq.alive:
 				r["hq_lost_at"] = snappedf(u.time / 60.0, 0.1)
+				# A lost HQ ends the run: later checkpoints count as zero net worth, so
+				# medians are not biased towards the surviving seeds.
+				for k in range(next_cp, CHECKPOINTS.size()):
+					if CHECKPOINTS[k] <= minutes:
+						r["net_worth_%d" % CHECKPOINTS[k]] = 0
 			break
 	r["nests_left"] = u.alive_nests().size()
 	r["raids"] = u.director.raid_count
@@ -90,10 +102,13 @@ func _counts(u: Universe) -> Dictionary:
 	return c
 
 
-## A modest, rule-based "economic player": miners, traders, one solar, a home-defence wing.
+## A modest, rule-based "economic player": miners, traders, one solar, a home-defence wing
+## that is topped back up when fighters die, and Defense Platforms at HQ (DEFENSE_AFTER, DEFENSE2_AFTER).
+## Everything here is something a human can do from the dock (buy ship / build station).
 func _economic(u: Universe) -> void:
 	var have: Dictionary = {}
 	var solars := 0
+	var defenses := 0
 	for e: SimEntity in u.entities.values():
 		if not e.alive or e.faction != Defs.Faction.PLAYER:
 			continue
@@ -102,13 +117,26 @@ func _economic(u: Universe) -> void:
 			have[cls] = int(have.get(cls, 0)) + 1
 		elif e is StationData and (e as StationData).kind == "solar":
 			solars += 1
+		elif e is StationData and (e as StationData).kind == "defense":
+			defenses += 1
+	var defense_cost := float(Defs.STATION["defense"]["cost"])
+	var want_def := 0
+	if u.time >= DEFENSE2_AFTER:
+		want_def = 2
+	elif u.time >= DEFENSE_AFTER:
+		want_def = 1
+	# While saving for a platform, only rebuy fighters when the wing is nearly gone.
+	var fighter_cap := 8 if defenses >= want_def else 4
 	if int(have.get("miner", 0)) < 4 and u.credits >= 6000.0 + RESERVE:
 		u.buy_ship("miner", u.hq)
 	elif int(have.get("trader", 0)) < 2 and u.credits >= 7000.0 + RESERVE:
 		u.buy_ship("trader", u.hq)
-	elif solars < 1 and u.credits >= 28000.0 + RESERVE:
+	elif defenses < want_def and u.credits >= defense_cost + RESERVE:
+		var off := Vector3(-900, 0, 700) if defenses == 0 else Vector3(900, 0, 900)
+		u.build_station("defense", u.hq.sector, u.hq.pos + off)
+	elif solars < 1 and (defenses > 0 or u.time < DEFENSE_AFTER) and u.credits >= 28000.0 + RESERVE:
 		u.build_station("solar", u.hq.sector, u.hq.pos + Vector3(1200, 0, -900))
-	elif int(have.get("fighter", 0)) < 8 and u.credits >= 4500.0 + RESERVE:
+	elif int(have.get("fighter", 0)) < fighter_cap and u.credits >= 4500.0 + RESERVE:
 		var f := u.buy_ship("fighter", u.hq)
 		if f:
 			f.order = "patrol"
@@ -117,7 +145,7 @@ func _economic(u: Universe) -> void:
 
 func _summary(results: Array[Dictionary], policy: String, minutes: int) -> Dictionary:
 	var s := {"policy": policy, "minutes": minutes, "seeds": results.size()}
-	for key: String in ["hq_lost_at", "first_raid_at", "union_collapse_at", "net_worth_10", "net_worth_20", "hive_ships_20", "union_ships_20"]:
+	for key: String in ["hq_lost_at", "first_raid_at", "union_collapse_at", "net_worth_10", "net_worth_20", "net_worth_30", "hive_ships_20", "union_ships_20"]:
 		var vals: Array[float] = []
 		for r: Dictionary in results:
 			if r.has(key):

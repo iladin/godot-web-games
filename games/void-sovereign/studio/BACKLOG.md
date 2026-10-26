@@ -77,6 +77,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - acceptance:
   - [ ] Overlapping marker labels are offset or merged ("2× PYLON 380m")
   - [ ] `shots.sh void-sovereign surface touch_surface` shows readable markers
+- notes: S0008 QA: two pylon labels ("PYLON 366m"/"PYLON 413m") overlap in surface.png.
 
 ## VS-006 · Web performance guard for late-game ship counts
 - status: blocked
@@ -149,7 +150,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS; economic balance run credits_10 still > TRADER_RESERVE in all seeds
 
 ## VS-011 · Economic player keeps growing from minute 20 to 30
-- status: todo
+- status: split
 - priority: P1
 - type: balance
 - size: M
@@ -161,7 +162,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Economic 30 min, 6 seeds: net_worth_30 median >= net_worth_20 median, and HQ survives >= 5/6
   - [ ] Economic 30 min, 6 seeds: net_worth_20 median between 80k and 130k (trim the overshoot, e.g. TRADE_HUB_EXPORT 50-60 or TARGET_FILL 0.15)
   - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
-- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics). S0007 balance (reviews/S0007-balance.md): unchanged since S0003, nw30 falls in 5/6 seeds (median 42.9k vs nw20 139k). Raids hit RAID_SIZE_MAX 16 at ~19.5 min and RAID_INTERVAL_MIN 75 s at ~21 min while the econ policy stops buying after ~10 min. Suggested: RAID_INTERVAL_MIN 75→100, RAID_SIZE_MAX 16→13, TRADE_HUB_EXPORT 80→60; harness: policy replaces lost fighters + builds a Defense Platform after 10 min. Seed-offset prototype: .tools/s0007/balance_offset.gd (adds --first=). S0007 VS-016 (curve batch pricing) lowered income: econ 3 seeds (101/118/135) credits_10 17.4k/21.2k/10.3k (was 23.9k/27.2k/20.7k), nw20 median 129k (was 139k), HQ 2/3 (135 lost 27.6 min; 118 now survives); seed 101 nw30 7.8k with 1 ship. Re-baseline 6 seeds before tuning.
+- notes: Balance harness prints net worth/ships at 30 min in the per-seed BALANCE_ lines. Levers: RAID_SIZE_GROWTH/MAX, Union quota/strength, defense platform cost. Consider removing raid withdrawal / dock repair if not needed (fewer mechanics). S0007 balance (reviews/S0007-balance.md): unchanged since S0003, nw30 falls in 5/6 seeds (median 42.9k vs nw20 139k). Raids hit RAID_SIZE_MAX 16 at ~19.5 min and RAID_INTERVAL_MIN 75 s at ~21 min while the econ policy stops buying after ~10 min. Suggested: RAID_INTERVAL_MIN 75→100, RAID_SIZE_MAX 16→13, TRADE_HUB_EXPORT 80→60; harness: policy replaces lost fighters + builds a Defense Platform after 10 min. Seed-offset prototype: .tools/s0007/balance_offset.gd (adds --first=). S0007 VS-016 (curve batch pricing) lowered income: econ 3 seeds (101/118/135) credits_10 17.4k/21.2k/10.3k (was 23.9k/27.2k/20.7k), nw20 median 129k (was 139k), HQ 2/3 (135 lost 27.6 min; 118 now survives); seed 101 nw30 7.8k with 1 ship. Re-baseline 6 seeds before tuning. S0008: split → VS-019 (harness: criteria 1/3/4, done, QA PASS) + VS-020 (criterion 2: nw30 >= nw20, still FAIL — needs a game lever).
 
 ## VS-012 · Audio/touch follow-ups from VS-003 QA
 - status: done
@@ -271,7 +272,38 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] The starting escorts plus the player beat the wave in all of seeds 7, 101, 118 without the player ship dying (autoplay/probe log)
   - [ ] After the wave is destroyed a message points the player to land on Ember (objective unchanged); selftest asserts the wave spawns once and only once
   - [ ] Balance gates unchanged: economic 30 min 3 seeds nw20 within ±15% of the S0007 baseline (139k median); passive 40 min HQ lost 20–35 min; check.sh PASS
-- notes: Do after VS-015 (title time must not count). Raid first-arrival (3.3 min) is separate — the wave must not reset or delay the raid timer.
+- notes: Do after VS-015 (title time must not count). Raid first-arrival (3.3 min) is separate — the wave must not reset or delay the raid timer. S0008: the 139k baseline is stale (pre-VS-016, old policy); use the VS-019 harness baseline instead (6 seeds nw20 median 105.6k).
+
+## VS-019 · Balance harness: seed offset, honest medians, defending economic policy
+- status: done
+- priority: P1
+- type: tech
+- size: S
+- source: producer
+- created: S0008
+- why: Split from VS-011 (S0008) — the harness half of VS-011 that QA verified. A 6-seed 30-min run could not fit the 180 s device cap, lost-HQ seeds were silently dropped from medians, and the economic policy stopped defending after minute 10 (S0007 balance).
+- acceptance:
+  - [x] `balance.sh` 5th arg `first` / balance.gd `--first=N` seed offset; no 5th arg behaves as before
+  - [x] Summary includes net_worth_30_median; a lost HQ records remaining checkpoints as net worth 0
+  - [x] Economic policy builds a Defense Platform at HQ from 10 min and a second from 18 min, using only player-available actions
+  - [x] Economic 30 min 6 seeds: nw20 median 80–130k, HQ >= 5/6; passive 40 min 3 seeds HQ lost 20–35 min (median); check.sh PASS
+- done: S0008 — seed offset + defending econ policy; 6 seeds (101..186) nw20 105.6k, nw30 74.1k (was 33.6k), HQ 6/6; passive median 25.4; QA PASS on these criteria
+- notes: S0008: no game code changed (scripts/sim untouched). Fixed seed list 101,118,135 (first=0) + 152,169,186 (first=3); run both halves in parallel in one device call (~101 s). Numbers are not comparable with S0003/S0007 (new policy, lost HQ = 0). Tried and reverted: raid nerf 75→100/16→13 (passive HQ survives 3/3 — breaks the passive gate); Defense Platform buff 24k/dps140 (econ nw30 100k but passive median 37.6 — Union stations use the same platform).
+
+## VS-020 · Late-game Hive pressure: economic net worth grows from minute 20 to 30
+- status: todo
+- priority: P1
+- type: balance
+- size: M
+- source: qa
+- created: S0008
+- why: Split from VS-011 criterion 2, still FAIL in S0008 QA: with a defending policy (VS-019) HQ survives 6/6 but nw30 median 74.1k < nw20 105.6k, falling in 6/6 seeds; player ships 7–14 → 2–7 while Hive ships grow ~52 → 76–94 between min 20 and 30; Union collapses ~28 min in seeds 169/186.
+- acceptance:
+  - [ ] Economic 30 min, 6 seeds (101..186 via two offset calls): net_worth_30 median >= net_worth_20 median, HQ survives >= 5/6
+  - [ ] Economic nw20 median stays 80–130k
+  - [ ] Passive 40 min, 3 seeds: HQ still lost between 20 and 35 min (median); check.sh PASS
+  - [ ] DESIGN.md tunables updated for any changed constant
+- notes: The lever must separate a defended player HQ from an undefended one, or slow Hive growth after ~20 min. Do NOT just nerf raids globally or buff the shared Defense Platform (both broke the passive gate in S0008). Candidates: cap total Hive fleet / slow Hive production after min 20; player-only platform variant or player-faction dps multiplier; raids avoid sectors with a platform; miners flee the HQ sector during raids (S0008 seed 186 lost 15 fighters + 8 miners in sector 0). Seed results swing ±50k on small changes — consider a 9-seed check before declaring PASS.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
