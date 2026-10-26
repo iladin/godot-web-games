@@ -214,6 +214,7 @@ static func _trade(u: Universe, s: ShipData, delta: float) -> void:
 
 
 ## Best (ware, seller, buyer) within TRADE_HOPS jumps by profit per unit × quantity.
+## The plan carries its expected "profit" (score after travel costs and supply bonus).
 static func plan_trade(u: Universe, s: ShipData) -> Dictionary:
 	var reach := u.sectors_within(s.sector, TRADE_HOPS, true)
 	var stations: Array[StationData] = []
@@ -241,7 +242,7 @@ static func plan_trade(u: Universe, s: ShipData) -> Dictionary:
 					profit += 120.0
 				if profit > best_profit:
 					best_profit = profit
-					best = {"ware": ware, "from": a.id, "to": b.id, "qty": qty}
+					best = {"ware": ware, "from": a.id, "to": b.id, "qty": qty, "profit": profit}
 	return best
 
 

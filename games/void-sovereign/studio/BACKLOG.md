@@ -16,7 +16,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] `bash scripts/studio/balance.sh void-sovereign 40 3 passive` → HQ lost between 20 and 35 min (median)
   - [ ] Changes are constants in `scripts/sim/defs.gd` (or a clearly named new mechanic) and DESIGN.md "Ramp" is updated
   - [ ] selftest still passes (raids still start within 8 minutes)
-- notes: Likely levers: raid targeting (non-combat ships are free kills), RAID_INTERVAL ramp, raid size cap, defence platform cost, union quota. Measure before/after.
+- notes: S0001 new baseline (after VS-002 reserve + VS-008 start stock), economic 30 min: 3 seeds credits_10 3716/4364/7692, nw10 med 46364, nw20 med 8022, HQ 0/3 (6 seeds 101-186: 3/6), Union collapse med 21.5. Use 6 seeds for survival metrics — 3 is noisy. Likely levers: raid targeting (non-combat ships are free kills), RAID_INTERVAL ramp, raid size cap, defence platform cost, union quota. Measure before/after.
 
 ## VS-002 · Player auto-traders must not drain credits to zero
 - status: done
@@ -101,7 +101,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] DESIGN.md controls table and title screen updated
 
 ## VS-008 · Selftest coverage for ship AI journeys
-- status: todo
+- status: done
 - priority: P1
 - type: tech
 - size: S
@@ -109,10 +109,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0000
 - why: selftest covers pricing, transactions and production, but not the multi-step AI loops most likely to regress (gate travel, mining, trading).
 - acceptance:
-  - [ ] Assertion: a ship ordered to another sector arrives there via gates within a time bound
-  - [ ] Assertion: a miner completes at least one ore sale within a time bound
-  - [ ] Assertion: `ShipAI.plan_trade` returns a plan with positive expected profit on the starting universe
-  - [ ] check.sh PASS
+  - [x] Assertion: a ship ordered to another sector arrives there via gates within a time bound
+  - [x] Assertion: a miner completes at least one ore sale within a time bound
+  - [x] Assertion: `ShipAI.plan_trade` returns a plan with positive expected profit on the starting universe
+  - [x] check.sh PASS
+- done: S0001 — selftest covers gate travel, miner ore sale and plan_trade profit; start stock fills swapped so trade is profitable at start
+- notes: S0001: _test_ai_journeys() (seed 7; goto 0->3 in 82/288 s, miner sale 64/289 s, plan_trade munitions x80 profit 1787); QA mutation-tested all 3. Bundled balance change: start stock inputs 1/3, outputs 1/2 (Defs.START_FILL_INPUT/OUTPUT) — plan_trade was empty on the starting universe.
 
 ## VS-009 · Save and continue a run
 - status: todo
@@ -140,6 +142,9 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS; economic balance run credits_10 still > TRADER_RESERVE in all seeds
 
 # Ideas parking lot
+- selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
+- selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
+- Show TRADER_RESERVE in the dock panel / make it player-adjustable (S0001 dev)
 - Engine trails and a proper travel-drive streak effect
 - Station construction takes time (construction ship + progress bar) instead of instant placement
 - Per-planet surface biomes (palette, props, Hive structure layouts) for levels 2–3

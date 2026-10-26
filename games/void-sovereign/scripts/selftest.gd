@@ -1,6 +1,14 @@
 extends SceneTree
 ## Logic checks for the simulation layer. Run by scripts/check.sh.
 
+# AI journey tests (fixed seed). Time bounds = worst-case straight-line path / ship speed x slack.
+const JOURNEY_SEED := 7
+const JOURNEY_DT := 1.0 / 10.0     # coarser than the game tick: keeps the selftest fast
+const PATH_SLACK := 2.0            # accel/brake ramps, arrival slow-down, gate approach offsets
+const TRAVEL_FROM := 0             # Haven's Reach
+const TRAVEL_TO := 3               # Cinder Belt: 2 jumps via Argent Fields
+const MINE_SELL_MARGIN := 60.0     # extra seconds for docking approach at the buyer
+
 
 func _init() -> void:
 	var u := Universe.new()
@@ -90,5 +98,69 @@ func _init() -> void:
 		if n.sector == 4:
 			assert(n.can_be_damaged())
 	u.director = null  # break the ref cycle so nothing leaks at exit
+
+	_test_ai_journeys()
 	print("SELFTEST OK")
 	quit()
+
+
+## Multi-step ship AI loops on a fresh universe. Only the ship under test is stepped
+## (ShipAI.update), so combat and the director can't make the result flaky.
+func _test_ai_journeys() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+
+	# Trade planning on the starting universe must find a profitable run.
+	var tr := u.spawn_ship("trader", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(0, 0, 400))
+	var plan := ShipAI.plan_trade(u, tr)
+	assert(not plan.is_empty(), "plan_trade finds a run on the starting universe")
+	assert(float(plan["profit"]) > 0.0, "planned trade has positive expected profit")
+	var pfrom := u.get_ent(int(plan["from"])) as StationData
+	var pto := u.get_ent(int(plan["to"])) as StationData
+	var pware: String = plan["ware"]
+	assert(pfrom != null and pfrom.sells(pware) and pto != null and pto.buys(pware))
+	assert(int(plan["qty"]) > 0 and int(plan["qty"]) <= tr.cargo_cap)
+
+	# Gate travel: a ship ordered to another sector arrives within the bound.
+	var hops := u.route(TRAVEL_FROM, TRAVEL_TO).size()
+	assert(hops == 2)
+	var mover := u.spawn_ship("trader", Defs.Faction.PLAYER, TRAVEL_FROM, Vector3.ZERO)
+	mover.order = "goto"
+	mover.order_sector = TRAVEL_TO
+	# Each leg is at most a sector diameter (gate to gate across the sector).
+	var travel_bound := float(hops + 1) * 2.0 * Defs.SECTOR_RADIUS / mover.speed * PATH_SLACK
+	var t := 0.0
+	var jumps := 0
+	var last_sector := mover.sector
+	while mover.order == "goto" and t < travel_bound:
+		ShipAI.update(u, mover, JOURNEY_DT)
+		if mover.sector != last_sector:
+			jumps += 1
+			last_sector = mover.sector
+		t += JOURNEY_DT
+	assert(mover.sector == TRAVEL_TO, "ship reaches its destination sector via gates")
+	assert(mover.order != "goto", "ship finishes its goto order within %.0f s" % travel_bound)
+	assert(jumps == hops, "ship took the shortest gate route")
+	var travel_t := t
+
+	# Mining loop: fly to a field, fill the hold, sell ore to a refinery (none in Haven -> gate hop).
+	var miner := u.spawn_ship("miner", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(0, 0, 300))
+	miner.order = "mine"
+	var fill_time := float(miner.cargo_cap) / ShipAI.MINE_RATE
+	var mine_bound := fill_time + 2.0 * (2.0 * Defs.SECTOR_RADIUS / miner.speed) * PATH_SLACK + MINE_SELL_MARGIN
+	var credits0 := u.credits
+	var was_full := false
+	var sold := false
+	t = 0.0
+	while not sold and t < mine_bound:
+		ShipAI.update(u, miner, JOURNEY_DT)
+		if miner.cargo_free() <= 0:
+			was_full = true
+		if was_full and miner.cargo_used() == 0:
+			sold = true
+		t += JOURNEY_DT
+	assert(was_full, "miner fills its hold")
+	assert(sold, "miner sells its ore within %.0f s" % mine_bound)
+	assert(u.credits > credits0, "player miner's ore sale earns credits")
+	print("journeys: trade plan %s x%d profit %.0f, travel %d jumps in %.0f/%.0f s, miner sold ore in %.0f/%.0f s" % [pware, int(plan["qty"]), float(plan["profit"]), jumps, travel_t, travel_bound, t, mine_bound])
+	u.director = null

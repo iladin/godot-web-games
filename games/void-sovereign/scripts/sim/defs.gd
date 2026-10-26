@@ -17,6 +17,10 @@ const PRICE_LOW := 0.6           # ... and when full
 const CYCLE_TIME := 10.0         # seconds per production cycle
 const STATION_CAPACITY := 300    # per ware
 const TRADE_HUB_CAPACITY := 600
+# Starting stock as a fraction of capacity. Outputs start fuller than inputs so producer ->
+# consumer runs are profitable on minute one (price falls as fill rises).
+const START_FILL_INPUT := 1.0 / 3.0
+const START_FILL_OUTPUT := 0.5
 const START_CREDITS := 30000.0
 const TRADER_RESERVE := 2000.0  # player-owned auto ships/stations never spend credits below this
 const COLONY_INCOME := 450.0     # credits per minute per colony

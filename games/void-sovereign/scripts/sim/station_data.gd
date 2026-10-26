@@ -27,11 +27,11 @@ func setup(p_kind: String, p_faction: int) -> void:
 		capacity = Defs.TRADE_HUB_CAPACITY
 	for w: String in Defs.WARES:
 		stock[w] = 0
-	# Start half stocked so the market is alive on minute one.
+	# Start inputs low and outputs high (Defs.START_FILL_*) so trade runs are profitable on minute one.
 	for w: String in inputs():
-		stock[w] = capacity / 2
+		stock[w] = int(float(capacity) * Defs.START_FILL_INPUT)
 	for w: String in outputs():
-		stock[w] = capacity / 3
+		stock[w] = int(float(capacity) * Defs.START_FILL_OUTPUT)
 	if kind == "trade":
 		for w: String in Defs.WARES:
 			stock[w] = capacity / 3
