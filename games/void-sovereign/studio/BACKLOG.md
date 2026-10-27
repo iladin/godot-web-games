@@ -394,7 +394,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0019 — RaidTracker: one arrival + one outcome message per raid, map inset ETA markers, turned-back throttle 300 s, countdown dims when HQ go-chance<0.5 (QA PASS)
 
 ## VS-026 · Serialize the Universe to a versioned save dictionary (round-trip)
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: M
@@ -406,7 +406,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Selftest: capture -> JSON stringify/parse -> restore on a mid-run Universe (after ~300 s of sim) gives identical net_worth, credits, and entity count, and 60 s of further stepping runs without errors
   - [ ] `restore` rejects a wrong `version` or malformed dict by returning null (selftest)
   - [ ] check.sh PASS; balance gates unaffected (capture is read-only)
-- notes: Do not touch gameplay RNG draws. See `scripts/sim/universe.gd` fields.
+- notes: S0022. Do not touch gameplay RNG draws. See scripts/sim/universe.gd fields.
+- done: S0022 — SaveGame capture/restore + selftest, QA PASS
 
 ## VS-027 · Autosave and Continue button on the title screen
 - status: todo

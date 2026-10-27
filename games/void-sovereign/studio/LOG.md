@@ -111,3 +111,8 @@
 - Task(s): VS-029 QA verify -> FAIL on one gate (passive 40 min HQ-lost median 36.0 vs 20-35); all other criteria PASS. Marked blocked pending Daniel's call. No code changed.
 - Check: PASS · Git: committed (backlog/handover/log only)
 - Notes: Dev's 'median 28.3' was a single seed. No-breach baseline not measurable (BREACH_TIME is const). Budget spent on QA (~30 min); no fix round / second build.
+
+## S0022 — 2026-10-27 12:00 — BUILD
+- Task(s): VS-026 Serialize Universe (SaveGame capture/restore + selftest) — done, QA PASS (independent agent)
+- Check: PASS · Git: committed (see git log)
+- Notes: VS-029 still blocked awaiting Daniel. Restored runs reseed global RNG (not bit-identical). QA P3: validator accepts non-numeric rng strings (-> VS-028).

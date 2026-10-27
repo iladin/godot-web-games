@@ -254,6 +254,7 @@ func _init() -> void:
 	_test_sfx()
 	_test_hints()
 	_test_ledger()
+	_test_save_game()
 	_test_marker_layout()
 	_test_run_flow()
 	await _test_surface_over()
@@ -427,6 +428,74 @@ func _test_hints() -> void:
 
 ## VS-024: every change to the player's credits goes through Universe.add_credits() with a
 ## category; the categorised totals must add up to the credit delta.
+## VS-026: capture -> JSON -> restore on a mid-run Universe matches, keeps running, and bad saves return null.
+func _test_save_game() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	for i in 3000:
+		u.step(JOURNEY_DT)
+	assert(u.time > 299.0)
+	var nw := u.net_worth()
+	var rng_state := u.rng.state
+	var ids_before := u.entities.keys().size()
+	var d := SaveGame.capture(u)
+	assert(u.rng.state == rng_state and u.net_worth() == nw and u.entities.size() == ids_before, "capture is read-only")
+	var text := JSON.stringify(d)
+	var parsed: Variant = JSON.parse_string(text)
+	assert(parsed is Dictionary, "save is JSON-safe")
+	var r := SaveGame.restore(parsed as Dictionary)
+	assert(r != null, "restore of a fresh save succeeds")
+	assert(absf(r.net_worth() - nw) < 0.001, "net worth (JSON keeps ~15 digits) round-trips: %f vs %f" % [r.net_worth(), nw])
+	assert(absf(r.credits - u.credits) < 0.001 and absf(r.time - u.time) < 0.001 and r.kills == u.kills)
+	assert(r.entities.size() == u.entities.size() and r.next_id == u.next_id)
+	assert(r.player_ship != null and r.player_ship.id == u.player_ship.id and r.hq.id == u.hq.id)
+	assert(r.rng.state == u.rng.state and absf(r.ledger.total() - u.ledger.total()) < 0.001)
+	assert(r.ledger.breakdown(r.time).size() == u.ledger.breakdown(u.time).size())
+	assert(absf(r.director.raid_t - u.director.raid_t) < 0.001 and r.director.raid_count == u.director.raid_count)
+	assert(r.director.tracker.raids.size() == u.director.tracker.raids.size())
+	assert(r.colonies() == u.colonies() and r.alive_nests().size() == u.alive_nests().size())
+	for e: SimEntity in u.entities.values():
+		var o := r.get_ent(e.id)
+		assert(o != null and o.pos.is_equal_approx(e.pos) and is_equal_approx(o.hull, e.hull) and o.faction == e.faction and o.sector == e.sector)
+		if e is ShipData:
+			assert((o as ShipData).order == (e as ShipData).order and (o as ShipData).cargo == (e as ShipData).cargo)
+			assert((o as ShipData).plan.size() == (e as ShipData).plan.size())
+		else:
+			assert((o as StationData).stock == (e as StationData).stock)
+	# Capturing again from the restored run keeps every section.
+	var d2 := SaveGame.capture(r)
+	assert(d2.keys() == d.keys() and (d2["entities"] as Array).size() == (d["entities"] as Array).size(), "re-capture of a restored run has the same shape")
+	for i in 600:
+		r.step(JOURNEY_DT)
+	assert(r.time > u.time + 59.0 and r.entities.size() > 0 and not is_nan(r.net_worth()))
+	# Bad saves
+	var bad := d.duplicate(true)
+	bad["version"] = SaveGame.VERSION + 1
+	assert(SaveGame.restore(bad) == null, "wrong version rejected")
+	bad = d.duplicate(true)
+	bad.erase("version")
+	assert(SaveGame.restore(bad) == null, "missing version rejected")
+	bad = d.duplicate(true)
+	bad.erase("entities")
+	assert(SaveGame.restore(bad) == null, "missing entities rejected")
+	bad = d.duplicate(true)
+	bad["sectors"] = []
+	assert(SaveGame.restore(bad) == null, "wrong sector count rejected")
+	bad = d.duplicate(true)
+	(bad["entities"] as Array)[0].erase("pos")
+	assert(SaveGame.restore(bad) == null, "entity without pos rejected")
+	bad = d.duplicate(true)
+	(bad["entities"] as Array)[0]["type"] = "no_such_class"
+	assert(SaveGame.restore(bad) == null, "unknown entity type rejected")
+	bad = d.duplicate(true)
+	bad["hq_id"] = 999999
+	assert(SaveGame.restore(bad) == null, "dangling hq id rejected")
+	assert(SaveGame.restore({}) == null, "empty dict rejected")
+	assert(SaveGame.restore({"version": SaveGame.VERSION}) == null, "version-only dict rejected")
+	for x: Universe in [u, r]:
+		x.director = null
+
+
 func _test_ledger() -> void:
 	var u := Universe.new()
 	u.setup(JOURNEY_SEED)
