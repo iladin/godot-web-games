@@ -165,7 +165,8 @@ func _process(delta: float) -> void:
 			u.respawn_player()
 			space.spawn_player()
 	if mode == "surface" and surface:
-		surface.tick(delta)
+		if RunFlow.surface_live(state):   # frozen under the end screen (VS-022)
+			surface.tick(delta)
 	elif space:
 		space.tick(delta)
 	if autoplay:
@@ -184,6 +185,8 @@ func _set_mode(m: String) -> void:
 		docked_at = null
 	var live := state == State.PLAYING
 	space.flight_enabled = m == "flight" and live
+	if surface:
+		surface.fps.input_enabled = RunFlow.surface_live(state)   # first click on "HQ LOST" must restart, not capture the mouse
 	hud.mode = ("flight" if m == "flight" else ("surface" if m == "surface" else "none")) if live else "none"
 	touch.set_layout(("flight" if m == "flight" else ("surface" if m == "surface" else "none")) if live else "none")
 	if m == "map":
@@ -217,7 +220,9 @@ func _on_land(sector_idx: int) -> void:
 	add_child(surface)
 	surface.setup(u, touch, sector_idx)
 	surface.takeoff_requested.connect(_leave_surface.bind(false))
-	surface.player_died.connect(func() -> void: _leave_surface.call_deferred(true))
+	surface.player_died.connect(func() -> void:
+		if RunFlow.surface_live(state):
+			_leave_surface.call_deferred(true))
 	surface.hit_something.connect(func() -> void: hud.hit(); sfx.play("hit"))
 	surface.sfx.connect(func(n: String) -> void: sfx.play(n))
 	surface.player_damaged.connect(func(a: float) -> void: hud.damaged(a))
@@ -228,10 +233,11 @@ func _on_land(sector_idx: int) -> void:
 
 
 func _leave_surface(evac: bool) -> void:
-	if surface == null:
+	if surface == null or not RunFlow.surface_live(state):
 		return
 	await _fade_to(1.0)
-	if surface == null:
+	if surface == null or not RunFlow.surface_live(state):   # run ended during the fade
+		_fade_to(0.0)
 		return
 	surface.queue_free()
 	surface = null

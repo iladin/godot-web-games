@@ -68,3 +68,8 @@
 - Task(s): VS-024 credit ledger — done (QA PASS first round). New `scripts/sim/ledger.gd` (CreditLedger); `Universe.add_credits(amount, cat)` is the sole writer of player credits (9 sites, 10 categories); HUD "+N cr/min", map/dock "Last 5 min" breakdown; tip 4 → Union Trade Hub.
 - Check: PASS · Git: see commit studio(S0013): VS-024
 - Notes: Pure observer confirmed — econ30 and passive40 BALANCE_JSON byte-identical to S0012. QA's per-step invariant (20 min, seeds 101/186) drift 0. Six P3 follow-ups to parking lot. Repo mount moved to $HOME/mnt/git/godot-web-games mid-session. ~50 min wall time.
+
+## S0014 — 2026-10-27 05:10 — BUILD
+- Task(s): VS-005 surface marker declutter (done, QA PASS round 1); VS-022 freeze surface under end screen (done, QA PASS round 1)
+- Check: PASS · Git: committed (see HANDOVER) 
+- Notes: Repo mount is $HOME/mnt/git/godot-web-games. Removed stale S0013 .git lock stubs and tmp_obj files after delete permission (C:\git root). HUD/input only; no balance gates needed.

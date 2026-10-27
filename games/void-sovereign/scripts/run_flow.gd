@@ -19,6 +19,11 @@ static func sim_runs(state: VoidMain.State) -> bool:
 	return state == VoidMain.State.PLAYING
 
 
+## True when the on-foot layer (surface tick, FPS input, evacuation on death) may run: only mid-run.
+static func surface_live(state: VoidMain.State) -> bool:
+	return state == VoidMain.State.PLAYING
+
+
 func start() -> void:
 	g.state = VoidMain.State.PLAYING
 	g.state_time = 0.0

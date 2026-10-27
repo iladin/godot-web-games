@@ -261,16 +261,67 @@ func _draw_surface(sz: Vector2) -> void:
 		_txt(Vector2(0, sz.y * 0.7), surface.prompt, 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not surface.touch.active:
 		_txt(Vector2(0, sz.y * 0.78), "Click to capture mouse", 18, DIM, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
-	# Objective markers.
+	# Objective markers (VS-005: same-label markers that line up are merged, others stacked).
 	var cam := surface.cam
+	var items: Array[Dictionary] = []
 	for m: Dictionary in surface.markers():
 		var wp: Vector3 = m["pos"]
 		if cam.is_position_behind(wp):
 			continue
-		var sp := cam.unproject_position(wp)
+		items.append({"sp": cam.unproject_position(wp), "col": m["col"], "label": m["label"],
+			"dist": wp.distance_to(cam.global_position)})
+	for m: Dictionary in layout_markers(items):
+		var sp: Vector2 = m["sp"]
 		var col: Color = m["col"]
-		draw_arc(sp, 9, 0, TAU, 16, col, 2.0)
-		_txt(sp + Vector2(12, 5), "%s %dm" % [m["label"], int(wp.distance_to(cam.global_position))], 14, col)
+		for q: Vector2 in m["pts"]:
+			draw_arc(q, 9, 0, TAU, 16, col, 2.0)
+		var tp: Vector2 = m["text_pos"]
+		if tp.y != sp.y:
+			draw_line(sp + Vector2(9, 0), tp + Vector2(-2, -5), Color(col, 0.5), 1.0)
+		_txt(tp, m["text"], 14, col)
+
+
+const MARKER_MERGE_PX := 70.0   ## same-label markers closer than this on screen merge into one
+const MARKER_LINE_H := 17.0     ## vertical step between stacked marker labels
+const MARKER_LABEL_W := 150.0   ## approximate label width, for overlap tests
+
+
+## Pure layout: items {sp: Vector2, col, label, dist} -> {sp, col, pts, text, text_pos}.
+## Same-label items within MARKER_MERGE_PX merge ("2x PYLON 380m", nearest distance); labels
+## that still overlap are pushed down so each stays readable.
+static func layout_markers(items: Array[Dictionary]) -> Array[Dictionary]:
+	var groups: Array[Dictionary] = []
+	for it: Dictionary in items:
+		var g: Dictionary = {}
+		for c: Dictionary in groups:
+			if c["label"] == it["label"] and (c["sp"] as Vector2).distance_to(it["sp"]) < MARKER_MERGE_PX:
+				g = c
+				break
+		if g.is_empty():
+			groups.append({"label": it["label"], "col": it["col"], "sp": it["sp"], "pts": [it["sp"]],
+				"n": 1, "dist": it["dist"]})
+		else:
+			g["n"] = int(g["n"]) + 1
+			(g["pts"] as Array).append(it["sp"])
+			g["dist"] = minf(float(g["dist"]), float(it["dist"]))
+	groups.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return (a["sp"] as Vector2).y < (b["sp"] as Vector2).y)
+	var out: Array[Dictionary] = []
+	for g: Dictionary in groups:
+		var n := int(g["n"])
+		var txt := "%s %dm" % [g["label"], int(float(g["dist"]))]
+		if n > 1:
+			txt = "%d\u00d7 %s" % [n, txt]
+		var tp: Vector2 = (g["sp"] as Vector2) + Vector2(12, 5)
+		var moved := true
+		while moved:
+			moved = false
+			for o: Dictionary in out:
+				var op: Vector2 = o["text_pos"]
+				if absf(op.x - tp.x) < MARKER_LABEL_W and absf(op.y - tp.y) < MARKER_LINE_H:
+					tp.y = op.y + MARKER_LINE_H
+					moved = true
+		out.append({"sp": g["sp"], "col": g["col"], "pts": g["pts"], "text": txt, "text_pos": tp})
+	return out
 
 
 func objective() -> String:

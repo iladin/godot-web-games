@@ -67,7 +67,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0006 — scripts/ui/tutorial_hints.gd: 6 state-latched tips (steer→throttle→target→dock→map→land Ember), touch wording, skip via H or tap; selftest + autoplay asserts (QA PASS, assert mutation-tested)
 
 ## VS-005 · Declutter surface objective markers
-- status: todo
+- status: done
 - priority: P2
 - type: bug
 - size: S
@@ -77,7 +77,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - acceptance:
   - [ ] Overlapping marker labels are offset or merged ("2× PYLON 380m")
   - [ ] `shots.sh void-sovereign surface touch_surface` shows readable markers
-- notes: S0008 QA: two pylon labels ("PYLON 366m"/"PYLON 413m") overlap in surface.png. S0012: still open (critic #4, QA); scout suggests one marker per objective + Core spire + pylon beams (parking lot).
+- notes: S0014 in progress. S0008 QA: two pylon labels overlap in surface.png. S0012: still open.
+- done: S0014 — Hud.layout_markers merges same-label markers (2× PYLON 366m) and stacks overlaps; QA PASS first round
 
 ## VS-006 · Web performance guard for late-game ship counts
 - status: blocked
@@ -326,7 +327,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0010 — balance.gd --perturb=N / --nowave (no-arg output byte-identical), scripts/studio/balance_gate.sh 9 seeds (offsets 0/3/6) with median+IQR, econ30 one call 154 s, passive40 two calls; baselines econ30 nw20 107.7k [103.5–127.0k] nw30 55.9k [39.9–70.2k] HQ 9/9, passive40 HQ lost 33.7 [32.1–35.8] survived 2/9; QA PASS first round
 
 ## VS-022 · Freeze the surface under the end screen (one click restarts)
-- status: todo
+- status: done
 - priority: P2
 - type: bug
 - size: S
@@ -338,7 +339,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] A player death after game over does not call `_leave_surface` / change hull or mode
   - [ ] A single click/tap/key on the surface end screen restarts the run
   - [ ] New selftest assertion covering surface + finish; check.sh PASS
-- notes: Fix hint (QA): gate surface.tick and fps input_enabled on state == PLAYING in run_flow.gd. Repro probes .tools/s0012_qa/p1.gd, p1b.gd. Supersedes parking-lot item (S0010, QA) surface game-over double click.
+- notes: S0014 in progress. Fix hint (QA): gate surface.tick and fps input on state==PLAYING in run_flow.gd. Repro probes .tools/s0012_qa/p1.gd, p1b.gd.
+- done: S0014 — surface frozen + fps input off when run not PLAYING (RunFlow.surface_live); death after game over ignored; one click restarts; QA PASS first round
 
 ## VS-023 · Raid deterrent counts only platforms that defend the target; tame the pre-deterrent dreadnought
 - status: todo
@@ -450,3 +452,4 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0013, QA VS-024, P3) cr/min inflated in the first 15 s (MIN_RATE_SPAN floor) — hide the rate until ≥15 s of data.
 - (S0013, dev VS-024, P3) Touch "ACT: Dock at Sovereign HQ" prompt shows under tip 4 at spawn (nearest station is HQ) — untested in a shot; add a touch hints shot at tip 4.
 - (S0013, dev, P3) End screen: per-category lifetime credit totals from CreditLedger.totals.
+- (S0014, QA VS-005, P3) Surface marker text is dark pink on pink/orange terrain, low contrast — add a dark outline/shadow in Hud._txt for markers. Stacking+leader-line path only selftest-covered, not seen in a shot.

@@ -165,7 +165,9 @@ func _init() -> void:
 	_test_sfx()
 	_test_hints()
 	_test_ledger()
+	_test_marker_layout()
 	_test_run_flow()
+	await _test_surface_over()
 	print("SELFTEST OK")
 	quit()
 
@@ -372,7 +374,40 @@ func _test_run_flow() -> void:
 	assert(not RunFlow.sim_runs(VoidMain.State.TITLE), "world frozen on the title screen")
 	assert(RunFlow.sim_runs(VoidMain.State.PLAYING), "world runs while playing")
 	assert(not RunFlow.sim_runs(VoidMain.State.OVER), "world frozen on the end screen")
+	assert(RunFlow.surface_live(VoidMain.State.PLAYING) and not RunFlow.surface_live(VoidMain.State.OVER), "surface only live mid-run")
 	print("run flow: sim gating OK")
+
+
+## VS-022: ending a run while on foot freezes the surface, and a later death does not evacuate.
+func _test_surface_over() -> void:
+	for won in [false, true]:
+		var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+		root.add_child(g)
+		await process_frame
+		await process_frame
+		g._start_game()
+		await process_frame
+		g._on_land(0)
+		for i in 60:
+			await process_frame
+		assert(g.mode == "surface" and g.surface != null, "landed for the surface/finish test")
+		var fps = g.surface.fps
+		g.flow.finish(won)
+		assert(g.state == VoidMain.State.OVER and not fps.input_enabled, "fps input off once the run is over")
+		var p0: Vector3 = fps.global_position
+		var hull0: float = g.u.player_ship.hull
+		Input.action_press("move_f")
+		for i in 90:
+			await process_frame
+		Input.action_release("move_f")
+		assert(fps.global_position.distance_to(p0) < 0.01, "player frozen under the end screen")
+		fps.take_damage(5000.0)
+		for i in 60:
+			await process_frame
+		assert(g.mode == "surface" and g.surface != null and is_equal_approx(g.u.player_ship.hull, hull0), "death after game over does not evacuate")
+		g.queue_free()
+		await process_frame
+	print("surface + finish: frozen, no evacuation OK")
 
 
 ## VS-016: buying N then selling N of a ware at the same station never increases the player's
@@ -404,3 +439,26 @@ func _check_no_round_trip_profit(u: Universe) -> void:
 	assert(pairs >= 4 * 3 * 4, "Trade Hub covers every ware")
 	ps.cargo = saved_cargo
 	u.credits = saved_credits
+
+
+func _test_marker_layout() -> void:
+	var col := Color.WHITE
+	var a: Array[Dictionary] = [
+		{"sp": Vector2(400, 300), "col": col, "label": "PYLON", "dist": 413.0},
+		{"sp": Vector2(430, 304), "col": col, "label": "PYLON", "dist": 366.0},
+	]
+	var r := Hud.layout_markers(a)
+	assert(r.size() == 1 and r[0]["text"] == "2\u00d7 PYLON 366m", "close same-label markers merge")
+	assert((r[0]["pts"] as Array).size() == 2)
+	var b: Array[Dictionary] = [
+		{"sp": Vector2(400, 300), "col": col, "label": "PYLON", "dist": 100.0},
+		{"sp": Vector2(900, 300), "col": col, "label": "PYLON", "dist": 200.0},
+		{"sp": Vector2(410, 306), "col": col, "label": "CORE", "dist": 150.0},
+	]
+	r = Hud.layout_markers(b)
+	assert(r.size() == 3, "far-apart or different labels stay separate")
+	var ys: Array[float] = []
+	for m: Dictionary in r:
+		if (m["text_pos"] as Vector2).x < 600.0:
+			ys.append((m["text_pos"] as Vector2).y)
+	assert(ys.size() == 2 and absf(ys[0] - ys[1]) >= Hud.MARKER_LINE_H, "overlapping labels are offset")
