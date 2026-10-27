@@ -110,6 +110,9 @@ func _init() -> void:
 	var dt := 1.0 / 20.0
 	var ow := u.director.opening
 	var wave_hostile_seen := false
+	var min_hull := 1e9   # VS-030: idle player's lowest hull while the wave is alive
+	var hold_checked := false
+	var revert_checked := false
 	for i in int(480.0 / dt):
 		u.step(dt)
 		if u.director.raid_count > 0:
@@ -124,6 +127,22 @@ func _init() -> void:
 			assert(TutorialHints.hostile_in(u, u.hq.sector), "the wave makes the target tip reachable at home")
 			assert(absf(u.director.raid_t - (Defs.FIRST_RAID - u.time)) < 0.2, "the wave does not reset or delay the raid timer")
 		assert(ow.spawn_count <= 1, "the opening wave spawns only once")
+		if ow.state == OpeningWave.State.ACTIVE:
+			min_hull = minf(min_hull, u.player_ship.hull)
+			var sc: ShipData = u.get_ent(ow.ids[0]) as ShipData
+			if sc != null and sc.sortie and not ow.engaged and ow.active_t < Defs.SORTIE_ESCORT_DELAY - 0.2:
+				hold_checked = true
+				assert(not ow.escorts_ok(), "escorts hold fire during SORTIE_ESCORT_DELAY")
+				var esc := ShipData.new()
+				esc.setup("fighter", Defs.Faction.PLAYER)
+				esc.sector = sc.sector
+				assert(not u.valid_target(esc, sc) and not u.valid_target(sc, esc), "escorts and scouts ignore each other during the delay")
+			if ow.active_t >= Defs.OPENING_WAVE_LINGER + 0.1 and not revert_checked:
+				for id: int in ow.ids:
+					var s2 := u.get_ent(id) as ShipData
+					if s2 != null and s2.alive:
+						revert_checked = true
+						assert(not s2.sortie and s2.hull_max <= float(Defs.SHIP["drone"]["hull"]) + 0.01, "scouts revert to 1x hull on unmark")
 		# VS-029 The Breach: nothing before BREACH_TIME, then exactly one scripted raid in the HQ sector.
 		if u.time < Defs.BREACH_TIME - 0.5:
 			assert(u.director.breach_count == 0, "the breach waits for BREACH_TIME")
@@ -131,6 +150,15 @@ func _init() -> void:
 	assert(u.director.breach_count == 1 and Defs.BREACH_TIME >= 330.0 and Defs.BREACH_TIME <= 450.0, "the breach raid spawned once in 5:30-7:30")
 	assert(Defs.BREACH_SIZE >= 4 and Defs.BREACH_SIZE <= 6, "breach has 4-6 raiders")
 	assert(ow.spawn_count == 1 and wave_hostile_seen, "the opening wave spawned once")
+	assert(hold_checked, "escort hold window observed")
+	assert(min_hull < 600.0 and min_hull >= 150.0, "idle player is hurt but survives the sortie (min hull %.0f)" % min_hull)
+	print("sortie idle min hull: %.0f" % min_hull)
+	# G on a scout releases the escorts early; the unmark math reverts hull proportionally.
+	var ow2 := OpeningWave.new(u)
+	ow2.state = OpeningWave.State.ACTIVE
+	assert(not ow2.escorts_ok(), "fresh wave holds escorts")
+	ow2.engaged = true
+	assert(ow2.escorts_ok(), "engaged wave frees escorts")
 	# Sortie scouts are the player's fight: only the player and Sovereign warships trade fire with them.
 	var scout := ShipData.new()
 	scout.setup("drone", Defs.Faction.HIVE)

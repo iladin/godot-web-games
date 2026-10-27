@@ -188,6 +188,7 @@ func tick(delta: float) -> void:
 func _handle_flight_input() -> void:
 	if Input.is_action_just_pressed("target") or touch.pressed("target"):
 		_cycle_target()
+		u.director.opening.player_target(target_id)   # VS-030: a G lock on a scout brings the escorts in
 		if target_id == 0:
 			u.message.emit("No hostiles in range", Color("8fd8ff"))
 	if (Input.is_action_just_pressed("act") or touch.pressed("act")) and _prompt_action.is_valid():

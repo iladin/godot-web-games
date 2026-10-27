@@ -183,6 +183,9 @@ func _process(delta: float) -> void:
 	if RunFlow.sim_runs(state):   # frozen behind the title and end screens
 		u.step(delta)
 		flow.autosave_tick(delta)
+		if u.director.opening.cue:   # VS-030 arrival cue, once per wave
+			u.director.opening.cue = false
+			sfx.play("alert")
 	if state == State.PLAYING and respawn_t >= 0.0:
 		respawn_t -= delta
 		if respawn_t < 0.0:

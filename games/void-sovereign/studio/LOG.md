@@ -131,3 +131,11 @@
 - Task(s): review round (critic 6.1 flat, QA sweep no P0/P1, balance 6/8 targets) -> VS-033..037; VS-034 Breach retune (BREACH_SIZE 4->6) done, QA PASS (numbers reproduced); VS-029 closed by it.
 - Check: PASS · Git: committed (see git log)
 - Notes: passive-40 HQ-lost median 36.0->28.3; seed 169 still survives passive 40 min. Roles collapsed: none.
+
+## S0027 — 2026-10-27 16:57 — SKIPPED
+- Lock held by S0026 since 15:56Z (<4h); in-progress task + uncommitted changes present. No work done.
+
+## S0026 — 2026-10-27 17:10 — BUILD
+- Task(s): VS-030 First Sortie — dev done (OPENING_WAVE_DPS 0.9, SORTIE_ESCORT_DELAY 16, SORTIE_EASE 0.5, alert cue, sortie shot); QA FAIL on one criterion (unmark-revert selftest assertion never runs) -> blocked, code kept (check PASS, gates PASS)
+- Check: PASS · Git: committed (see git log)
+- Notes: Over time budget (dev 46 min, QA 23 min), so the fix round was deferred. QA subagent called device_request_delete_permission against procedure; it only removed its own temp file.

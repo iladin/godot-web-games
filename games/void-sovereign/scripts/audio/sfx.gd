@@ -9,11 +9,11 @@ const MIX_RATE := 22050
 const POOL_SIZE := 10
 const MASTER_DB := -6.0
 const VOLUME_DB: Dictionary = {
-	"laser": -10.0, "rifle": -7.0, "hit": -9.0, "explosion": -2.0, "gate": -4.0, "click": -12.0,
+	"laser": -10.0, "rifle": -7.0, "hit": -9.0, "explosion": -2.0, "gate": -4.0, "click": -12.0, "alert": -6.0,
 }
 const PITCH_JITTER := 0.08          # +-8 % random pitch per play
 const MIN_INTERVAL := 0.045         # same sound re-triggered faster than this is skipped (twin guns)
-const NAMES: Array[String] = ["laser", "rifle", "hit", "explosion", "gate", "click"]
+const NAMES: Array[String] = ["laser", "rifle", "hit", "explosion", "gate", "click", "alert"]
 const MUTE_KEY := KEY_N
 
 signal mute_changed(is_muted: bool)
@@ -103,6 +103,7 @@ static func generate_all() -> Dictionary:
 	out["explosion"] = _explosion(rng)
 	out["gate"] = _gate()
 	out["click"] = _click()
+	out["alert"] = _alert()
 	return out
 
 
@@ -199,4 +200,16 @@ static func _click() -> AudioStreamWAV:
 	for i in n:
 		var t := float(i) / n
 		s[i] = sin(TAU * 1000.0 * float(i) / MIX_RATE) * 0.5 * (1.0 - t) * (1.0 - t)
+	return _wav(s)
+
+
+## Sortie alert: two descending square-ish blips.
+static func _alert() -> AudioStreamWAV:
+	var s := _buf(0.4)
+	var n := s.size()
+	for i in n:
+		var t := float(i) / n
+		var f := 880.0 if t < 0.45 else 660.0
+		var gate := 1.0 if fmod(t, 0.5) < 0.4 else 0.0
+		s[i] = signf(sin(TAU * f * float(i) / MIX_RATE)) * 0.25 * gate * (1.0 - t * 0.5)
 	return _wav(s)

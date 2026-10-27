@@ -49,7 +49,7 @@ static func capture(u: Universe) -> Dictionary:
 				"turned_back_at": d.turned_back_at, "turned_back_pending": d.turned_back_pending,
 				"breach_t": d.breach_t, "breach_count": d.breach_count},
 		"tracker": {"raids": raids, "t": d.tracker._t},
-		"opening": {"t": ow.t, "state": ow.state, "spawn_count": ow.spawn_count, "ids": _enc(ow.ids), "active_t": ow.active_t,
+		"opening": {"t": ow.t, "state": ow.state, "spawn_count": ow.spawn_count, "ids": _enc(ow.ids), "active_t": ow.active_t, "engaged": ow.engaged, "eased": ow.eased,
 				"rng_seed": str(ow.rng.seed), "rng_state": str(ow.rng.state)},
 	}
 
@@ -167,6 +167,8 @@ static func restore(d: Dictionary) -> Universe:
 	for i in _dec(od["ids"]) as Array:
 		ow.ids.append(int(i))
 	ow.active_t = float(od["active_t"])
+	ow.engaged = bool(od.get("engaged", false))
+	ow.eased = bool(od.get("eased", false))
 	ow.rng.seed = int(str(od["rng_seed"]))
 	ow.rng.state = int(str(od["rng_state"]))
 	u._rebuild_cache()

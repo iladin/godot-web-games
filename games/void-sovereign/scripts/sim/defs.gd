@@ -142,10 +142,15 @@ const NEST_SPAWN_MIN := 12.0
 const OPENING_WAVE_TIME := 60.0
 const OPENING_WAVE_SIZE := 3
 const OPENING_WAVE_HULL := 3.0
-const OPENING_WAVE_DPS := 0.5
+const OPENING_WAVE_DPS := 0.9
 const OPENING_WAVE_ORBIT := 700.0
 const OPENING_WAVE_RANGE := 1300.0
 const OPENING_WAVE_LINGER := 240.0
+# VS-030: for the first SORTIE_ESCORT_DELAY s after arrival the scouts only trade fire with the
+# player (escorts and the HQ hold off) unless the player locks a scout with G. Hull and damage
+# of survivors revert to 1x when the wave is unmarked.
+const SORTIE_ESCORT_DELAY := 16.0
+const SORTIE_EASE := 0.5   # scouts' damage multiplier once the escorts join in
 
 # --- Union upkeep --------------------------------------------------------------------
 const UNION_QUOTA: Dictionary = {"fighter": 10, "trader": 8, "miner": 6}

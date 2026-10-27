@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Render screenshot scenarios for a game (needs xvfb-run + Mesa; works headless on Linux).
 # Usage: bash scripts/studio/shots.sh <slug> <scenario>...    RES=900x720 to change resolution.
-# Void Sovereign scenarios: title map dock surface touch touch_surface combat over win death
+# Void Sovereign scenarios: sortie title map dock surface touch touch_surface combat over win death
 # Output: .tools/shots/<slug>/<scenario>.png
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

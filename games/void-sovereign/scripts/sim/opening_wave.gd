@@ -14,6 +14,9 @@ var state: int = State.PENDING
 var spawn_count: int = 0          # how many times the wave spawned (selftest: exactly once)
 var ids: Array[int] = []
 var active_t: float = 0.0
+var engaged: bool = false         # VS-030: the player locked a scout (G), so escorts may join in
+var eased: bool = false           # VS-030: scouts already toned down by SORTIE_EASE
+var cue: bool = false             # VS-030: one-shot arrival cue, consumed by main (Sfx)
 var rng := RandomNumberGenerator.new()   # wave-only draws; the main sim stream stays untouched
 
 
@@ -29,6 +32,8 @@ func step(delta: float) -> void:
 				_spawn()
 		State.ACTIVE:
 			active_t += delta
+			if not eased and escorts_ok():
+				_ease()
 			if active_t >= Defs.OPENING_WAVE_LINGER:
 				_unmark()
 			if alive() == 0:
@@ -49,12 +54,29 @@ func alive() -> int:
 
 ## Combat filter (Universe.valid_target): sortie scouts and everything other than the
 ## player's own ships and warships ignore each other.
-static func allows(e: SimEntity, t: SimEntity) -> bool:
+static func allows(u: Universe, e: SimEntity, t: SimEntity) -> bool:
+	var other: SimEntity = null
 	if t is ShipData and (t as ShipData).sortie:
-		return _wing(e)
-	if e is ShipData and (e as ShipData).sortie:
-		return _wing(t)
-	return true
+		other = e
+	elif e is ShipData and (e as ShipData).sortie:
+		other = t
+	else:
+		return true
+	if not _wing(other):
+		return false
+	return (other as ShipData).is_player or u.director == null or u.director.opening.escorts_ok()
+
+
+## True once escorts may fight the scouts: the delay ran out, the player locked one, or the wave is over.
+func escorts_ok() -> bool:
+	return state != State.ACTIVE or engaged or active_t >= Defs.SORTIE_ESCORT_DELAY
+
+
+## The player targeted `id` (G): if it is a scout, the escorts join the fight.
+func player_target(id: int) -> void:
+	var e := u.get_ent(id)
+	if state == State.ACTIVE and e is ShipData and (e as ShipData).sortie:
+		engaged = true
 
 
 static func _wing(x: SimEntity) -> bool:
@@ -77,11 +99,26 @@ func spawn_point() -> Vector3:
 	return from + dir * Defs.OPENING_WAVE_RANGE
 
 
+## Once the escorts are in, the scouts hit softer so the player is not finished off while the wing cleans up.
+func _ease() -> void:
+	eased = true
+	for id: int in ids:
+		var e := u.get_ent(id)
+		if e is ShipData and (e as ShipData).sortie:
+			(e as ShipData).dps *= Defs.SORTIE_EASE
+
+
 func _unmark() -> void:
 	for id: int in ids:
 		var e := u.get_ent(id)
 		if e is ShipData:
-			(e as ShipData).sortie = false
+			var s := e as ShipData
+			if s.sortie:
+				var frac := s.hull / s.hull_max
+				s.sortie = false
+				s.hull_max /= Defs.OPENING_WAVE_HULL
+				s.hull = s.hull_max * frac
+				s.dps /= Defs.OPENING_WAVE_DPS * (Defs.SORTIE_EASE if eased else 1.0)
 
 
 func _spawn() -> void:
@@ -90,6 +127,7 @@ func _spawn() -> void:
 		return
 	state = State.ACTIVE
 	spawn_count += 1
+	cue = true
 	rng.seed = u.rng.seed + 18
 	var sidx := u.hq.sector
 	var base := spawn_point()

@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: title title_continue title_continue_touch title_confirm map dock ledger ledger_dock ledger_map surface touch touch_surface over over_map win death combat hints
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map dock ledger ledger_dock ledger_map surface touch touch_surface over over_map win death combat hints
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -11,6 +11,7 @@ var g: VoidMain
 var _ap_step: int = 0
 var _title_frames: int = 0
 var _save_checked: bool = false
+var _min_hull: float = 1e9
 
 
 func _init(p_g: VoidMain) -> void:
@@ -166,13 +167,23 @@ func _shot_script(t: float) -> void:
 				g._on_dock(g.u.hq)
 				g.u.player_ship.take_damage(1e9)
 				g.u._on_killed(g.u.player_ship, 0)
-			"combat", "combat_long":
+			"sortie":   # VS-030: idle player at home when the scouts arrive; escorts hold fire at first
+				g.space.autoplay = false
+				g.space.player.autopilot = false
+				g.u.director.opening.t = 0.2
+			"combat_long":   # home sector: the First Sortie lands on the player at t=60
+				pass
+			"combat":
 				g.u.player_ship.sector = 3
 				g.space.enter_sector(3)
 				g.space.player.position = Vector3(800, 0, 800)
-	if g.shot_mode.ends_with("_long") and int(t * 60.0) % 300 == 0:
-		print("t=%d credits=%d hull=%d %s" % [int(t), int(g.u.credits), int(g.u.player_ship.hull), g.surface.objective_text() if g.surface else "sector %d mode %s" % [g.space.sector_idx, g.mode]])
+	if g.shot_mode.ends_with("_long") and int(t * 60.0) % 60 == 0:
+		print("t=%d credits=%d hull=%d sh=%d min_hull=%d %s" % [int(t), int(g.u.credits), int(g.u.player_ship.hull), int(g.u.player_ship.shield), int(_min_hull), g.surface.objective_text() if g.surface else "sector %d mode %s" % [g.space.sector_idx, g.mode]])
+	if g.shot_mode.ends_with("_long") and g.u.player_ship != null:
+		_min_hull = minf(_min_hull, g.u.player_ship.hull)
 	var wait := 6.0 if g.shot_mode == "surface" else 3.0
+	if g.shot_mode == "sortie":
+		wait = 9.0
 	if g.shot_mode.ends_with("_long"):
 		wait = 90.0
 	if _ap_step == 1 and t > wait:

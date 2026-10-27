@@ -145,7 +145,7 @@ func valid_target(e: SimEntity, t: SimEntity) -> bool:
 		return false
 	if e is ShipData and (e as ShipData).breach and not (t is StationData):
 		return false
-	return Defs.hostile(e.faction, t.faction) and OpeningWave.allows(e, t)
+	return Defs.hostile(e.faction, t.faction) and OpeningWave.allows(self, e, t)
 
 
 func nearest_hostile(e: SimEntity, max_dist: float) -> SimEntity:
