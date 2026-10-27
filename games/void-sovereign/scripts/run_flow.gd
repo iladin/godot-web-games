@@ -6,11 +6,13 @@ extends RefCounted
 ## MapView (mouse_filter STOP) can't eat the restart click or tap.
 
 const SAVE_PATH := "user://save.cfg"
+const CONFIRM_GUARD := 0.35      # seconds before the confirming press counts (VS-028)
 const AUTOSAVE_INTERVAL := 60.0   # seconds of PLAYING between autosaves (VS-027)
 
 var g: VoidMain
 var save_path: String = RunSave.PATH
 var _save_t: float = 0.0
+var _confirm_at: float = -1.0   # >= 0 while the title asks "replace your saved run?"
 
 
 func _init(p_g: VoidMain) -> void:
@@ -28,6 +30,7 @@ static func surface_live(state: VoidMain.State) -> bool:
 
 
 func start(msg: String = "") -> void:
+	_confirm_at = -1.0
 	_save_t = 0.0
 	g.state = VoidMain.State.PLAYING
 	g.state_time = 0.0
@@ -57,6 +60,31 @@ func autosave() -> bool:
 	return RunSave.write(g.u, save_path)
 
 
+## Title "New Game" gate (VS-028): with a valid save the first press only arms a confirmation, and a
+## second press (after CONFIRM_GUARD, so a double-tap can't skip it) starts over and deletes the save.
+## Returns true when a new run should start now. `now` is seconds (injectable for tests).
+func request_new_game(has_save: bool, now: float) -> bool:
+	if not has_save:
+		_confirm_at = -1.0
+		return true
+	if _confirm_at < 0.0:
+		_confirm_at = now
+		return false
+	if now - _confirm_at < CONFIRM_GUARD:
+		return false
+	_confirm_at = -1.0
+	clear_save()
+	return true
+
+
+func cancel_new_game() -> void:
+	_confirm_at = -1.0
+
+
+func confirming() -> bool:
+	return _confirm_at >= 0.0
+
+
 func clear_save() -> void:
 	RunSave.delete(save_path)
 
@@ -66,6 +94,8 @@ func continue_run() -> bool:
 	var r := RunSave.load_universe(save_path)
 	if r == null:
 		g.overlay.continue_time = -1.0
+		g.overlay.confirm_new = false
+		cancel_new_game()
 		return false
 	g._new_world(r)
 	start("Run restored — welcome back, Sovereign.")

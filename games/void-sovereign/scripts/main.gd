@@ -59,11 +59,24 @@ func _ready() -> void:
 	add_child(sfx)
 	sfx.mute_changed.connect(func(m: bool) -> void: u.message.emit("Sound off (N)" if m else "Sound on", Color("8fd8ff")))
 	_build_ui()
+	if shot_mode.begins_with("title_continue") or shot_mode == "title_confirm":
+		_seed_autoplay_save()   # VS-028: so the title shows its Continue button
 	_new_world()
 	# Plain --autoplay starts from the title (TestDriver checks the world is frozen there first);
 	# shot scenarios other than "title" start a run straight away.
-	if shot_mode != "" and shot_mode != "title":
+	if shot_mode != "" and shot_mode != "title" and not shot_mode.begins_with("title_continue") and shot_mode != "title_confirm":
 		_start_game()
+
+
+## Screenshot scenarios only: write a mid-run save (12:34 in, not in the home sector) to the autoplay path.
+func _seed_autoplay_save() -> void:
+	var s := Universe.new()
+	s.setup(7)
+	for i in 600:
+		s.step(1.0 / 6.0)
+	s.time = 754.0
+	RunSave.write(s, RunSave.AUTOPLAY_PATH)
+	s.director = null
 
 
 func _build_ui() -> void:
@@ -149,6 +162,8 @@ func _new_world(restored: Universe = null) -> void:
 	hud.mode = "none"
 	overlay.screen = "title"
 	overlay.best = best
+	overlay.confirm_new = false
+	flow.cancel_new_game()
 	overlay.continue_time = -1.0 if restored != null else RunSave.peek_time(flow.save_path)
 
 
@@ -288,9 +303,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		State.TITLE:
 			if _wants_continue(event):
 				flow.continue_run()
+			elif event.is_action_pressed("ui_cancel") and flow.confirming():
+				flow.cancel_new_game()
+				overlay.confirm_new = false
 			elif press:
 				overlay.touch_hint = touch.active
-				_start_game()
+				if flow.request_new_game(overlay.continue_time >= 0.0, Time.get_ticks_msec() / 1000.0):
+					overlay.confirm_new = false
+					_start_game()
+				else:
+					overlay.confirm_new = flow.confirming()
 		State.OVER:
 			if press and state_time > RESTART_DELAY:
 				_new_world()

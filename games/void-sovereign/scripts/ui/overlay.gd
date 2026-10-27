@@ -15,6 +15,7 @@ var stats: String = ""
 var t: float = 0.0
 var touch_hint: bool = false
 var continue_time: float = -1.0   # saved run time in seconds; < 0 = no valid save (VS-027)
+var confirm_new: bool = false     # title asks to confirm replacing the save (VS-028)
 var font: Font = ThemeDB.fallback_font
 
 
@@ -70,8 +71,12 @@ func _draw() -> void:
 				draw_rect(r, Color(0.02, 0.1, 0.14, 0.9))
 				draw_rect(r, CYAN, false, 2.0)
 				_line(r.position.y + 31, "Continue (%d:%02d)  [C]" % [int(continue_time / 60.0), int(continue_time) % 60], 28, CYAN)
-			_line(h * 0.86, "Click, tap or press Space to launch" if continue_time < 0.0 else "Or click, tap or press Space for a New Game", 32 if continue_time < 0.0 else 26, pulse)
-			if best > 0:
+			if confirm_new:
+				_line(h * 0.86, "Replace your saved run? Click, tap or press Space again", 26, HIVE.lerp(Color.WHITE, 0.3 + 0.3 * sin(t * 6.0)))
+				_line(h * 0.86 + 28, "Esc cancels · or press Continue to keep your run", 18, Color(1, 1, 1, 0.7))
+			else:
+				_line(h * 0.86, "Click, tap or press Space to launch" if continue_time < 0.0 else "Or click, tap or press Space for a New Game", 32 if continue_time < 0.0 else 26, pulse)
+			if best > 0 and not confirm_new:
 				_line(h * 0.92, "Best score %d" % best, 20, Color(1, 1, 1, 0.6))
 		"pause":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.6))

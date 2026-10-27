@@ -121,3 +121,8 @@
 - Task(s): VS-027 Autosave + Continue on title — done (Developer -> independent QA PASS)
 - Check: PASS · Git: committed (see git log)
 - Notes: new scripts/run_save.gd; RunFlow autosave/continue_run; Overlay Continue button (key C/click/tap). P3: no selftest that finish() deletes save.
+
+## S0024 — 2026-10-27 14:10 — BUILD
+- Task(s): VS-028 save robustness / new-game confirm — done (QA PASS)
+- Check: PASS · Git: committed (see log)
+- Notes: builds_since_review=6 -> PLANNING due next. QA P3: title FLIGHT line clipped (pre-existing).

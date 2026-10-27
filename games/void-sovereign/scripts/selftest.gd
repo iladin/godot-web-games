@@ -259,6 +259,7 @@ func _init() -> void:
 	_test_marker_layout()
 	_test_run_flow()
 	await _test_surface_over()
+	await _test_save_flow()
 	print("SELFTEST OK")
 	quit()
 
@@ -582,6 +583,67 @@ func _test_run_flow() -> void:
 	assert(not RunFlow.sim_runs(VoidMain.State.OVER), "world frozen on the end screen")
 	assert(RunFlow.surface_live(VoidMain.State.PLAYING) and not RunFlow.surface_live(VoidMain.State.OVER), "surface only live mid-run")
 	print("run flow: sim gating OK")
+
+
+## VS-028: finish() clears the save; New Game over a save asks first; Continue from a non-home sector restores it.
+func _test_save_flow() -> void:
+	var path := "user://selftest_flow.save"
+	var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+	root.add_child(g)
+	await process_frame
+	await process_frame
+	g.flow.save_path = path   # never touch a real save
+	RunSave.delete(path)
+	# finish() deletes the save.
+	g._start_game()
+	await process_frame
+	assert(g.flow.autosave() and FileAccess.file_exists(path), "autosave wrote the file")
+	g.flow.finish(false)
+	assert(not FileAccess.file_exists(path) and RunSave.peek_time(path) < 0.0, "finish() clears the save")
+	# Save a run that is away from the home sector, then return to the title.
+	g._new_world()
+	g._start_game()
+	await process_frame
+	var away := 0
+	for i in g.u.sectors.size():
+		if i != g.u.hq.sector:
+			away = i
+			break
+	g.u.player_ship.sector = away
+	g.space.enter_sector(away)
+	g.u.add_credits(1234.0, "trade")
+	var credits := g.u.credits
+	for i in 30:
+		await process_frame
+	assert(g.flow.autosave(), "autosave away from home")
+	g._new_world()
+	g.state = VoidMain.State.TITLE
+	assert(g.overlay.continue_time >= 0.0, "title offers Continue for a valid save")
+	# New Game over a save: first press asks, a double-tap is ignored, the confirming press deletes the save.
+	assert(not g.flow.request_new_game(true, 10.0) and g.flow.confirming(), "first New Game press only asks")
+	assert(not g.flow.request_new_game(true, 10.1), "double-tap cannot confirm")
+	assert(FileAccess.file_exists(path), "save kept while asking")
+	g.flow.cancel_new_game()
+	assert(not g.flow.confirming() and FileAccess.file_exists(path), "cancel keeps the save")
+	assert(g.flow.request_new_game(false, 11.0), "no save -> New Game starts at once")
+	# Continue restores the non-home sector.
+	assert(g.flow.continue_run(), "continue works from the title")
+	assert(g.state == VoidMain.State.PLAYING and g.u.player_ship.sector == away, "continue restores the player's sector")
+	assert(g.space.sector_idx == away and absf(g.u.credits - credits) < 1.0, "flight view + credits restored")
+	# Confirming path: ask, wait, confirm -> save deleted.
+	g.state = VoidMain.State.TITLE
+	assert(not g.flow.request_new_game(true, 20.0) and g.flow.request_new_game(true, 20.5), "second press confirms")
+	assert(not FileAccess.file_exists(path), "confirmed New Game deletes the old save")
+	# A corrupt file leaves no Continue and continue_run fails cleanly.
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("garbage")
+	f.close()
+	g._new_world()
+	assert(g.overlay.continue_time < 0.0 and not g.flow.continue_run(), "corrupt save: no Continue, no crash")
+	RunSave.delete(path)
+	g.queue_free()
+	await process_frame
+	print("save flow: finish clears, confirm gate, continue from sector %d OK" % away)
 
 
 ## VS-022: ending a run while on foot freezes the surface, and a later death does not evacuate.

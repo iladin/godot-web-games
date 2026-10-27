@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: title map dock ledger ledger_dock ledger_map surface touch touch_surface over over_map win death combat hints
+## Scenarios: title title_continue title_continue_touch title_confirm map dock ledger ledger_dock ledger_map surface touch touch_surface over over_map win death combat hints
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -104,8 +104,15 @@ func _shot_script(t: float) -> void:
 	if _ap_step == 0 and t > 0.2:
 		_ap_step = 1
 		match g.shot_mode:
-			"title":
+			"title", "title_continue":
 				pass   # main stays on the real title screen for this scenario
+			"title_continue_touch":   # touch layout of the title with a save present
+				g.touch.active = true
+				g.overlay.touch_hint = true
+			"title_confirm":   # New Game pressed once over a save
+				assert(g.overlay.continue_time >= 0.0, "seeded save shows Continue")
+				assert(not g.flow.request_new_game(true, 0.0), "first press only asks")
+				g.overlay.confirm_new = g.flow.confirming()
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")

@@ -426,7 +426,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0023 — autosave 60s/focus-loss + Continue on title (QA PASS)
 
 ## VS-028 · Save robustness: corrupt/old saves, starting over, polish
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -439,6 +439,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Screenshot of the title with Continue visible at 1280x720 and touch size
   - [ ] check.sh PASS
 - notes: Depends on VS-027.
+- done: S0024 — new-game overwrite confirm (keyboard+touch), title_continue shots, save-flow selftests; QA PASS
 
 ## VS-029 · The Breach: one guaranteed early raid reaches the HQ
 - status: blocked
