@@ -163,6 +163,23 @@ func _init() -> void:
 		if e.alive and e is StationData and e.faction == Defs.Faction.UNION:
 			assert(dir.raid_go_chance(e as StationData) == 1.0, "Union targets are never deterred")
 			break
+	# VS-023: a platform far from the target does not deter; one nearby does.
+	for e: SimEntity in u.ents_in(u.hq.sector):
+		if e.alive and e is StationData and (e as StationData).kind == "defense" and e.faction == Defs.Faction.PLAYER:
+			e.alive = false
+	u.time = Defs.RAID_DETER_FROM
+	var far_pl := u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(Defs.RAID_DETER_RANGE + 500.0, 0, 0))
+	assert(dir.raid_go_chance(u.hq) == 1.0, "a far platform does not deter raids on the HQ")
+	var near_pl := u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(900, 0, 900))
+	assert(absf(dir.raid_go_chance(u.hq) - Defs.RAID_DETER_PER_PLATFORM) < 0.001, "a near platform deters raids at 0.25")
+	far_pl.alive = false
+	near_pl.alive = false
+	# VS-023: building inside a planet is rejected without charging.
+	var cr0 := u.credits
+	u.credits = 1.0e6
+	var inside := u.build_station("solar", u.hq.sector, u.sectors[u.hq.sector].planet_pos + Vector3(100, 0, 0))
+	assert(inside == null and u.credits == 1.0e6, "build_station rejects positions inside a planet without charging")
+	u.credits = cr0
 	u.time = t_save
 
 	# Core destruction exposes the nest.

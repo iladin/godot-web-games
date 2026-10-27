@@ -88,3 +88,8 @@
 - Task(s): VS-007 wing commands (G attack / C escort / V hold, ATK/ESC/HOLD touch buttons, HUD "WING n · ORDER" line) — done. QA FAIL round 1 (ACT/ATK touch overlap at 1280x720) → dev fix → QA PASS round 2.
 - Check: PASS · Git: committing game paths only (S0017 skipped session had left unrelated edits to ai-studio/studio-cycle.md and docs/AI_STUDIO.md — not staged)
 - Notes: new scripts/sim/wing.gd (no RNG); `hold` order added to ShipAI. P3s parked (wing row mid-screen at 1280, map "hold" label, no wing shot scenario, resume-last-order).
+
+## S0018 — 2026-10-27 07:35 — BUILD
+- Task(s): VS-009 (L) split into VS-026 (serialize Universe), VS-027 (autosave + Continue), VS-028 (save robustness). VS-023 raid-deterrent range + planet build guard + DREAD_TIME 1200 — done (QA PASS round 1).
+- Check: PASS · Git: committed game/studio paths only (see git log -1)
+- Notes: Session id S0018 (S0017 was a skipped session). Perturbed econ gate margin thin (129k vs 126k) — re-run --perturb=1 after any raid tuning.

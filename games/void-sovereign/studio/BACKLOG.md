@@ -127,7 +127,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0001: _test_ai_journeys() (seed 7; goto 0->3 in 82/288 s, miner sale 64/289 s, plan_trade munitions x80 profit 1787); QA mutation-tested all 3. Bundled balance change: start stock inputs 1/3, outputs 1/2 (Defs.START_FILL_INPUT/OUTPUT) — plan_trade was empty on the starting universe.
 
 ## VS-009 · Save and continue a run
-- status: todo
+- status: split
 - priority: P2
 - type: feature
 - size: L
@@ -345,7 +345,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0014 — surface frozen + fps input off when run not PLAYING (RunFlow.surface_live); death after game over ignored; one click restarts; QA PASS first round
 
 ## VS-023 · Raid deterrent counts only platforms that defend the target; tame the pre-deterrent dreadnought
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: M
@@ -358,7 +358,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] `DREAD_TIME` 900→1200 adopted only if gates pass, else reverted and noted
   - [ ] 9-seed gates (fresh GATE_OUT): econ30 nw30 median ≥ nw20 median, HQ ≥ 8/9; passive40 HQ-lost median 20–35; `--perturb=1` econ nw30 ≥ nw20
   - [ ] DESIGN.md Ramp bullet updated; metrics.csv row appended
-- notes: Balance analyst (S0012) says softening the per-platform factor (0.5) or redirecting cancelled raids breaks the nw30≥nw20 guardrail — keep 0.25. The econ balance bot places platforms near the HQ, so the range check should barely move the gate; verify. Reports: studio/reviews/S0012-balance.md, S0012-qa.md. Supersedes parking-lot items on deterrent strength and build_station inside planets.
+- notes: Balance analyst (S0012) says softening the per-platform factor (0.5) or redirecting cancelled raids breaks the nw30≥nw20 guardrail — keep 0.25. The econ balance bot places platforms near the HQ, so the range check should barely move the gate; verify. Reports: studio/reviews/S0012-balance.md, S0012-qa.md. Supersedes parking-lot items on deterrent strength and build_station inside planets. S0018 working.
+- done: S0018 — RAID_DETER_RANGE 3400 (platforms must be near the raid target), build_station rejects planet interior, DREAD_TIME 1200; 9-seed gates green (econ nw30 142k>=nw20 108k, HQ 9/9; perturbed 129k>=126k thin; passive HQ lost 33.6); QA PASS round 1
 
 ## VS-024 · Credit ledger: income per minute and where the money came from
 - status: done
@@ -390,6 +391,51 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Repeated "turned back" messages are merged/throttled (at most one per THROTTLE constant)
   - [ ] The "Next raid" countdown is not shown red for a raid that will be deterred; check.sh PASS, balance gate numbers unchanged
 - notes: Do after VS-023 if possible (deterrent range rule changes which raids are turned back). Supersedes parking-lot items honest raid reports (S0007) and turned-back throttle (S0011).
+
+## VS-026 · Serialize the Universe to a versioned save dictionary (round-trip)
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: producer
+- created: S0018
+- why: Split from VS-009 (Daniel restored it to todo). A 30-40 minute run needs persistence; this is the data layer. Pure sim, no UI, so it is testable headless.
+- acceptance:
+  - [ ] New `scripts/sim/save_game.gd` with static `capture(u: Universe) -> Dictionary` and `restore(d: Dictionary) -> Universe` (JSON-safe: Vector3 as arrays; includes `version`, entities, sector planet/colony state, credits, ledger, time, kills, director timers, rng state, wing/orders)
+  - [ ] Selftest: capture -> JSON stringify/parse -> restore on a mid-run Universe (after ~300 s of sim) gives identical net_worth, credits, and entity count, and 60 s of further stepping runs without errors
+  - [ ] `restore` rejects a wrong `version` or malformed dict by returning null (selftest)
+  - [ ] check.sh PASS; balance gates unaffected (capture is read-only)
+- notes: Do not touch gameplay RNG draws. See `scripts/sim/universe.gd` fields.
+
+## VS-027 · Autosave and Continue button on the title screen
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: producer
+- created: S0018
+- why: Split from VS-009. Browser players close tabs; Continue turns VS-026's data layer into player value. Depends on VS-026.
+- acceptance:
+  - [ ] Autosave to `user://run.save` every 60 s of PLAYING and on focus loss; deleted when a run ends (win/lose)
+  - [ ] Title screen shows "Continue (mm:ss)" when a valid save exists, usable by keyboard, mouse and touch; New Game still works
+  - [ ] Continue restores the run into PLAYING; selftest or autoplay covers start -> save -> continue
+  - [ ] check.sh PASS; DESIGN.md controls/persistence updated
+- notes: Depends on VS-026. Reuse RunFlow; PauseGate must stay main's first child.
+
+## VS-028 · Save robustness: corrupt/old saves, starting over, polish
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: producer
+- created: S0018
+- why: Split from VS-009. Players with stale or corrupt saves must never get stuck on the title screen.
+- acceptance:
+  - [ ] Corrupt or wrong-version save is ignored (no Continue button, no crash)
+  - [ ] Starting a New Game over an existing save clearly overwrites or asks for confirmation (keyboard + touch)
+  - [ ] Screenshot of the title with Continue visible at 1280x720 and touch size
+  - [ ] check.sh PASS
+- notes: Depends on VS-027.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)

@@ -333,6 +333,9 @@ func build_station(kind: String, sector_idx: int, p: Vector3) -> StationData:
 	if sector_has_nest(sector_idx):
 		message.emit("Cannot build in a Hive sector", Color.ORANGE_RED)
 		return null
+	if p.distance_to(sectors[sector_idx].planet_pos) < Defs.PLANET_RADIUS:
+		message.emit("Cannot build inside a planet", Color.ORANGE_RED)
+		return null
 	add_credits(-cost, "build")
 	var st := spawn_station(kind, Defs.Faction.PLAYER, sector_idx, p)
 	for w: String in Defs.WARES:

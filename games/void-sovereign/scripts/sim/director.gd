@@ -118,7 +118,8 @@ func raid_go_chance(target: StationData) -> float:
 		return 1.0
 	var platforms := 0
 	for e: SimEntity in u.ents_in(target.sector):
-		if e.alive and e is StationData and e.faction == Defs.Faction.PLAYER and (e as StationData).kind == "defense":
+		if e.alive and e is StationData and e.faction == Defs.Faction.PLAYER and (e as StationData).kind == "defense" \
+				and e.pos.distance_to(target.pos) <= Defs.RAID_DETER_RANGE:
 			platforms += 1
 	return pow(Defs.RAID_DETER_PER_PLATFORM, platforms)
 
