@@ -137,7 +137,7 @@ func _init() -> void:
 				esc.setup("fighter", Defs.Faction.PLAYER)
 				esc.sector = sc.sector
 				assert(not u.valid_target(esc, sc) and not u.valid_target(sc, esc), "escorts and scouts ignore each other during the delay")
-			if ow.active_t >= Defs.OPENING_WAVE_LINGER + 0.1 and not revert_checked:
+			if ow.active_t >= Defs.OPENING_WAVE_LINGER + 0.1 and not revert_checked:  # opportunistic; forced test below is authoritative
 				for id: int in ow.ids:
 					var s2 := u.get_ent(id) as ShipData
 					if s2 != null and s2.alive:
@@ -159,6 +159,28 @@ func _init() -> void:
 	assert(not ow2.escorts_ok(), "fresh wave holds escorts")
 	ow2.engaged = true
 	assert(ow2.escorts_ok(), "engaged wave frees escorts")
+	# VS-030: force the unmark on living scouts, uneased and eased, and verify the 1x revert.
+	for use_ease in [false, true]:
+		var ow3 := OpeningWave.new(u)
+		ow3._spawn()
+		var live: Array[ShipData] = []
+		for id3: int in ow3.ids:
+			var sc3 := u.get_ent(id3) as ShipData
+			if sc3 != null and sc3.alive:
+				live.append(sc3)
+		assert(live.size() > 0, "forced wave has living scouts")
+		var base_hull := float(Defs.SHIP["drone"]["hull"])
+		assert(live[0].sortie and live[0].hull_max > base_hull + 0.01, "scouts are scaled while marked")
+		var dps_base: float = live[0].dps / Defs.OPENING_WAVE_DPS
+		if use_ease:
+			ow3.eased = true
+			for s3: ShipData in live:
+				s3.dps *= Defs.SORTIE_EASE
+		ow3._unmark()
+		for s3: ShipData in live:
+			assert(not s3.sortie and absf(s3.hull_max - base_hull) < 0.01, "unmark reverts scouts to 1x hull (eased=%s)" % str(use_ease))
+			assert(absf(s3.dps - dps_base) < 0.01, "unmark reverts scout dps to 1x (eased=%s)" % str(use_ease))
+		print("sortie revert checked (eased=%s)" % str(use_ease))
 	# Sortie scouts are the player's fight: only the player and Sovereign warships trade fire with them.
 	var scout := ShipData.new()
 	scout.setup("drone", Defs.Faction.HIVE)

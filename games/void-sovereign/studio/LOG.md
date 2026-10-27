@@ -139,3 +139,8 @@
 - Task(s): VS-030 First Sortie — dev done (OPENING_WAVE_DPS 0.9, SORTIE_ESCORT_DELAY 16, SORTIE_EASE 0.5, alert cue, sortie shot); QA FAIL on one criterion (unmark-revert selftest assertion never runs) -> blocked, code kept (check PASS, gates PASS)
 - Check: PASS · Git: committed (see git log)
 - Notes: Over time budget (dev 46 min, QA 23 min), so the fix round was deferred. QA subagent called device_request_delete_permission against procedure; it only removed its own temp file.
+
+## S0027 — 2026-10-27 18:10 — BUILD
+- Task(s): VS-030 First Sortie closed: selftest now forces ow._unmark() on living scouts (eased + uneased); QA PASS (mutation test confirmed assertion bites)
+- Check: PASS · Git: committed (see git log) 
+- Notes: Producer wrote the test fix directly (dev role collapsed, small test-only change); QA independent subagent. Selftest takes ~3 min on the mount; run it with timeout_ms 180000.

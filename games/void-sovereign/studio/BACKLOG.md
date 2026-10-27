@@ -458,7 +458,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0025 — closed by VS-034 retune (passive median 28.3 <= 35); QA noted seed 169 still survives passive 40 min
 
 ## VS-030 · First Sortie belongs to the player
-- status: blocked
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -471,6 +471,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Scouts revert to 1x hull on unmark; arrival cue plays once via Sfx; new --shot=sortie in shots.sh
   - [ ] check.sh PASS; balance gates unchanged
 - notes: Keep damage tuned for touch accuracy. S0026: dev done, QA FAIL on one criterion only: selftest unmark-revert assertion (selftest.gd, `revert_checked`) never executes since scouts die <60s. Fix = force `ow._unmark()` on a living scout (eased and uneased) + assert(revert_checked); then re-verify selftest+check only (gates already PASS: econ nw20 med 104k 9/9, passive40 med 31.9, perturb 100.6k). Code is uncommitted-then-committed in S0026, kept because check PASS.
+- done: S0027 — selftest now forces unmark revert (eased+uneased); QA PASS
 
 ## VS-031 · Readable surface: Core spire and pylon beams
 - status: todo

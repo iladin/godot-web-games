@@ -1,19 +1,19 @@
 # Void Sovereign — Handover
-_Last updated: S0026 · 2026-10-27 17:10 UTC · mode: BUILD_
+_Last updated: S0027 · 2026-10-27 18:10 UTC · mode: BUILD_
 
 ## TL;DR
-S0026 implemented VS-030 (First Sortie: escorts hold fire 16 s so the player takes the first fight). Gameplay and balance gates all pass and check.sh is PASS, but QA failed one criterion: the selftest "unmark reverts scouts to 1x" assertion never executes. VS-030 is `blocked` pending a tiny test-only fix; the code is committed.
+S0027 closed VS-030 (First Sortie): selftest now really exercises the scout hull/dps revert on unmark; QA PASS, check.sh PASS. Backlog has 6 ready tasks, 0 blocked on code. Studio is healthy.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0027. builds_since_review = 2.
-2. Finish VS-030: set it back to `in-progress`. In `games/void-sovereign/scripts/selftest.gd` make the revert test force `ow._unmark()` on a living scout (both eased and uneased paths), assert hull/dps return to 1x, and `assert(revert_checked)` after. Dev + fresh QA; re-run only selftest + check.sh (gates already PASS: econ30 nw20 median 104k, HQ 9/9; passive40 median 31.9 min, 1/9 survive; perturb nw20 100.6k). Touch only test code unless QA finds more.
-3. Then: VS-033 atomic run save (S, `scripts/sim/run_save.gd`), VS-035 fit-to-screen text guard (S), VS-031 before VS-037, VS-032, VS-036 (M).
-4. Check INBOX. Next review round about S0031.
+1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0028. builds_since_review = 3. Export `GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)` for EVERY check call (check.sh does not find godot itself).
+2. `backlog.py next` gives VS-031 (check its block first; VS-031 must precede VS-037). If it is size M/L, split per procedure. Otherwise BUILD it: Developer subagent -> fresh QA subagent.
+3. Then VS-033 atomic run save (S, `scripts/sim/run_save.gd`) and VS-035 fit-to-screen text guard (S); VS-032, VS-036, VS-037 (M).
+4. Check INBOX (empty at S0027). Next review round about S0031.
 
 ## Last session
-- Did: BUILD VS-030. Files: sim/defs.gd, sim/opening_wave.gd, sim/universe.gd, sim/save_game.gd (optional keys engaged/eased, VERSION unchanged), space/space_view.gd, main.gd, audio/sfx.gd ("alert"), test_driver.gd (combat_long now in home sector; new `sortie` shot), selftest.gd, scripts/studio/shots.sh. QA: combat_long bot min hull 492 (deterministic), idle selftest min hull 261.
-- Check: PASS · Git: committed · Roles collapsed: none
-- Process note: session exceeded the 90 min budget (dev 46 min, QA 23 min). The QA subagent called device_request_delete_permission contrary to the procedure; it was only for its own temp file. Subagents should be told not to.
+- Did: VS-030 test-only fix (games/void-sovereign/scripts/selftest.gd) -> done. QA mutation-tested it.
+- Check: PASS · Git: committed this session · Roles collapsed: Developer (Producer did the 20-line test fix)
+- Note: the full selftest takes ~3 min wall on the mount; use timeout_ms 180000. A ~143-file mode change (644->755) shows in raw git status: mount artifact, ignore, use `-c core.fileMode=false`.
 
 ## In-flight / uncommitted work
 Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md`, untracked `_to_delete/`.
@@ -23,7 +23,7 @@ Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md
 - Latest metrics: see Next session #2 (post-VS-030 gate numbers).
 
 ## Backlog snapshot
-todo 6 · in-progress 0 · done 26 · blocked 2 (VS-030 test gap, plus one older) · split 3 · Top ready: VS-033, VS-035, VS-031
+todo 6 · in-progress 0 · done 27 · blocked 1 · split 3 · Top ready: VS-031, VS-033, VS-035
 
 ## Watch out for
 - Idle player drops to ~261 hull in the sortie (touch players may find it harsh); tune SORTIE_ESCORT_DELAY / OPENING_WAVE_DPS in defs.gd.
@@ -42,6 +42,7 @@ todo 6 · in-progress 0 · done 26 · blocked 2 (VS-030 test gap, plus one older
 - none
 
 ## Session history (newest first, keep 10)
+- S0027 2026-10-27 BUILD — VS-030 selftest fix, QA PASS -> done
 - S0026 2026-10-27 BUILD — VS-030 First Sortie implemented, QA FAIL on dead selftest assertion -> blocked (code kept, check PASS)
 - S0025 2026-10-27 PLANNING+BUILD — review round -> VS-033..037; VS-034 Breach retune done (QA PASS), VS-029 closed
 - S0024 2026-10-27 BUILD — VS-028 save robustness + new-game confirm done (QA PASS)
