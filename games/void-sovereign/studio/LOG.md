@@ -73,3 +73,8 @@
 - Task(s): VS-005 surface marker declutter (done, QA PASS round 1); VS-022 freeze surface under end screen (done, QA PASS round 1)
 - Check: PASS · Git: committed (see HANDOVER) 
 - Notes: Repo mount is $HOME/mnt/git/godot-web-games. Removed stale S0013 .git lock stubs and tmp_obj files after delete permission (C:\git root). HUD/input only; no balance gates needed.
+
+## S0015 — 2026-10-27 05:30 — BUILD
+- Task(s): VS-010 NPC traders stuck at broke player station — done (QA PASS round 1)
+- Check: PASS · Git: committed (see git log -1) — delete permission granted for C:\git
+- Notes: ShipAI.can_deliver_to guards plan_trade/best_buyer. credits_10 18.4k/22.1k/19.2k (seeds 101/118/135), HQ 3/3. QA P3: best_buyer selftest assertion not discriminating (parking lot).

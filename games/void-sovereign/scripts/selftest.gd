@@ -63,6 +63,18 @@ func _init() -> void:
 	var p2 := pst.batch_total("energy", 20, true)
 	u.transact(npc, pst, "energy", 20, true)
 	assert(is_equal_approx(u.credits, before + p2))
+	# VS-010: NPC sellers skip player stations that cannot pay (credits <= TRADER_RESERVE).
+	var other := u.spawn_station("solar", Defs.Faction.UNION, 0, Vector3(900, 0, 0))
+	pst.stock["energy"] = 0
+	other.stock["energy"] = 0
+	npc.cargo = {"energy": 10}
+	u.credits = Defs.TRADER_RESERVE
+	assert(not ShipAI.can_deliver_to(u, npc, pst, "energy"), "broke player station cannot take NPC delivery")
+	var nb := ShipAI.best_buyer(u, npc, "energy")
+	assert(nb != null and nb.id != pst.id, "NPC seller picks a different buyer when player cannot pay")
+	u.credits = Defs.START_CREDITS
+	assert(ShipAI.can_deliver_to(u, npc, pst, "energy"))
+	npc.cargo.clear()
 	_check_no_round_trip_profit(u)
 
 	# Production cycle consumes inputs, makes outputs.

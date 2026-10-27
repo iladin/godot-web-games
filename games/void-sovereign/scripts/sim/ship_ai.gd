@@ -262,6 +262,8 @@ static func plan_trade(u: Universe, s: ShipData) -> Dictionary:
 			for b: StationData in stations:
 				if b == a or not b.buys(ware) or b.room(ware) < 10:
 					continue
+				if not can_deliver_to(u, s, b, ware):
+					continue
 				var pb := b.price(ware)
 				var qty := mini(s.cargo_cap, mini(int(a.stock[ware]), b.room(ware)))
 				var profit := (pb - pa) * float(qty) - a.pos.distance_to(b.pos) * 0.01
@@ -276,6 +278,14 @@ static func plan_trade(u: Universe, s: ShipData) -> Dictionary:
 	return best
 
 
+## VS-010: Universe.transact refuses NPC deliveries a player station cannot pay for (credits below
+## TRADER_RESERVE), so NPCs must not pick such a station. Needs room for ~5 units to be worth the trip.
+static func can_deliver_to(u: Universe, s: ShipData, st: StationData, ware: String) -> bool:
+	if s.faction == Defs.Faction.PLAYER or st.faction != Defs.Faction.PLAYER:
+		return true
+	return u.credits - Defs.TRADER_RESERVE >= st.price(ware) * 5.0
+
+
 static func best_buyer(u: Universe, s: ShipData, ware: String) -> StationData:
 	var best: StationData = null
 	var best_p := 0.0
@@ -283,7 +293,7 @@ static func best_buyer(u: Universe, s: ShipData, ware: String) -> StationData:
 		for e: SimEntity in u.ents_in(idx):
 			if e is StationData and e.faction != Defs.Faction.HIVE:
 				var st := e as StationData
-				if st.buys(ware) and st.room(ware) > 5:
+				if st.buys(ware) and st.room(ware) > 5 and can_deliver_to(u, s, st, ware):
 					var p := st.price(ware) - (Defs.CROSS_SECTOR_SELL_PENALTY if st.sector != s.sector else 0.0)
 					if p > best_p:
 						best_p = p

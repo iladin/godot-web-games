@@ -138,7 +138,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Size L on purpose — exercises the split rule. S0007: parked by Producer to keep open todo ≤ 8; needs Daniel to confirm save/continue is wanted (see HANDOVER open questions) before it is split. Daniel (2026-10-26, after S0007): restore to todo.
 
 ## VS-010 · NPC traders must not get stuck at a player station that can't pay
-- status: todo
+- status: done
 - priority: P2
 - type: bug
 - size: S
@@ -149,6 +149,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] best_buyer()/plan_trade() skip player stations when the player cannot afford a meaningful delivery (credits - TRADER_RESERVE below ~5 units' price)
   - [ ] New selftest assertion: with credits <= TRADER_RESERVE an NPC seller docked at a player station picks a different buyer instead of retrying
   - [ ] check.sh PASS; economic balance run credits_10 still > TRADER_RESERVE in all seeds
+- done: S0015 — ShipAI.can_deliver_to guards plan_trade/best_buyer; QA PASS round 1
 
 ## VS-011 · Economic player keeps growing from minute 20 to 30
 - status: split
@@ -453,3 +454,4 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0013, dev VS-024, P3) Touch "ACT: Dock at Sovereign HQ" prompt shows under tip 4 at spawn (nearest station is HQ) — untested in a shot; add a touch hints shot at tip 4.
 - (S0013, dev, P3) End screen: per-category lifetime credit totals from CreditLedger.totals.
 - (S0014, QA VS-005, P3) Surface marker text is dark pink on pink/orange terrain, low contrast — add a dark outline/shadow in Hud._txt for markers. Stacking+leader-line path only selftest-covered, not seen in a shot.
+- (S0015, QA VS-010, P3) selftest best_buyer assertion is not discriminating (passes without the guard: price tie) — make the player station clearly best-priced (lower the other buyer's price via stock near capacity). Also miners idle without a wait timer when no buyer exists.
