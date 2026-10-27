@@ -438,6 +438,15 @@ func _draw_galaxy() -> void:
 		if threat > 0:
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-14, 14), p + Vector2(-8, 4), p + Vector2(-2, 14)]), HIVE)
 			_text(p + Vector2(-2, 24), "%d" % threat, 12, HIVE, 24)
+	# VS-025: every active raid: red ring on its sector, a line to the target sector, ETA label.
+	for rd: Dictionary in u.director.tracker.active():
+		var rp := r.position + u.sectors[int(rd["sector"])].map_pos * r.size
+		var tp := r.position + u.sectors[int(rd["target_sector"])].map_pos * r.size
+		if rp != tp:
+			draw_dashed_line(rp, tp, Color(HIVE, 0.8), 2.0, 6.0)
+		draw_arc(rp, 11, 0, TAU, 16, HIVE, 2.5)
+		var lbl := "RAID x%d ON TARGET" % int(rd["ships"]) if rp == tp else "RAID x%d ETA %ds" % [int(rd["ships"]), int(float(rd["eta"]))]
+		_text(rp + Vector2(-60, 32), lbl, 11, HIVE, 120)
 	_text(r.position + Vector2(6, r.size.y - 6), "Click sector to view · RMB send selection", 11, Color(1, 1, 1, 0.5), r.size.x)
 
 

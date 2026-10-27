@@ -116,7 +116,7 @@ func _draw_top(sz: Vector2) -> void:
 	if u.hq:
 		_bar(Rect2(370, 20, 115, 10), u.hq.hull_frac(), AMBER if u.hq.hull_frac() > 0.35 else HIVE)
 	var raid := u.director.raid_t
-	_txt(Vector2(340, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 else DIM)
+	_txt(Vector2(340, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 and not u.director.next_raid_likely_deterred() else DIM)
 	for p: Dictionary in popups:
 		var k := float(p["t"]) / 1.4
 		_txt(Vector2(pop_x, 32 - k * 30.0), p["text"], 22, Color(AMBER, 1.0 - k))

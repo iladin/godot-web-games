@@ -93,3 +93,8 @@
 - Task(s): VS-009 (L) split into VS-026 (serialize Universe), VS-027 (autosave + Continue), VS-028 (save robustness). VS-023 raid-deterrent range + planet build guard + DREAD_TIME 1200 — done (QA PASS round 1).
 - Check: PASS · Git: committed game/studio paths only (see git log -1)
 - Notes: Session id S0018 (S0017 was a skipped session). Perturbed econ gate margin thin (129k vs 126k) — re-run --perturb=1 after any raid tuning.
+
+## S0019 — 2026-10-27 08:50 — PLANNING+BUILD
+- Task(s): Review round (critic 6.1/10, QA sweep no P0-P2, balance 8/8 targets, scout 5 proposals) -> VS-029..032 added. VS-025 honest raid reports — done (QA PASS round 1; built before VS-029 because it is VS-029's prerequisite).
+- Check: PASS · Git: review round committed 1e49fff; VS-025 committed after this log (see git log -1)
+- Notes: Deterred-raid redirect idea parked (needs VS-025+VS-029). Stale git locks HEAD.lock/maintenance.lock moved to .git/stale-*-S0019 (no delete permission).

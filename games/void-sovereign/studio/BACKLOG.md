@@ -378,7 +378,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0013 — CreditLedger (scripts/sim/ledger.gd) + Universe.add_credits sole writer, HUD cr/min, map/dock 5-min breakdown, tip 4 → Trade Hub; gates byte-identical; QA PASS first round
 
 ## VS-025 · Honest raid reports: every raid tracked to its end
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -386,11 +386,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0012
 - why: S0012 critic #2: raid warnings "moving on Sovereign HQ" are false alarms (3-seed 600 s probe: HQ untouched, no Hive in home sector); QA: the red "Next raid" countdown also shows for raids that will be cancelled; "turned back" message fires on every deterred raid. Scout proposal 2.
 - acceptance:
-  - [ ] Each raid gets one outcome message: "RAID ARRIVING in X", "intercepted in X (k/n destroyed)", "withdrew", or "turned back" — no warning for a raid that never launches
-  - [ ] Active raids are marked on the map inset with an ETA
-  - [ ] Repeated "turned back" messages are merged/throttled (at most one per THROTTLE constant)
-  - [ ] The "Next raid" countdown is not shown red for a raid that will be deterred; check.sh PASS, balance gate numbers unchanged
-- notes: Do after VS-023 if possible (deterrent range rule changes which raids are turned back). Supersedes parking-lot items honest raid reports (S0007) and turned-back throttle (S0011).
+  - [x] Each raid gets one outcome message: "RAID ARRIVING in X", "intercepted in X (k/n destroyed)", "withdrew", or "turned back" — no warning for a raid that never launches
+  - [x] Active raids are marked on the map inset with an ETA
+  - [x] Repeated "turned back" messages are merged/throttled (at most one per THROTTLE constant)
+  - [x] The "Next raid" countdown is not shown red for a raid that will be deterred; check.sh PASS, balance gate numbers unchanged
+- notes: S0019 in progress (built before VS-029, its prerequisite). Do after VS-023 if possible (deterrent range rule changes which raids are turned back). Supersedes parking-lot items honest raid reports (S0007) and turned-back throttle (S0011).
+- done: S0019 — RaidTracker: one arrival + one outcome message per raid, map inset ETA markers, turned-back throttle 300 s, countdown dims when HQ go-chance<0.5 (QA PASS)
 
 ## VS-026 · Serialize the Universe to a versioned save dictionary (round-trip)
 - status: todo
@@ -567,3 +568,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0019, scout) Deterred raids redirect to the nearest Union station with an interception bounty (M, balance; needs VS-025 + VS-029 landed first; perturbed-econ tail nw30<90k in 4/9 seeds).
 - (S0019, balance) Optional: RAID_DETER_RANGE 3400 -> 3800 to lift the perturbed tail; keep only if passive HQ lost <= 35 min. Hive q3 61 > 60 guard.
 - (S0019, QA) over.png shows Net worth 45,000 vs 30,000 credits elsewhere — confirm net-worth formula is intended (P3).
+- (S0019, QA VS-025, P3) Map inset raid label 'RAID xN ON TARGET' overlaps sector name / clips left edge (map_view.gd offset rp+(-60,32)); clamp to inset rect and offset from sector names. No --shot scenario for an active raid (QA used a temporary one).
+- (S0019, QA VS-025, P3) A raid that kills its target reports 'intercepted'/'withdrew'; add an honest 'raid succeeded / destroyed X' outcome. Countdown stays red when HQ go-chance >= 0.5 though some such raids are still turned back.

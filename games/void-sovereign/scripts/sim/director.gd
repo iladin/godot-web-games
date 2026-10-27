@@ -8,12 +8,16 @@ var raid_t: float = Defs.FIRST_RAID
 var union_t: float = Defs.UNION_SPAWN_TIME
 var raid_count: int = 0
 var rebuild_queue: Array[Dictionary] = []
+var tracker: RaidTracker          # VS-025 follows every launched raid
+var turned_back_at: float = -1.0e9
+var turned_back_pending: int = 0
 var opening: OpeningWave          # VS-018 one-off First Sortie wave
 
 
 func _init(p_u: Universe) -> void:
 	u = p_u
 	opening = OpeningWave.new(p_u)
+	tracker = RaidTracker.new(p_u)
 
 
 func seed_fleets() -> void:
@@ -45,6 +49,7 @@ func seed_fleets() -> void:
 
 func step(delta: float) -> void:
 	opening.step(delta)
+	tracker.step(delta)
 	_nests(delta)
 	_raids(delta)
 	_union(delta)
@@ -91,11 +96,12 @@ func _raids(delta: float) -> void:
 	var go := raid_go_chance(target)
 	if go < 1.0 and randf() >= go:   # no extra randf() draw unless deterred (keeps early game identical)
 		# VS-020: the Hive scouts a fortified Sovereign sector and calls the raid off.
-		u.message.emit("Hive raid on %s turned back by your Defense Platforms" % u.sectors[target.sector].name, Defs.faction_color(Defs.Faction.PLAYER))
+		_report_turned_back(target)
 		return
 	raid_count += 1
 	var nest: StationData = nests[randi() % nests.size()]
 	var n := raid_size()
+	var launched: Array[ShipData] = []
 	for i in n:
 		var cls := "drone"
 		if u.time > Defs.RAVAGER_TIME and i % 3 == 0:
@@ -106,8 +112,24 @@ func _raids(delta: float) -> void:
 		s.order = "raid"
 		s.order_target = target.id
 		s.order_sector = target.sector
-	var col := Defs.faction_color(Defs.Faction.HIVE)
-	u.message.emit("HIVE RAID: %d ships moving on %s in %s" % [n, target.display_name, u.sectors[target.sector].name], col)
+		launched.append(s)
+	tracker.add(launched, target)   # VS-025: the warning comes when the raid actually arrives
+
+
+## VS-025: one "turned back" line per RAID_TURNED_BACK_THROTTLE s; deterred raids in between are counted into the next line.
+func _report_turned_back(target: StationData) -> void:
+	if u.time - turned_back_at < Defs.RAID_TURNED_BACK_THROTTLE:
+		turned_back_pending += 1
+		return
+	var extra := " (+%d earlier)" % turned_back_pending if turned_back_pending > 0 else ""
+	turned_back_pending = 0
+	turned_back_at = u.time
+	u.message.emit("Hive raid on %s turned back by your Defense Platforms%s" % [u.sectors[target.sector].name, extra], Defs.faction_color(Defs.Faction.PLAYER))
+
+
+## VS-025: true when the HQ is fortified enough that the next raid will most likely be turned back (HUD shows it calm).
+func next_raid_likely_deterred() -> bool:
+	return u.hq != null and u.hq.alive and raid_go_chance(u.hq) < 0.5
 
 
 ## VS-020: chance a raid on `target` goes ahead. Each Sovereign Defense Platform in the target's

@@ -117,6 +117,11 @@ const RAID_SIZE_MAX := 16
 const RAID_DETER_PER_PLATFORM := 0.25
 # VS-023: only platforms within RAID_DETER_RANGE (2x platform gun range) of the raid target count.
 const RAID_DETER_RANGE := 3400.0
+# VS-025: raid reporting. The tracker polls every RAID_TRACK_INTERVAL s; "turned back" is announced at most once per
+# RAID_TURNED_BACK_THROTTLE s (later ones are counted into the next message); RAID_HOP_ETA = rough seconds per gate hop.
+const RAID_TRACK_INTERVAL := 0.5
+const RAID_TURNED_BACK_THROTTLE := 300.0
+const RAID_HOP_ETA := 40.0
 const RAID_DETER_FROM := 1200.0   # s; before this the Hive raids regardless (early game unchanged)
 const RAVAGER_TIME := 300.0
 const DREAD_TIME := 1200.0

@@ -182,6 +182,59 @@ func _init() -> void:
 	u.credits = cr0
 	u.time = t_save
 
+	# VS-025: raids are tracked to their end; one outcome message each, throttled "turned back".
+	var msgs: Array[String] = []
+	var on_msg := func(t: String, _c: Color) -> void: msgs.append(t)
+	u.message.connect(on_msg)
+	var nest0: StationData = u.alive_nests()[0]
+	var raiders: Array[ShipData] = []
+	for i in 3:
+		var rs := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
+		rs.order = "raid"
+		rs.order_target = u.hq.id
+		rs.order_sector = u.hq.sector
+		raiders.append(rs)
+	dir.tracker.add(raiders, u.hq)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(msgs.is_empty(), "no raid warning while the raid is still far from its target")
+	var act := dir.tracker.active()
+	assert(act.size() == 1 and int(act[0]["ships"]) == 3 and float(act[0]["eta"]) > 0.0, "active raid exposes ships and an ETA")
+	for rs: ShipData in raiders:
+		rs.sector = u.hq.sector
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(msgs.size() == 1 and msgs[0].begins_with("RAID ARRIVING"), "one arrival warning, once: %s" % [msgs])
+	raiders[0].alive = false
+	raiders[1].alive = false
+	raiders[2].order = "patrol"
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(msgs.size() == 2 and "2/3 destroyed" in msgs[1], "interception reports kills: %s" % [msgs])
+	assert(dir.tracker.active().is_empty(), "finished raid leaves the tracker")
+	# A raid that is called off with no losses reports "withdrew"; a raid wiped out en route never warns.
+	var w := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
+	w.order = "raid"
+	var wl: Array[ShipData] = [w]
+	dir.tracker.add(wl, u.hq)
+	w.order = "patrol"
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(msgs.size() == 3 and "withdrew" in msgs[2], "withdrawn raid reported: %s" % [msgs])
+	msgs.clear()
+	var dtarget := u.hq
+	dir.turned_back_at = -1.0e9
+	dir.turned_back_pending = 0
+	t_save = u.time
+	u.time = 5000.0
+	dir._report_turned_back(dtarget)
+	u.time = 5000.0 + Defs.RAID_TURNED_BACK_THROTTLE * 0.5
+	dir._report_turned_back(dtarget)
+	dir._report_turned_back(dtarget)
+	assert(msgs.size() == 1, "turned-back messages are throttled")
+	u.time = 5000.0 + Defs.RAID_TURNED_BACK_THROTTLE + 1.0
+	dir._report_turned_back(dtarget)
+	assert(msgs.size() == 2 and "+2 earlier" in msgs[1], "throttled turn-backs are merged into the next message: %s" % [msgs])
+	u.message.disconnect(on_msg)
+	u.time = t_save
+
 	# Core destruction exposes the nest.
 	u.core_destroyed(4)
 	assert(u.sectors[4].planet_state == "colony")
