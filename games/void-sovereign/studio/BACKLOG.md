@@ -77,7 +77,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - acceptance:
   - [ ] Overlapping marker labels are offset or merged ("2× PYLON 380m")
   - [ ] `shots.sh void-sovereign surface touch_surface` shows readable markers
-- notes: S0008 QA: two pylon labels ("PYLON 366m"/"PYLON 413m") overlap in surface.png.
+- notes: S0008 QA: two pylon labels ("PYLON 366m"/"PYLON 413m") overlap in surface.png. S0012: still open (critic #4, QA); scout suggests one marker per objective + Core spire + pylon beams (parking lot).
 
 ## VS-006 · Web performance guard for late-game ship counts
 - status: blocked
@@ -92,7 +92,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Flight view hides or simplifies ship proxies beyond a distance constant
   - [ ] Economic balance run: hive_ships_30 ≤ 60 in all seeds
   - [ ] No visible popping within 2 km in a combat screenshot
-- notes: S0007: blocked on VS-011 — its raid-size/interval changes move the Hive ship count (S0007 balance: hive_20 median 59, max 65). Re-measure after VS-011 lands, then unblock or close.
+- notes: S0007: blocked on VS-011 — its raid-size/interval changes move the Hive ship count (S0007 balance: hive_20 median 59, max 65). Re-measure after VS-011 lands, then unblock or close. S0012: VS-020 done; still relevant (S0012 balance: hive_20 median 58, q3 61, max 75; 3/9 seeds > 60). Kept blocked until VS-023 lands, because its DREAD_TIME change moves Hive counts; re-measure then and unblock (open todo is at the cap of 8).
 
 ## VS-007 · Wing commands from the cockpit
 - status: todo
@@ -325,6 +325,67 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Global randf() is seeded in universe.gd:30 and used by director, ShipData.setup and retarget (u.rng is not the chaotic stream). Passive 40 min × 9 seeds may exceed one 180 s call — measure first. S0010: started (Producer chose VS-021 before VS-020 per S0009 handover).
 - done: S0010 — balance.gd --perturb=N / --nowave (no-arg output byte-identical), scripts/studio/balance_gate.sh 9 seeds (offsets 0/3/6) with median+IQR, econ30 one call 154 s, passive40 two calls; baselines econ30 nw20 107.7k [103.5–127.0k] nw30 55.9k [39.9–70.2k] HQ 9/9, passive40 HQ lost 33.7 [32.1–35.8] survived 2/9; QA PASS first round
 
+## VS-022 · Freeze the surface under the end screen (one click restarts)
+- status: todo
+- priority: P2
+- type: bug
+- size: S
+- source: qa
+- created: S0012
+- why: S0012 QA sweep bug 1: when a run ends while on foot (HQ lost / last Nest burned), close_overlays keeps mode=surface, so surface.tick and fps input stay live under "HQ LOST" — player and foes keep moving, a death triggers "Emergency evacuation" and a switch to flight under the end screen, and the first click only captures the mouse (root cause of the S0010 "double click" parking-lot item).
+- acceptance:
+  - [ ] After `flow.finish(false)` (and `finish(true)`) while on the surface, surface.tick does not advance and fps input is disabled (player position unchanged over 2 s in a probe)
+  - [ ] A player death after game over does not call `_leave_surface` / change hull or mode
+  - [ ] A single click/tap/key on the surface end screen restarts the run
+  - [ ] New selftest assertion covering surface + finish; check.sh PASS
+- notes: Fix hint (QA): gate surface.tick and fps input_enabled on state == PLAYING in run_flow.gd. Repro probes .tools/s0012_qa/p1.gd, p1b.gd. Supersedes parking-lot item (S0010, QA) surface game-over double click.
+
+## VS-023 · Raid deterrent counts only platforms that defend the target; tame the pre-deterrent dreadnought
+- status: todo
+- priority: P2
+- type: balance
+- size: M
+- source: qa
+- created: S0012
+- why: S0012 QA bug 2: Director.raid_go_chance counts any player Defense Platform in the sector — one 42 km away or inside a planet cuts HQ raid chance to 0.25; with 2 platforms only 1/9 raids go (QA p3). Balance: 57% of late raid rolls cancelled, HQ pressure-free from ~min 25; all four tail collapses (econ 186, perturbed 118/169/220) are the dreadnought raid launched at 18–19.7 min just before the deterrent; DREAD_TIME 900→1200 A/B raised econ min nw30 37k→60k. QA P3: build_station accepts positions inside a planet.
+- acceptance:
+  - [ ] raid_go_chance counts only platforms within a range constant (e.g. `RAID_DETER_RANGE`, ~1–2× platform range) of the raid target; selftest: a far platform gives go-chance 1.0, a near one 0.25
+  - [ ] build_station rejects positions within PLANET_RADIUS of a planet (no charge); selftest assertion
+  - [ ] `DREAD_TIME` 900→1200 adopted only if gates pass, else reverted and noted
+  - [ ] 9-seed gates (fresh GATE_OUT): econ30 nw30 median ≥ nw20 median, HQ ≥ 8/9; passive40 HQ-lost median 20–35; `--perturb=1` econ nw30 ≥ nw20
+  - [ ] DESIGN.md Ramp bullet updated; metrics.csv row appended
+- notes: Balance analyst (S0012) says softening the per-platform factor (0.5) or redirecting cancelled raids breaks the nw30≥nw20 guardrail — keep 0.25. The econ balance bot places platforms near the HQ, so the range check should barely move the gate; verify. Reports: studio/reviews/S0012-balance.md, S0012-qa.md. Supersedes parking-lot items on deterrent strength and build_station inside planets.
+
+## VS-024 · Credit ledger: income per minute and where the money came from
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: critic
+- created: S0012
+- why: S0012 critic: Economy legibility still 3/10 (unchanged since S0007) — no income/min or breakdown, and tip 4 sends the player to dock at the HQ, which does not trade wares. Scout proposal 1; parking-lot ledger idea (S0007).
+- acceptance:
+  - [ ] All credit changes go through one function with a category (trade, mining, bounty, build, repair, ships…); selftest asserts the categorised totals sum to the credit delta
+  - [ ] HUD shows cr/min (rolling window constant) and the map/dock panel shows a "last 5 min" breakdown by category
+  - [ ] Tutorial tip 4 points to a Union Trade Hub (a station that trades wares), not the HQ
+  - [ ] Pure observer: econ30 9-seed gate numbers unchanged (nw20/nw30 medians identical to S0012 row); check.sh PASS; shots show the HUD line at 1280 and 900 wide
+- notes: Scout report studio/reviews/S0012-scout.md proposal 1. Keep RNG stream untouched. main.gd is ~306 lines — put the ledger in its own script.
+
+## VS-025 · Honest raid reports: every raid tracked to its end
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: critic
+- created: S0012
+- why: S0012 critic #2: raid warnings "moving on Sovereign HQ" are false alarms (3-seed 600 s probe: HQ untouched, no Hive in home sector); QA: the red "Next raid" countdown also shows for raids that will be cancelled; "turned back" message fires on every deterred raid. Scout proposal 2.
+- acceptance:
+  - [ ] Each raid gets one outcome message: "RAID ARRIVING in X", "intercepted in X (k/n destroyed)", "withdrew", or "turned back" — no warning for a raid that never launches
+  - [ ] Active raids are marked on the map inset with an ETA
+  - [ ] Repeated "turned back" messages are merged/throttled (at most one per THROTTLE constant)
+  - [ ] The "Next raid" countdown is not shown red for a raid that will be deterred; check.sh PASS, balance gate numbers unchanged
+- notes: Do after VS-023 if possible (deterrent range rule changes which raids are turned back). Supersedes parking-lot items honest raid reports (S0007) and turned-back throttle (S0011).
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -375,3 +436,10 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0011, QA VS-020) "Hive raid on X turned back…" HUD message fires on every deterred raid (~every 75–80 s late game) — merge/throttle (P3).
 - (S0011, QA VS-020) A Defense Platform counts toward its own deterrence when it is the raid target (P3, design call).
 - (S0011, QA VS-020) selftest leaves its 2 spawned player Defense Platforms in the world for later assertions — remove them after the deterrent asserts (P3).
+- (S0012, scout/critic) First Sortie belongs to the player: escorts hold fire on the sortie, scouts target the player at 1x dps, arrival sfx, `--shot=sortie`, survivors back to 1x hull after linger (P2, S — critic #3: escorts win the first fight, player hull stays 600). Next candidate when todo < 8.
+- (S0012, scout/critic) Readable surface: one marker per objective, a Core spire, pylon beams — extend VS-005 (On-foot FPS 4/10, unchanged since S0007) (P2, S).
+- (S0012, critic) Bold idea "visible war fronts": every raid as a fleet on the map with ETA; intercept for bounty, let platforms turn it toward Union, or take the hit (builds on VS-025).
+- (S0012, balance) Hive ships at 20 min median 58, q3 61, max 75 — 3/9 econ seeds over the 60 guard (VS-006).
+- (S0012, QA) Command map: "Sovereign HQ" label hidden under player/escort icons at default zoom (P3).
+- (S0012, QA) World marker labels draw through the tutorial tip box (death.png "Solar Array 1.7km" over "H: skip tips") (P3).
+- (S0012, QA) shots.sh: reports success if a stale PNG exists; RES=900x720 overwrites 1280 PNGs of the same name (P3).

@@ -58,3 +58,8 @@
 - Task(s): VS-020 late-game Hive pressure — done (QA PASS first round). Lever: player-only raid deterrent after min 20 (go-chance 0.25^n per player Defense Platform in the target sector).
 - Check: PASS · Git: committed 15b724b (VS-020) + wrap-up commit
 - Notes: econ30 9 seeds nw20 107.7k → nw30 122.3k (was 55.9k), HQ 9/9; --perturb=1 126k → 160k; passive40 identical to baseline (33.7, 2/9). QA flags the deterrent as strong (2 platforms ≈ 6% late raids) → planning round next (builds_since_review = 6). ~35 min wall time.
+
+## S0012 — 2026-10-27 03:05 — PLANNING
+- Task(s): review round 2 (Critic 5.5/10, up from 5.1; QA sweep; Balance; Scout). New tasks: VS-022 surface frozen under end screen (P2 S), VS-023 deterrent range check + no building in planets + DREAD_TIME A/B (P2 M), VS-024 credit ledger (P1 M), VS-025 honest raid reports (P2 S). VS-005 and VS-006 notes updated; VS-006 kept blocked until VS-023. No BUILD (time budget used by review agents).
+- Check: PASS · Git: see commit studio(S0012): review round
+- Notes: Balance gates identical to S0011 (all 8 targets met; hive_20 max 75 over guard). 57% of late raid rolls cancelled by the deterrent; all tail collapses are the 18–19.7 min dreadnought raid. QA found far/in-planet platforms deter raids. ~3 h 50 min wall time (subagents ran 15–35 min each on the 2-core device).
