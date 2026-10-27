@@ -10,6 +10,11 @@ const ACTIVE := Color(1.0, 0.7, 0.28, 0.55)
 ## Utility row (SND/TRVL/MAP) sits below the HUD message log (top-right, 24 px per line from
 ## y=30): clear of 4 stacked messages, above ACT, and right of the centred tutorial tip box.
 const TOP_ROW_Y := 190.0
+## VS-032: wing orders sit in a column on the left edge (world labels and the ship fill the
+## centre-right); RUN is spaced so its hit zone clears JUMP's.
+const WING_R := 32.0
+const WING_X := 52.0
+const BTN_GAP := 8.0    # min clear gap between any two buttons' hit zones (selftest)
 
 var active: bool = false          # a touch has ever been seen
 var layout: String = "none"       # none | flight | surface
@@ -28,14 +33,14 @@ var font: Font = ThemeDB.fallback_font
 const LAYOUTS: Dictionary = {
 	"flight": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["boost", "BOOST", Vector2(-250, -90), 0.0],
 		["thr_up", "THR+", Vector2(-110, -290), 0.0], ["thr_dn", "THR-", Vector2(-230, -230), 0.0],
-		["target", "TGT", Vector2(-360, -80), 0.0], ["act", "ACT", Vector2(-120, -420), 0.0],
+		["target", "TGT", Vector2(-372, -80), 0.0], ["act", "ACT", Vector2(-120, -420), 0.0],
 		["map", "MAP", Vector2(-80, TOP_ROW_Y), 0.0], ["travel", "TRVL", Vector2(-200, TOP_ROW_Y), 0.0],
 		["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0],
-		["wing_atk", "ATK", Vector2(-400, TOP_ROW_Y + 80.0), 0.0], ["wing_esc", "ESC", Vector2(-520, TOP_ROW_Y + 80.0), 0.0],
-		["wing_hold", "HOLD", Vector2(-640, TOP_ROW_Y + 80.0), 0.0]],
+		["wing_atk", "ATK", Vector2(WING_X, 290.0), WING_R], ["wing_esc", "ESC", Vector2(WING_X, 374.0), WING_R],
+		["wing_hold", "HOLD", Vector2(WING_X, 458.0), WING_R]],
 	"surface": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["jump", "JUMP", Vector2(-250, -90), 0.0],
 		["reload", "RLD", Vector2(-120, -290), 0.0], ["act", "ACT", Vector2(-260, -230), 0.0],
-		["sprint", "RUN", Vector2(-380, -80), 0.0], ["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0]],
+		["sprint", "RUN", Vector2(-400, -60), 0.0], ["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0]],
 }
 
 
@@ -57,15 +62,20 @@ func set_layout(l: String) -> void:
 
 
 func _relayout() -> void:
-	_buttons.clear()
-	var sz := size
-	for b: Array in LAYOUTS.get(layout, []):
+	_buttons = layout_circles(layout, size)
+
+
+## Button centres + hit radii for a layout at a viewport size (shared by _relayout and selftest).
+static func layout_circles(l: String, sz: Vector2) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for b: Array in LAYOUTS.get(l, []):
 		var off: Vector2 = b[2]
 		var c := Vector2(sz.x + off.x if off.x < 0 else off.x, sz.y + off.y if off.y < 0 else off.y)
 		if off.y > 0:
 			c.y = off.y
 		var r: float = b[3] if float(b[3]) > 0.0 else BTN_RADIUS
-		_buttons.append({"name": b[0], "label": b[1], "c": c, "r": r})
+		out.append({"name": b[0], "label": b[1], "c": c, "r": r})
+	return out
 
 
 func held(n: String) -> bool:

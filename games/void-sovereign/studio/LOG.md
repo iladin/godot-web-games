@@ -149,3 +149,8 @@
 - Task(s): VS-031 Readable surface: Core spire + pylon beams — done (QA PASS)
 - Check: PASS · Git: committed (see git log)
 - Notes: spire/beam unshaded fog-free; HUD `_txt` now outlines all text; new `--shot=surface_far`; selftest _test_surface_landmarks mutation-tested by QA.
+
+## S0029 — 2026-10-27 20:10 — BUILD
+- Task(s): VS-032 First-minute touch and UX bundle -> done (QA PASS, 3 P3s parked)
+- Check: PASS · Git: committed (see git log)
+- Notes: Touch ACT wording + earn hint, wing column moved left, map panel reordered (fold_ok), shots.sh stale-PNG guard, selftest _test_touch_ux. Review round due at builds_since_review>=6.

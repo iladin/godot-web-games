@@ -2,6 +2,7 @@ class_name Hud
 extends Control
 ## Flight + surface HUD, drawn by hand. Reads state from the views; never mutates it.
 
+const CYAN_HINT := Color("8fd8ff")
 const AMBER := Color("ffb347")
 const CYAN := Color("5ee6ff")
 const HIVE := Color("ff3b8d")
@@ -79,7 +80,10 @@ func _draw() -> void:
 	_draw_top(sz)
 	_draw_messages(sz)
 	if mode == "flight":
-		_txt(Vector2(0, sz.y - 14), "OBJECTIVE  " + objective(), 17, Color(AMBER, 0.85), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
+		var tch := space != null and space.touch != null and space.touch.active
+		_txt(Vector2(0, sz.y - 14), "OBJECTIVE  " + objective_for(u, tch), 17, Color(AMBER, 0.85), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
+		if u.ledger.income_per_min(u.time) <= 0.0:   # VS-032: nudge new players toward income
+			_txt(Vector2(0, sz.y - 38), earn_hint(tch), 15, Color(CYAN_HINT, 0.8), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if dmg_flash > 0.0:
 		var c := Color(1, 0.1, 0.2, dmg_flash * 0.35)
 		draw_rect(Rect2(0, 0, sz.x, 18), c)
@@ -327,8 +331,17 @@ static func layout_markers(items: Array[Dictionary]) -> Array[Dictionary]:
 
 
 func objective() -> String:
+	return objective_for(u, false)
+
+
+## VS-032: touch players have no F or M key; say ACT / MAP instead.
+static func earn_hint(touch: bool) -> String:
+	return "Need credits? Dock at the Union Trade Hub (%s) and sell wares" % ("tap ACT" if touch else "F")
+
+
+static func objective_for(u: Universe, touch: bool) -> String:
 	if u.sectors[u.hq.sector].planet_state == "hive":
-		return "Fly to planet %s, press F to land, and destroy its Hive Core" % u.sectors[u.hq.sector].planet_name
+		return "Fly to planet %s, %s to land, and destroy its Hive Core" % [u.sectors[u.hq.sector].planet_name, "tap ACT" if touch else "press F"]
 	var shielded: Array[String] = []
 	var exposed: Array[String] = []
 	for n: StationData in u.alive_nests():
@@ -337,7 +350,7 @@ func objective() -> String:
 		else:
 			exposed.append(u.sectors[n.sector].name)
 	if not exposed.is_empty():
-		return "Nest exposed in %s — bring your fleet (M: select warships, right-click the Nest)" % ", ".join(PackedStringArray(exposed))
+		return "Nest exposed in %s — bring your fleet (%s)" % [", ".join(PackedStringArray(exposed)), "tap MAP, Select warships, then Tap-to-order on the Nest" if touch else "M: select warships, right-click the Nest"]
 	if not shielded.is_empty():
 		return "Kill the Hive Cores on %s to drop the Nest shields" % ", ".join(PackedStringArray(shielded))
 	return "Hold the line"

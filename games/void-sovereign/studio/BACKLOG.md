@@ -490,7 +490,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0028 — Core spire + pylon beams, outlined HUD text; QA PASS
 
 ## VS-032 · First-minute touch and UX bundle
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -503,6 +503,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Map side panel keeps BUY SHIPS / BUILD STATION visible at 900x720 without scrolling
   - [ ] shots.sh exits non-zero if the PNG is stale; check.sh PASS
 - notes: Verify at 1280x720 and 900x720.
+- done: S0029 — touch ACT wording + earn hint, wing column, map fold, shots.sh stale guard; QA PASS
 
 ## VS-033 · Atomic run save and honest save failures
 - status: todo
@@ -654,3 +655,4 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0019, QA VS-025, P3) A raid that kills its target reports 'intercepted'/'withdrew'; add an honest 'raid succeeded / destroyed X' outcome. Countdown stays red when HQ go-chance >= 0.5 though some such raids are still turned back.
 - (S0025, QA, P3) Autosave never fires on foot/dead and no save on focus-out; closing tab after a long surface fight restores an old in-space save.
 - (S0025, QA, P3) Touch surface RUN/JUMP buttons overlap each other and the weapon model (covered by VS-032 if it lands).
+- Touch layout polish: earn-hint line nearly touches TGT at 900x720; wing column (ATK/ESC/HOLD) sits over the planet at 1280x720 and HOLD is ~13 px from the MOVE pad; flight layout cramped (ACT/MAP overlap) below ~650 px height; `dock_touch`/`touch_wing` not in standard shot sweep; shots.sh writes a PNG for unknown scenario names (S0029 QA, P3)

@@ -229,7 +229,7 @@ func _on_dock(st: StationData) -> void:
 		return
 	docked_at = st
 	space.set_docked(true)
-	dock.open(u, st)
+	dock.open(u, st, touch.active)
 	_set_mode("dock")
 
 

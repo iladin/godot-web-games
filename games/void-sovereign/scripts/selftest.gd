@@ -303,6 +303,7 @@ func _init() -> void:
 	_test_ai_journeys()
 	_test_sfx()
 	_test_hints()
+	_test_touch_ux()
 	_test_ledger()
 	_test_save_game()
 	_test_run_save_file()
@@ -799,6 +800,39 @@ func _check_no_round_trip_profit(u: Universe) -> void:
 	assert(pairs >= 4 * 3 * 4, "Trade Hub covers every ware")
 	ps.cargo = saved_cargo
 	u.credits = saved_credits
+
+
+## VS-032: touch layouts never overlap hit zones (RUN/JUMP, wing row), and touch wording says ACT/MAP.
+func _test_touch_ux() -> void:
+	for sz: Vector2 in [Vector2(1280, 720), Vector2(900, 720), Vector2(1280, 800)]:
+		for l: String in TouchControls.LAYOUTS:
+			var cs := TouchControls.layout_circles(l, sz)
+			for i in cs.size():
+				var ci: Dictionary = cs[i]
+				var p: Vector2 = ci["c"]
+				var r: float = ci["r"] * 1.15
+				assert(p.x - r >= 0.0 and p.x + r <= sz.x and p.y - r >= 0.0 and p.y + r <= sz.y, "%s button %s on screen at %s" % [l, ci["name"], str(sz)])
+				for j in range(i + 1, cs.size()):
+					var cj: Dictionary = cs[j]
+					var gap := p.distance_to(cj["c"]) - r - float(cj["r"]) * 1.15
+					assert(gap >= TouchControls.BTN_GAP, "%s: %s and %s hit zones overlap at %s (gap %.1f)" % [l, ci["name"], cj["name"], str(sz), gap])
+	var wing_x: float = -1.0
+	for c: Dictionary in TouchControls.layout_circles("flight", Vector2(1280, 720)):
+		if str(c["name"]).begins_with("wing_"):
+			assert((c["c"] as Vector2).x < 128.0, "wing row sits in the left column, off the world labels")
+			wing_x = (c["c"] as Vector2).x
+	assert(wing_x > 0.0, "flight layout has the wing buttons")
+	var u2 := Universe.new()
+	u2.setup(7)
+	var tch := Hud.objective_for(u2, true)
+	var kb := Hud.objective_for(u2, false)
+	assert(tch.contains("ACT") and not tch.contains("press F") and not tch.contains("M:"), "touch objective uses ACT wording: " + tch)
+	assert(kb.contains("press F"), "keyboard objective keeps F")
+	assert(Hud.earn_hint(true).contains("tap ACT") and Hud.earn_hint(false).contains("(F)"), "earn hint wording")
+	var dh := DockPanel.hq_hint(true)
+	assert(dh.contains("MAP") and dh.contains("ACT") and dh.contains("Earn") and not dh.contains("(M)"), "touch HQ dock text")
+	assert(DockPanel.hq_hint(false).contains("(M)") and DockPanel.hq_hint(false).contains("press F"), "keyboard HQ dock text")
+	print("touch ux: no overlapping buttons, ACT wording OK")
 
 
 func _test_marker_layout() -> void:

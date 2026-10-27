@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map dock ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -118,7 +118,8 @@ func _shot_script(t: float) -> void:
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")
-			"dock":
+			"dock", "dock_touch":
+				g.touch.active = g.shot_mode == "dock_touch"
 				g._on_dock(g.u.hq)
 			"ledger", "ledger_dock", "ledger_map":   # VS-024: HUD cr/min + last-5-min breakdown
 				g.space.autoplay = false
@@ -136,7 +137,7 @@ func _shot_script(t: float) -> void:
 				g._on_land(0)
 			"surface_far":
 				g._on_land(0)
-			"touch":
+			"touch", "touch_wing":
 				g.touch.active = true
 				g.touch.set_layout("none")
 				g.touch.set_layout("flight")
@@ -193,6 +194,8 @@ func _shot_script(t: float) -> void:
 		sv.fps.look_at(Vector3(sv.core_pos.x, sv.fps.position.y, sv.core_pos.z), Vector3.UP)
 		sv.fps.rotation.x = 0.0
 		sv.fps.rotation.z = 0.0
+	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
+		assert(g.map.fold_ok(), "map side panel: BUILD STATION buttons below the fold at %s" % str(g.map.size))
 	var wait := 6.0 if g.shot_mode == "surface" or g.shot_mode == "surface_far" else 3.0
 	if g.shot_mode == "sortie":
 		wait = 9.0

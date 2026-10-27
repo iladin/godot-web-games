@@ -16,7 +16,13 @@ var _repair: Button
 var _ship_btns: Dictionary = {}
 
 
-func open(p_u: Universe, p_st: StationData) -> void:
+## VS-032: HQ footer; touch wording uses MAP/ACT and points at income.
+static func hq_hint(touch: bool) -> String:
+	return "Build stations and command your fleet from the Command Map (%s). Earn credits: undock, then %s at the Union Trade Hub to sell wares." % [
+		"tap MAP" if touch else "M", "tap ACT" if touch else "press F"]
+
+
+func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 	u = p_u
 	st = p_st
 	for c in get_children():
@@ -97,7 +103,8 @@ func open(p_u: Universe, p_st: StationData) -> void:
 			_ship_btns[cls] = b
 	if st.kind == "hq":
 		var hint := Label.new()
-		hint.text = "Build stations and command your fleet from the Command Map (M)."
+		hint.text = hq_hint(touch_active)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.modulate = Color(1, 1, 1, 0.6)
 		box.add_child(hint)
 	var undock := Button.new()

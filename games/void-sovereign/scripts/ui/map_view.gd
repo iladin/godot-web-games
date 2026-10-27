@@ -28,6 +28,9 @@ var _dragging: bool = false
 var _drag_now: Vector2 = Vector2.ZERO
 var _side: VBoxContainer
 var _info: Label
+var _head: Label
+var _scroll: ScrollContainer
+var _build_grid: GridContainer
 var _sel_label: Label
 var _order_btns: Dictionary = {}
 var _buy_btns: Dictionary = {}
@@ -84,24 +87,25 @@ func _build_side() -> void:
 	scroll.offset_bottom = -8
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
+	_scroll = scroll
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size = Vector2(SIDE_W - 30, 0)
 	_side.add_theme_constant_override("separation", 6)
 	scroll.add_child(_side)
-	_info = Label.new()
-	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_side.add_child(_info)
-	_sel_label = Label.new()
-	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_sel_label.add_theme_color_override("font_color", AMBER)
-	_side.add_child(_sel_label)
+	# VS-032: one-line status first, details (fleet, ledger, selection) after the buy/build
+	# buttons, so BUY SHIPS / BUILD STATION stay on screen at 900x720 without scrolling.
+	_head = Label.new()
+	_head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_head.add_theme_color_override("font_color", AMBER)
+	_head.add_theme_font_size_override("font_size", 15)
+	_side.add_child(_head)
 	var orders := GridContainer.new()
 	orders.columns = 2
 	_side.add_child(orders)
 	for o: Array in [["patrol", "Patrol"], ["escort", "Escort me"], ["trade", "Auto-trade"], ["mine", "Auto-mine"], ["idle", "Stop"], ["all", "Select warships"]]:
 		var b := Button.new()
 		b.text = o[1]
-		b.custom_minimum_size = Vector2(140, 40)
+		b.custom_minimum_size = Vector2(140, 34)
 		var key: String = o[0]
 		b.pressed.connect(func() -> void: _order_button(key))
 		orders.add_child(b)
@@ -119,7 +123,7 @@ func _build_side() -> void:
 	_side.add_child(buys)
 	for cls: String in Defs.PLAYER_BUYABLE:
 		var b2 := Button.new()
-		b2.custom_minimum_size = Vector2(140, 48)
+		b2.custom_minimum_size = Vector2(140, 42)
 		b2.clip_text = true
 		b2.pressed.connect(func() -> void:
 			var s := u.buy_ship(cls, u.hq)
@@ -131,18 +135,31 @@ func _build_side() -> void:
 	var builds := GridContainer.new()
 	builds.columns = 2
 	_side.add_child(builds)
+	_build_grid = builds
 	for kind: String in Defs.PLAYER_BUILDABLE:
 		var b3 := Button.new()
-		b3.custom_minimum_size = Vector2(140, 48)
+		b3.custom_minimum_size = Vector2(140, 42)
 		b3.clip_text = true
 		b3.pressed.connect(func() -> void: build_kind = kind if build_kind != kind else "")
 		builds.add_child(b3)
 		_build_btns[kind] = b3
+	_info = Label.new()
+	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_side.add_child(_info)
+	_sel_label = Label.new()
+	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sel_label.add_theme_color_override("font_color", AMBER)
+	_side.add_child(_sel_label)
 	var close := Button.new()
 	close.text = "Close map (M)"
 	close.custom_minimum_size = Vector2(0, 48)
 	close.pressed.connect(func() -> void: close_requested.emit())
 	_side.add_child(close)
+
+
+## VS-032: true when the last BUILD STATION button ends inside the side scroll area (no scrolling needed).
+func fold_ok() -> bool:
+	return _build_grid.get_global_rect().end.y <= _scroll.get_global_rect().end.y + 0.5
 
 
 func _header(s: String) -> Label:
@@ -187,7 +204,8 @@ func _process(delta: float) -> void:
 			counts[c] = int(counts.get(c, 0)) + 1
 	var fleet := ", ".join(counts.keys().map(func(k: String) -> String: return "%s ×%d" % [k, counts[k]]))
 	var pstate := {"hive": "Hive Core (threat %d)" % s.level, "colony": "Your colony", "union": "Union world"}
-	_info.text = "%s\nPlanet %s: %s\nCredits %s\nFleet: %s\n%s" % [s.name, s.planet_name, pstate[s.planet_state], Hud._fmt(u.credits), fleet if fleet != "" else "none", Hud.ledger_text(u, 4)]
+	_head.text = "Credits %s  ·  %s" % [Hud._fmt(u.credits), "%d selected" % selected.size() if not selected.is_empty() else "none selected"]
+	_info.text = "%s\nPlanet %s: %s\nFleet: %s\n%s" % [s.name, s.planet_name, pstate[s.planet_state], fleet if fleet != "" else "none", Hud.ledger_text(u, 4)]
 	if selected.is_empty():
 		_sel_label.text = "Click or drag-box your ships to select. Right-click to order."
 	else:
@@ -195,7 +213,7 @@ func _process(delta: float) -> void:
 		for id: int in selected.slice(0, 6):
 			var sh := u.get_ent(id) as ShipData
 			lines.append("%s — %s%s" % [sh.display_name, sh.order, "" if sh.sector == view_sector else " (%s)" % u.sectors[sh.sector].name])
-		_sel_label.text = "%d selected\n%s" % [selected.size(), "\n".join(lines)]
+		_sel_label.text = "\n".join(lines)
 	for cls: String in _buy_btns:
 		var cost := int(Defs.SHIP[cls]["cost"])
 		(_buy_btns[cls] as Button).text = "%s\n%s" % [Defs.SHIP[cls]["name"], Hud._fmt(cost)]
