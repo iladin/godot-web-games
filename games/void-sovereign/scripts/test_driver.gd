@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -45,6 +45,7 @@ func tick() -> void:
 		g.map.selected.clear()
 		g.map._order_button("all")
 		g.map._order_button("patrol")
+		_exercise_raid_ui()
 		g.u.buy_ship("fighter", g.u.hq)
 		g.u.build_station("solar", 0, Vector3(1500, 0, -1500))
 		g.map._issue_order(g.map.w2s(Vector3(800, 0, 800)))
@@ -116,6 +117,18 @@ func _shot_script(t: float) -> void:
 				assert(not g.flow.request_new_game(true, 0.0), "first press only asks")
 				g.overlay.confirm_new = g.flow.confirming()
 			"map":
+				g._set_mode("map")
+				g.map._order_button("all")
+			"raid_map":   # VS-039: one raid in flight on the inset + panel, one finished outcome listed
+				var nst: StationData = g.u.alive_nests()[0]
+				var tr := g.u.director.tracker
+				var r1 := g.u.spawn_ship("drone", Defs.Faction.HIVE, nst.sector, nst.pos + Vector3(300, 0, 0))
+				r1.order = "raid"
+				r1.order_target = g.u.hq.id
+				r1.order_sector = g.u.hq.sector
+				var rl1: Array[ShipData] = [r1]
+				tr.add(rl1, g.u.hq)
+				tr.history.append({"t": g.u.time - 40.0, "kind": "intercepted", "text": "Raid intercepted in Argent (3/4 destroyed)"})
 				g._set_mode("map")
 				g.map._order_button("all")
 			"dock", "dock_touch":
@@ -207,3 +220,24 @@ func _shot_script(t: float) -> void:
 		var img := g.get_viewport().get_texture().get_image()
 		img.save_png(g.shot_file if g.shot_file != "" else "user://shot.png")
 		g.get_tree().quit()
+
+
+## VS-039: a fake raid shows in the map panel and "Defend" sends the warships to patrol its target in one click.
+func _exercise_raid_ui() -> void:
+	var u := g.u
+	var nest: StationData = u.alive_nests()[0]
+	var rs := u.spawn_ship("drone", Defs.Faction.HIVE, nest.sector, nest.pos + Vector3(300, 0, 0))
+	rs.order = "raid"
+	var rl: Array[ShipData] = [rs]
+	u.director.tracker.raids.clear()
+	u.director.tracker.add(rl, u.hq)
+	g.map._raid_panel()
+	assert(g.map._raid_label.visible and g.map._defend_btn.visible, "raid shows in the map panel")
+	g.map.selected.clear()
+	assert(g.map.defend_raid_target() == u.hq.sector, "Defend orders patrol of the raid target")
+	for id: int in g.map.selected:
+		assert((u.get_ent(id) as ShipData).order == "patrol" and (u.get_ent(id) as ShipData).order_sector == u.hq.sector)
+	rs.alive = false
+	u.director.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	g.map._raid_panel()
+	assert(not g.map._defend_btn.visible and "Last 5 min" in g.map._raid_label.text, "outcome listed in the map panel")

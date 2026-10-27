@@ -32,6 +32,8 @@ var _head: Label
 var _scroll: ScrollContainer
 var _build_grid: GridContainer
 var _sel_label: Label
+var _raid_label: Label              # VS-039: active raids + last-5-min outcomes
+var _defend_btn: Button             # VS-039: patrol the first active raid's target sector
 var _order_btns: Dictionary = {}
 var _buy_btns: Dictionary = {}
 var _build_btns: Dictionary = {}
@@ -146,6 +148,20 @@ func _build_side() -> void:
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_side.add_child(_info)
+	_raid_label = Label.new()
+	_raid_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_raid_label.add_theme_color_override("font_color", HIVE)
+	_raid_label.add_theme_font_size_override("font_size", 14)
+	_raid_label.visible = false
+	_side.add_child(_raid_label)
+	_side.move_child(_raid_label, 1)   # right under the status line: threats first (hidden when there are none)
+	_defend_btn = Button.new()
+	_defend_btn.custom_minimum_size = Vector2(0, 40)
+	_defend_btn.clip_text = true
+	_defend_btn.visible = false
+	_defend_btn.pressed.connect(defend_raid_target)
+	_side.add_child(_defend_btn)
+	_side.move_child(_defend_btn, 2)
 	_sel_label = Label.new()
 	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sel_label.add_theme_color_override("font_color", AMBER)
@@ -191,10 +207,55 @@ func _order_button(key: String) -> void:
 		s.order_target = 0
 
 
+## VS-039: sends the selection (or, with nothing selected, every player warship) to patrol the sector of the
+## first active raid: one click on the raid button, or two with the selection step. Returns the sector or -1.
+func defend_raid_target() -> int:
+	var act := u.director.tracker.active()
+	if act.is_empty():
+		return -1
+	var sec := int(act[0]["target_sector"])
+	if selected.is_empty():
+		for e: SimEntity in u.entities.values():
+			if _own_unit(e) and e.faction == Defs.Faction.PLAYER and e.armed():
+				selected.append(e.id)
+	var n := 0
+	for id: int in selected:
+		var sh := u.get_ent(id) as ShipData
+		if sh == null or not sh.armed():
+			continue
+		sh.order = "patrol"
+		sh.ai_state = ""
+		sh.order_sector = sec
+		sh.order_target = 0
+		n += 1
+	if n > 0:
+		u.message.emit("%d ships ordered to patrol %s" % [n, u.sectors[sec].name], AMBER)
+	return sec
+
+
+func _raid_panel() -> void:
+	var tr := u.director.tracker
+	var act := tr.active()
+	var lines: Array[String] = []
+	for rd: Dictionary in act:
+		lines.append(tr.label_for(rd))
+	var rec := tr.recent()
+	if not rec.is_empty():
+		lines.append("Last 5 min:")
+		for o: Dictionary in rec.slice(0, 4):
+			lines.append("%s (%dm%02ds ago)" % [o["text"], int(float(o["age"]) / 60.0), int(float(o["age"])) % 60])
+	_raid_label.visible = not lines.is_empty()
+	_raid_label.text = "\n".join(lines)
+	_defend_btn.visible = not act.is_empty()
+	if not act.is_empty():
+		_defend_btn.text = "Defend %s (patrol)" % u.sectors[int(act[0]["target_sector"])].name
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	t += delta
+	_raid_panel()
 	selected = selected.filter(func(id: int) -> bool: return u.get_ent(id) != null)
 	var s := u.sectors[view_sector]
 	var counts: Dictionary = {}
@@ -456,15 +517,19 @@ func _draw_galaxy() -> void:
 		if threat > 0:
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-14, 14), p + Vector2(-8, 4), p + Vector2(-2, 14)]), HIVE)
 			_text(p + Vector2(-2, 24), "%d" % threat, 12, HIVE, 24)
-	# VS-025: every active raid: red ring on its sector, a line to the target sector, ETA label.
+	# VS-025/039: every active raid: red ring on its sector, a line to the target sector (ringed), a "x3 > Ember ETA 42s" label.
+	var shown := 0
 	for rd: Dictionary in u.director.tracker.active():
 		var rp := r.position + u.sectors[int(rd["sector"])].map_pos * r.size
 		var tp := r.position + u.sectors[int(rd["target_sector"])].map_pos * r.size
 		if rp != tp:
 			draw_dashed_line(rp, tp, Color(HIVE, 0.8), 2.0, 6.0)
+			draw_arc(tp, 15, 0, TAU, 20, Color(HIVE, 0.5 + 0.4 * sin(t * 6.0)), 1.5)
 		draw_arc(rp, 11, 0, TAU, 16, HIVE, 2.5)
-		var lbl := "RAID x%d ON TARGET" % int(rd["ships"]) if rp == tp else "RAID x%d ETA %ds" % [int(rd["ships"]), int(float(rd["eta"]))]
-		_text(rp + Vector2(-60, 32), lbl, 11, HIVE, 120)
+		var lbl := u.director.tracker.label_for(rd)
+		var lx := clampf(rp.x - 90.0, r.position.x + 2.0, r.end.x - 182.0)
+		_text(Vector2(lx, minf(rp.y + 32.0, r.end.y - 30.0) + 12.0 * float(shown)), lbl, 11, HIVE, 180)
+		shown += 1
 	_text(r.position + Vector2(6, r.size.y - 6), "Click sector to view · RMB send selection", 11, Color(1, 1, 1, 0.5), r.size.x)
 
 

@@ -164,3 +164,8 @@
 - Task(s): review round (critic avg 6.5, QA sweep no P0-P2, balance 8/8 green) -> VS-038..042 created; VS-038 hot opening done (QA FAIL round 1 on nw20 gate, fixed by pilot-present gating, PASS round 2)
 - Check: PASS · Git: committed (see git log)
 - Notes: harness hides the pilot so First Sortie never spawns in balance gates (parking lot). builds_since_review reset to 0.
+
+## S0032 — 2026-10-27 23:35 — BUILD
+- Task(s): VS-039 raid tracks on inset + map panel (labels, outcome history, Defend patrol button) — done (QA PASS round 1); VS-043 created from QA P3s
+- Check: PASS · Git: committed (see git log)
+- Notes: sim bit-identical to HEAD (A/B 9 seeds); HEAD metrics drifted vs S0031 line (nw20 120.8k, nw30 167.5k, hive@20 53).

@@ -48,7 +48,7 @@ static func capture(u: Universe) -> Dictionary:
 		"director": {"raid_t": d.raid_t, "union_t": d.union_t, "raid_count": d.raid_count, "rebuild_queue": rq,
 				"turned_back_at": d.turned_back_at, "turned_back_pending": d.turned_back_pending,
 				"breach_t": d.breach_t, "breach_count": d.breach_count},
-		"tracker": {"raids": raids, "t": d.tracker._t},
+		"tracker": {"raids": raids, "t": d.tracker._t, "history": _enc(d.tracker.history)},
 		"opening": {"t": ow.t, "state": ow.state, "spawn_count": ow.spawn_count, "ids": _enc(ow.ids), "active_t": ow.active_t, "engaged": ow.engaged, "eased": ow.eased,
 				"rng_seed": str(ow.rng.seed), "rng_state": str(ow.rng.state)},
 	}
@@ -159,6 +159,8 @@ static func restore(d: Dictionary) -> Universe:
 			ids.append(int(i))
 		rr["ids"] = ids
 		dir.tracker.raids.append(rr)
+	for h: Variant in _dec(td.get("history", [])) as Array:
+		dir.tracker.history.append(h as Dictionary)
 	var od: Dictionary = d["opening"]
 	var ow := dir.opening
 	ow.t = float(od["t"])
@@ -322,6 +324,8 @@ static func _valid(d: Dictionary) -> bool:
 		return false
 	# Tagged-value payloads must decode to the shapes restore() casts them to.
 	if not (d["ledger"]["totals"] is Dictionary) or not (d["ledger"]["buckets"] is Array) or not (d["opening"]["ids"] is Array):
+		return false
+	if d["tracker"].has("history") and not (d["tracker"]["history"] is Array):
 		return false
 	for r: Variant in d["tracker"]["raids"]:
 		if not _has(r, ["ids", "n", "target_sector", "target_name", "arrived", "last_sector", "eta", "sector"]) or not (r["ids"] is Array):

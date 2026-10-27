@@ -258,6 +258,7 @@ func _init() -> void:
 		rs.order_sector = u.hq.sector
 		raiders.append(rs)
 	dir.tracker.raids.clear()   # the scripted Breach / earlier raids may still be in flight
+	dir.tracker.history.clear()
 	dir.tracker.add(raiders, u.hq)
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	assert(msgs.is_empty(), "no raid warning while the raid is still far from its target")
@@ -274,6 +275,9 @@ func _init() -> void:
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	assert(msgs.size() == 2 and "2/3 destroyed" in msgs[1], "interception reports kills: %s" % [msgs])
 	assert(dir.tracker.active().is_empty(), "finished raid leaves the tracker")
+	# VS-039: exactly one outcome per raid, in the message log and in the last-5-min history.
+	assert(dir.tracker.history.size() == 1 and dir.tracker.history[0]["kind"] == "intercepted", "interception written to history once")
+	assert(dir.tracker.recent().size() == 1 and "2/3 destroyed" in String(dir.tracker.recent()[0]["text"]), "recent() lists the outcome")
 	# A raid that is called off with no losses reports "withdrew"; a raid wiped out en route never warns.
 	var w := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
 	w.order = "raid"
@@ -282,6 +286,25 @@ func _init() -> void:
 	w.order = "patrol"
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	assert(msgs.size() == 3 and "withdrew" in msgs[2], "withdrawn raid reported: %s" % [msgs])
+	assert(dir.tracker.history.size() == 2 and dir.tracker.history[1]["kind"] == "withdrew", "withdrawal written to history once")
+	# A raid whose target station is destroyed reports "succeeded (destroyed X)", once.
+	var victim := u.spawn_station("solar", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(900, 0, 0))
+	var sv := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
+	sv.order = "raid"
+	var svl: Array[ShipData] = [sv]
+	dir.tracker.add(svl, victim)
+	var lab := dir.tracker.label_for(dir.tracker.active()[0])
+	assert(victim.sector == u.hq.sector and "RAID x1" in lab and u.sectors[victim.sector].name in lab, "inset label names the target sector: %s" % lab)
+	victim.alive = false
+	sv.order = "patrol"
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(msgs.size() == 4 and "SUCCEEDED" in msgs[3] and victim.display_name in msgs[3], "successful raid reported: %s" % [msgs])
+	assert(dir.tracker.history.size() == 3 and dir.tracker.history[2]["kind"] == "succeeded", "success written to history once")
+	var tt := u.time
+	u.time += Defs.RAID_HISTORY_WINDOW + 1.0
+	assert(dir.tracker.recent().is_empty(), "outcomes older than 5 min leave the list")
+	u.time = tt
 	msgs.clear()
 	var dtarget := u.hq
 	dir.turned_back_at = -1.0e9
@@ -497,6 +520,18 @@ func _test_save_game() -> void:
 		u.step(JOURNEY_DT)
 	assert(u.time > 299.0)
 	var nw := u.net_worth()
+	# VS-039: an in-flight raid marker and the outcome history survive the round trip.
+	var rn: ShipData
+	for e: SimEntity in u.entities.values():
+		if e is ShipData and e.faction == Defs.Faction.HIVE and e.alive:
+			rn = e as ShipData
+			break
+	assert(rn != null)
+	var rl: Array[ShipData] = [rn]
+	rn.order = "raid"
+	u.director.tracker.raids.clear()
+	u.director.tracker.add(rl, u.hq)
+	u.director.tracker.history.append({"t": u.time - 10.0, "kind": "withdrew", "text": "Raid withdrew from X"})
 	var rng_state := u.rng.state
 	var ids_before := u.entities.keys().size()
 	var d := SaveGame.capture(u)
@@ -514,6 +549,9 @@ func _test_save_game() -> void:
 	assert(r.ledger.breakdown(r.time).size() == u.ledger.breakdown(u.time).size())
 	assert(absf(r.director.raid_t - u.director.raid_t) < 0.001 and r.director.raid_count == u.director.raid_count)
 	assert(r.director.tracker.raids.size() == u.director.tracker.raids.size())
+	assert(r.director.tracker.raids.size() == 1 and int(r.director.tracker.raids[0]["target_id"]) == u.hq.id and int(r.director.tracker.raids[0]["ids"][0]) == rn.id, "raid marker round-trips")
+	assert(r.director.tracker.history.size() == u.director.tracker.history.size() and r.director.tracker.recent().size() == u.director.tracker.recent().size() and r.director.tracker.recent().size() >= 1, "raid history round-trips")
+	assert(r.director.tracker.label_for(r.director.tracker.active()[0]) == u.director.tracker.label_for(u.director.tracker.active()[0]), "restored raid shows the same inset label")
 	assert(r.colonies() == u.colonies() and r.alive_nests().size() == u.alive_nests().size())
 	for e: SimEntity in u.entities.values():
 		var o := r.get_ent(e.id)

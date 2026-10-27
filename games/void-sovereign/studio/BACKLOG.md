@@ -565,7 +565,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Intercept kills outside the HQ sector pay a bounty via Universe.add_credits(amount, "intercept"), shown in ledger breakdown
   - [ ] Deterred raids redirect to nearest Union station with the same ETA marker
   - [ ] Union ships @20 and nw30 tail do not worsen; Hive ships @20 <= 60; check.sh and balance gates PASS
-- notes: Do after VS-034. Watch perturbed-econ tail and VS-006 perf guard.
+- notes: Do after VS-034. Watch perturbed-econ tail and VS-006 perf guard. S0032: VS-039 already ships outcome kinds intercepted/withdrew/succeeded + history; remaining here = bounty + redirect only.
 
 ## VS-037 · On-foot pressure: flanking Hive and hit/kill feedback
 - status: todo
@@ -600,7 +600,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0031 — scouts spawn at 8 s (pilot-present gated), Scout markers/edge arrows, radio line, tip box lowered; first damage t~13; QA PASS round 2
 
 ## VS-039 · Raid tracks on galaxy inset and map (step 1 of VS-036)
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -615,6 +615,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Markers are not persisted wrongly: save/load round trip asserted in selftest
   - [ ] check.sh PASS
 - notes: Reuse the VS-025 raid tracker. After this lands, trim VS-036 to bounty + redirect.
+- done: S0032 — raid tracks on inset + map panel, outcomes list, Defend patrol button; QA PASS
 
 ## VS-040 · Income empty state and net/gross labelling
 - status: todo
@@ -662,6 +663,21 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Zero console errors on title, flight and surface
   - [ ] Failing thresholds are recorded, not hidden; VS-006 closed or reopened with real numbers
 - notes: Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
+
+## VS-043 · Raid panel fit: 900-wide and touch, shorter outcome list
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0032
+- why: S0032 QA on VS-039: raid text pushes BUY/BUILD to the bottom edge at 1280x720; 900-wide and touch layouts unchecked; inset raid label overlaps "Cinder Belt".
+- acceptance:
+  - [ ] With 1 raid + 1 outcome, fold_ok holds (BUY/BUILD first row visible) at 1280x720 and 900x720
+  - [ ] Touch screenshot of the map with a raid shows the Defend button >= 44 px tall and tappable
+  - [ ] Inset raid label does not overlap sector names in the raid_map shot
+  - [ ] check.sh PASS
+- notes: Cap outcome list to 2 lines or move block below BUY. Defend empty-selection selects all armed ships incl. auto-trade; add tooltip.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)

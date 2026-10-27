@@ -122,6 +122,9 @@ const RAID_DETER_RANGE := 3400.0
 const RAID_TRACK_INTERVAL := 0.5
 const RAID_TURNED_BACK_THROTTLE := 300.0
 const RAID_HOP_ETA := 40.0
+# VS-039: raid outcomes are listed in the map panel for RAID_HISTORY_WINDOW s (at most RAID_HISTORY_MAX kept).
+const RAID_HISTORY_WINDOW := 300.0
+const RAID_HISTORY_MAX := 12
 # VS-029 The Breach: one scripted raid (never deterred, no dreadnought) appears BREACH_RANGE from the HQ at BREACH_TIME s
 # and heads straight for it, so every run sees at least one raid actually reach the HQ. Drones are scaled by BREACH_HULL/DPS.
 const BREACH_TIME := 360.0
