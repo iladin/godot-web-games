@@ -194,6 +194,15 @@ func _draw_markers(sz: Vector2) -> void:
 		var col := Defs.faction_color(e.faction)
 		if e.is_station:
 			_marker(cam, sz, e.pos, col, e.display_name, true, cpos)
+		elif e is ShipData and (e as ShipData).sortie and e.alive:
+			# VS-038: sortie scouts get a labelled marker with distance, or an edge arrow when off-screen.
+			if cam.is_position_behind(e.pos) or not Rect2(Vector2.ZERO, sz).has_point(cam.unproject_position(e.pos)):
+				_edge_arrow(sz, cam, e.pos, HIVE, "Scout %dm" % int(e.pos.distance_to(cpos)))
+			else:
+				_marker(cam, sz, e.pos, col, "", true, cpos)
+				# Label above the diamond (station labels sit to the right) so the two don't overprint.
+				var spp := cam.unproject_position(e.pos)
+				_txt(spp + Vector2(-50, -26), "Scout %dm" % int(e.pos.distance_to(cpos)), 14, Color(col, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 100)
 		elif e.pos.distance_to(cpos) < 3500.0:
 			_marker(cam, sz, e.pos, col, "", false, cpos)
 	var tgt := u.get_ent(space.target_id)
@@ -231,7 +240,7 @@ func _marker(cam: Camera3D, sz: Vector2, wp: Vector3, col: Color, label: String,
 		_txt(sp + Vector2(10, 5), "%s  %s" % [label, ds], 14, Color(col, 0.8))
 
 
-func _edge_arrow(sz: Vector2, cam: Camera3D, wp: Vector3, col: Color) -> void:
+func _edge_arrow(sz: Vector2, cam: Camera3D, wp: Vector3, col: Color, label: String = "") -> void:
 	var local := cam.global_transform.basis.inverse() * (wp - cam.global_position)
 	var dir := Vector2(local.x, -local.y).normalized()
 	if dir == Vector2.ZERO:
@@ -240,6 +249,9 @@ func _edge_arrow(sz: Vector2, cam: Camera3D, wp: Vector3, col: Color) -> void:
 	var p := c + dir * minf(sz.x, sz.y) * 0.42
 	var n := dir.orthogonal()
 	draw_colored_polygon(PackedVector2Array([p + dir * 14, p - dir * 6 + n * 9, p - dir * 6 - n * 9]), col)
+	if label != "":
+		var tw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		_txt(Vector2(clampf(p.x - tw * 0.5, 4.0, sz.x - tw - 4.0), p.y + (24.0 if dir.y < 0.0 else -34.0)), label, 14, col)
 
 
 # --- Surface ---------------------------------------------------------------------------------

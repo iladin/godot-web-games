@@ -195,6 +195,13 @@ func _init() -> void:
 	assert(not u.valid_target(u.hq, scout) and not u.valid_target(scout, u.hq), "stations and scouts ignore each other")
 	assert(not u.valid_target(scout, mk.call("miner", Defs.Faction.PLAYER)), "scouts leave the miner alone")
 	assert(ow.state == OpeningWave.State.CLEARED, "HQ + escorts beat the opening wave within 8 min")
+	# VS-038: hot opening: scouts arrive early, radio line has a bearing and per-input wording.
+	assert(Defs.OPENING_WAVE_TIME <= 10.0, "opening wave arrives within 10 s")
+	ow.touch = false
+	var rl := ow.radio_line(Vector3(0, 0, -1000.0) + u.hq.pos)
+	assert(rl.contains("press R") and rl.contains("bearing"), "radio line (keyboard)")
+	ow.touch = true
+	assert(ow.radio_line(u.hq.pos + Vector3(0, 0, -1000.0)).contains("tap TGT"), "radio line (touch)")
 	print("opening wave: spawned once, cleared")
 	assert(raids_seen, "Hive raids should start within 8 minutes")
 	assert(u.time > 479.0)

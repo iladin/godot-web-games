@@ -582,6 +582,87 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Pylons down <= 90 s, Core dead <= 100 s; check.sh PASS
 - notes: Depends on VS-031 landing first. Keep dps low for touch aim.
 
+## VS-038 · Hot opening: scouts close in within 25 s
+- status: done
+- priority: P1
+- type: feature
+- size: S
+- source: scout
+- created: S0031
+- why: S0031 critic problem 1: first minute of flight is dead air (hull 600, credits flat t=1..60); QA P3 tip box over ship in sortie.
+- acceptance:
+  - [ ] `combat_long` shows first shield/hull damage at t <= 30 and idle-bot hull still >= 450 at t=85
+  - [ ] Sortie scouts show a marker or edge bearing arrow with distance from the moment they spawn (spawn at t <= 10)
+  - [ ] One radio message line fires at first contact (touch wording on touch)
+  - [ ] Tutorial tip box is not drawn over the player ship in sortie.png
+  - [ ] check.sh PASS; balance gates unchanged (sortie constants only)
+- notes: Keep scout dps low (touch harshness question). See reviews/S0031-scout.md.
+- done: S0031 — scouts spawn at 8 s (pilot-present gated), Scout markers/edge arrows, radio line, tip box lowered; first damage t~13; QA PASS round 2
+
+## VS-039 · Raid tracks on galaxy inset and map (step 1 of VS-036)
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: scout
+- created: S0031
+- why: S0031 critic problem 2: HQ never threatened in active play; visible war fronts idea. Ships first so VS-036 shrinks to bounty + redirect.
+- acceptance:
+  - [ ] Every active raid draws a marker on the inset with target sector name and ETA, updated at 1 Hz
+  - [ ] Raid end writes exactly one outcome: intercepted (k/n), withdrew, succeeded (destroyed X), shown as message and in map panel last-5-min list
+  - [ ] Map order patrol on a raid target sector reachable in <= 3 clicks/taps
+  - [ ] No change to raid spawn/deterrence logic: 9-seed gate medians unchanged within IQR (Hive ships @20 <= 60)
+  - [ ] Markers are not persisted wrongly: save/load round trip asserted in selftest
+  - [ ] check.sh PASS
+- notes: Reuse the VS-025 raid tracker. After this lands, trim VS-036 to bounty + redirect.
+
+## VS-040 · Income empty state and net/gross labelling
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0031
+- why: S0031 critic problem 5: "+0 cr/min" beside 30,000 cr teaches nothing; HUD income is gross but unlabelled.
+- acceptance:
+  - [ ] Map panel before first income lists 3 income sources with estimates from the same code that pays out (0 shown honestly)
+  - [ ] After income starts the panel shows "net X (gross Y)"; ledger test asserts gross >= net
+  - [ ] Universe.add_credits remains the only credit writer (selftest still asserts)
+  - [ ] check.sh PASS
+- notes: The HUD hide-rate-for-15s item is in VS-035; do not duplicate.
+
+## VS-041 · Honest save on the surface: landing checkpoint and HUD notice
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0031
+- why: S0031 QA P3 (repeat since S0025): autosave never fires on foot; Continue restores an old in-space save with no warning.
+- acceptance:
+  - [ ] An in-space autosave is written when surface mode starts via the existing atomic writer, containing no surface state
+  - [ ] Surface HUD shows "Progress is saved when you return to space" for the first 8 s and in the pause overlay
+  - [ ] Selftest: save before descent, focus-out on surface, load -> state equals pre-descent state
+  - [ ] Dying on the surface then Continue restores pre-descent state
+  - [ ] DESIGN.md Out of scope unchanged; check.sh PASS
+- notes: 
+
+## VS-042 · Real-browser smoke: save round trip and late-game frame time
+- status: todo
+- priority: P2
+- type: tech
+- size: M
+- source: scout
+- created: S0031
+- why: S0031 critic problem 10: VS-006 web perf unverified for five reviews; IndexedDB .bak behaviour untested on web.
+- acceptance:
+  - [ ] A script exports, serves and drives the web build headless with no manual steps
+  - [ ] Reports median/p95 frame time at ~20 and ~60 ships into metrics.csv with the session id
+  - [ ] Reload then Continue restores credits and sector; removing the main save makes Continue use .bak (asserted)
+  - [ ] Zero console errors on title, flight and surface
+  - [ ] Failing thresholds are recorded, not hidden; VS-006 closed or reopened with real numbers
+- notes: Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -657,3 +738,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0025, QA, P3) Autosave never fires on foot/dead and no save on focus-out; closing tab after a long surface fight restores an old in-space save.
 - (S0025, QA, P3) Touch surface RUN/JUMP buttons overlap each other and the weapon model (covered by VS-032 if it lands).
 - Touch layout polish: earn-hint line nearly touches TGT at 900x720; wing column (ATK/ESC/HOLD) sits over the planet at 1280x720 and HOLD is ~13 px from the MOVE pad; flight layout cramped (ACT/MAP overlap) below ~650 px height; `dock_touch`/`touch_wing` not in standard shot sweep; shots.sh writes a PNG for unknown scenario names (S0029 QA, P3)
+- (S0031, QA VS-038, P3) Balance harness hides the pilot so the First Sortie never spawns there (hive_ships_20 median now 60 vs 49-51 with wave); add a pilot-present/--wave harness mode so gates cover real play.
+- (S0031, QA sweep, P3) Command map side panel at 900x720 scrolls: Close and last orders at bottom edge; sortie tip box also a mouse-capture tip on touch.

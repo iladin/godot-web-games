@@ -181,6 +181,7 @@ func _process(delta: float) -> void:
 		return
 	state_time += delta
 	if RunFlow.sim_runs(state):   # frozen behind the title and end screens
+		u.director.opening.touch = touch.active
 		u.step(delta)
 		flow.autosave_tick(delta)
 		if u.director.opening.cue:   # VS-030 arrival cue, once per wave

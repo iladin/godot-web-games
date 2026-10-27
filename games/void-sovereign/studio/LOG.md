@@ -159,3 +159,8 @@
 - Task(s): VS-033 atomic run save + honest save failures — done (QA PASS)
 - Check: PASS · Git: committed (see git log)
 - Notes: run_save.gd tmp+verify+rename with .bak fallback; run_flow.gd throttled "Autosave failed" msg; selftest extended. QA P3s: _parses only checks "version" key; HUD message rendering untested on screen. builds_since_review now 6 -> PLANNING next.
+
+## S0031 — 2026-10-27 22:38 — PLANNING+BUILD
+- Task(s): review round (critic avg 6.5, QA sweep no P0-P2, balance 8/8 green) -> VS-038..042 created; VS-038 hot opening done (QA FAIL round 1 on nw20 gate, fixed by pilot-present gating, PASS round 2)
+- Check: PASS · Git: committed (see git log)
+- Notes: harness hides the pilot so First Sortie never spawns in balance gates (parking lot). builds_since_review reset to 0.

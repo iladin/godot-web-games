@@ -175,7 +175,7 @@ func _shot_script(t: float) -> void:
 				g.space.autoplay = false
 				g.space.player.autopilot = false
 				g.u.director.opening.t = 0.2
-			"combat_long":   # home sector: the First Sortie lands on the player at t=60
+			"combat_long":   # home sector: the First Sortie (OPENING_WAVE_TIME = 8 s) lands on the player; first damage ~t=12
 				pass
 			"combat":
 				g.u.player_ship.sector = 3

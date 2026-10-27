@@ -16,6 +16,7 @@ var ids: Array[int] = []
 var active_t: float = 0.0
 var engaged: bool = false         # VS-030: the player locked a scout (G), so escorts may join in
 var eased: bool = false           # VS-030: scouts already toned down by SORTIE_EASE
+var touch: bool = false           # VS-038: set by main so the radio line uses touch wording
 var cue: bool = false             # VS-030: one-shot arrival cue, consumed by main (Sfx)
 var rng := RandomNumberGenerator.new()   # wave-only draws; the main sim stream stays untouched
 
@@ -28,7 +29,9 @@ func step(delta: float) -> void:
 	match state:
 		State.PENDING:
 			t -= delta
-			if t <= 0.0:
+			# VS-038: the sortie is a player encounter; while the pilot is away (hidden, e.g. the
+			# balance harness) it waits instead of hunting the sim's wing and economy.
+			if t <= 0.0 and _pilot_present():
 				_spawn()
 		State.ACTIVE:
 			active_t += delta
@@ -40,6 +43,11 @@ func step(delta: float) -> void:
 				state = State.CLEARED
 				var planet := u.sectors[u.hq.sector].planet_name
 				u.message.emit("Scouts destroyed! They came from %s: fly there and land to strike the Hive Core" % planet, Defs.faction_color(Defs.Faction.PLAYER))
+
+
+func _pilot_present() -> bool:
+	var ps := u.player_ship
+	return ps != null and ps.alive and not ps.hidden
 
 
 ## Live ships of the wave.
@@ -152,5 +160,14 @@ func _spawn() -> void:
 			d.order = "patrol"
 		d.order_sector = sidx
 		ids.append(d.id)
-	var sec := u.sectors[sidx]
-	u.message.emit("HIVE SCOUTS inbound from %s: %d drones hunting your wing!" % [sec.planet_name, Defs.OPENING_WAVE_SIZE], Defs.faction_color(Defs.Faction.HIVE))
+	u.message.emit(radio_line(base), Defs.faction_color(Defs.Faction.HIVE))
+
+
+## VS-038: the one radio line at first contact: compass bearing from the player (or HQ) and the next action.
+func radio_line(at: Vector3) -> String:
+	var ps := u.player_ship
+	var from := ps.pos if ps != null and ps.alive and ps.sector == u.hq.sector else u.hq.pos
+	var d := at - from
+	var deg := int(roundf(rad_to_deg(atan2(d.x, -d.z)) + 360.0)) % 360
+	var act := "tap TGT to lock one" if touch else "press R to lock one"
+	return "RADIO: Hive scouts x%d, bearing %03d, %dm. Hold your ground, %s" % [Defs.OPENING_WAVE_SIZE, deg, int(d.length()), act]

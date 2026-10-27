@@ -139,12 +139,12 @@ const NEST_SPAWN_MIN := 12.0
 # orbit, OPENING_WAVE_ORBIT above its surface) and hunt the player's wing. Stations and Union ships
 # ignore them for OPENING_WAVE_LINGER s, so the fight is the player's. Hull/dps scale a drone.
 # Not a raid: the raid timer (FIRST_RAID) is unaffected.
-const OPENING_WAVE_TIME := 60.0
+const OPENING_WAVE_TIME := 8.0   # VS-038: hot opening (was 60)
 const OPENING_WAVE_SIZE := 3
 const OPENING_WAVE_HULL := 3.0
 const OPENING_WAVE_DPS := 0.9
 const OPENING_WAVE_ORBIT := 700.0
-const OPENING_WAVE_RANGE := 1300.0
+const OPENING_WAVE_RANGE := 2000.0   # VS-038: far enough to watch them close in (~6 s)
 const OPENING_WAVE_LINGER := 240.0
 # VS-030: for the first SORTIE_ESCORT_DELAY s after arrival the scouts only trade fire with the
 # player (escorts and the HQ hold off) unless the player locks a scout with G. Hull and damage
