@@ -439,7 +439,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Depends on VS-027.
 
 ## VS-029 · The Breach: one guaranteed early raid reaches the HQ
-- status: in-progress
+- status: blocked
 - priority: P1
 - type: feature
 - size: M
@@ -451,7 +451,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] HQ takes damage if the player does nothing; a player with wing + 1 platform repels it with HQ >= 70% (selftest or balance probe)
   - [ ] 9-seed econ gates stay in target (nw20 >= 90k, HQ survives >= 6/9, passive HQ lost 20-35 min) plus a --perturb=1 run reported
   - [ ] Raid warns once using VS-025 reporting; check.sh PASS
-- notes: S0020: Developer finished (Breach t=360s, 4 drones, station-only, 24x hull/5x dps; constants BREACH_* in defs.gd; probe scripts/tools/breach_probe.gd). QA verify NOT yet run (budget). Dev numbers: nw20 med 111k min 98k HQ 9/9; perturbed med 127k (2 seeds <90k); passive harness median 28.3 (3 seeds survive 40m).
+- notes: S0021 QA verify: all criteria PASS except passive 40 min HQ-lost median 36.0 min (gate 20-35; 6 lost at 27.7-37.5, 3 survive; dev's 'median 28.3' was one seed). Blocked pending decision: accept 36.0 as in tolerance (then mark done) or small retune of BREACH_DPS/HULL + harness --nobreach baseline. Also P3: perturbed seeds 118 (37k), 169 (81k) fragile; bare-HQ breach damage modest (min hull 0.39-0.76). S0020: Developer finished (Breach t=360s, 4 drones, station-only, 24x hull/5x dps; constants BREACH_* in defs.gd; probe scripts/tools/breach_probe.gd). QA verify NOT yet run (budget). Dev numbers: nw20 med 111k min 98k HQ 9/9; perturbed med 127k (2 seeds <90k); passive harness median 28.3 (3 seeds survive 40m).
 
 ## VS-030 · First Sortie belongs to the player
 - status: todo

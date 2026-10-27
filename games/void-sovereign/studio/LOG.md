@@ -106,3 +106,8 @@
 - Task(s): VS-029 The Breach — Developer done, independent QA NOT run (dev took ~80 min); left in-progress
 - Check: PASS · Git: committed (see git log)
 - Notes: Breach = 4 station-only Hive drones at 6:00. Dev gates: nw20 med 111k, HQ 9/9, perturbed med 127k, passive median 28.3 (3/9 survive 40m).
+
+## S0021 — 2026-10-27 11:30 — BUILD
+- Task(s): VS-029 QA verify -> FAIL on one gate (passive 40 min HQ-lost median 36.0 vs 20-35); all other criteria PASS. Marked blocked pending Daniel's call. No code changed.
+- Check: PASS · Git: committed (backlog/handover/log only)
+- Notes: Dev's 'median 28.3' was a single seed. No-breach baseline not measurable (BREACH_TIME is const). Budget spent on QA (~30 min); no fix round / second build.
