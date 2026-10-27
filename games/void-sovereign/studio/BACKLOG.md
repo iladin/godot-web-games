@@ -410,7 +410,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0022 — SaveGame capture/restore + selftest, QA PASS
 
 ## VS-027 · Autosave and Continue button on the title screen
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -423,6 +423,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Continue restores the run into PLAYING; selftest or autoplay covers start -> save -> continue
   - [ ] check.sh PASS; DESIGN.md controls/persistence updated
 - notes: Depends on VS-026. Reuse RunFlow; PauseGate must stay main's first child.
+- done: S0023 — autosave 60s/focus-loss + Continue on title (QA PASS)
 
 ## VS-028 · Save robustness: corrupt/old saves, starting over, polish
 - status: todo

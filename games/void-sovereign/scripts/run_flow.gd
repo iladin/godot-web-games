@@ -6,8 +6,11 @@ extends RefCounted
 ## MapView (mouse_filter STOP) can't eat the restart click or tap.
 
 const SAVE_PATH := "user://save.cfg"
+const AUTOSAVE_INTERVAL := 60.0   # seconds of PLAYING between autosaves (VS-027)
 
 var g: VoidMain
+var save_path: String = RunSave.PATH
+var _save_t: float = 0.0
 
 
 func _init(p_g: VoidMain) -> void:
@@ -24,14 +27,49 @@ static func surface_live(state: VoidMain.State) -> bool:
 	return state == VoidMain.State.PLAYING
 
 
-func start() -> void:
+func start(msg: String = "") -> void:
+	_save_t = 0.0
 	g.state = VoidMain.State.PLAYING
 	g.state_time = 0.0
 	g.overlay.screen = "none"
 	g.sfx.play("click")
 	g._set_mode("flight")
 	var tips_on := g.hints != null and g.hints.current() != ""   # tips teach the controls (VS-017)
-	g.u.message.emit("Welcome, Sovereign." if tips_on else "Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map", Color("ffb347"))
+	if msg == "":
+		msg = "Welcome, Sovereign." if tips_on else "Welcome, Sovereign. Kill the Hive Cores, then the Nests. M = command map"
+	g.u.message.emit(msg, Color("ffb347"))
+
+
+## Autosave bookkeeping (VS-027): called every frame; saves each AUTOSAVE_INTERVAL of PLAYING time.
+func autosave_tick(delta: float) -> void:
+	if g.state != VoidMain.State.PLAYING:
+		return
+	_save_t += delta
+	if _save_t >= AUTOSAVE_INTERVAL:
+		autosave()
+
+
+## Only a plain in-space moment is saved: not on the surface (restore can't rebuild it) and not while dead.
+func autosave() -> bool:
+	_save_t = 0.0
+	if g.state != VoidMain.State.PLAYING or g.surface != null or g.mode == "surface" or g.respawn_t >= 0.0:
+		return false
+	return RunSave.write(g.u, save_path)
+
+
+func clear_save() -> void:
+	RunSave.delete(save_path)
+
+
+## Title "Continue": rebuild the main view around the restored Universe and enter PLAYING.
+func continue_run() -> bool:
+	var r := RunSave.load_universe(save_path)
+	if r == null:
+		g.overlay.continue_time = -1.0
+		return false
+	g._new_world(r)
+	start("Run restored — welcome back, Sovereign.")
+	return true
 
 
 func finish(won: bool) -> void:
@@ -39,6 +77,7 @@ func finish(won: bool) -> void:
 		return
 	g.state = VoidMain.State.OVER
 	g.state_time = 0.0
+	clear_save()   # a finished run can't be continued
 	close_overlays()
 	var u := g.u
 	var score := u.score(won)

@@ -14,6 +14,7 @@ var new_best: bool = false
 var stats: String = ""
 var t: float = 0.0
 var touch_hint: bool = false
+var continue_time: float = -1.0   # saved run time in seconds; < 0 = no valid save (VS-027)
 var font: Font = ThemeDB.fallback_font
 
 
@@ -32,6 +33,12 @@ func _process(delta: float) -> void:
 func _line(y: float, s: String, fs: int, c: Color) -> void:
 	draw_string(font, Vector2(2, y + 2), s, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, Color(0, 0, 0, 0.8))
 	draw_string(font, Vector2(0, y), s, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, c)
+
+
+## Screen-space rectangle of the title's Continue button (also used for click/tap hit-testing).
+func continue_rect() -> Rect2:
+	var w := 380.0
+	return Rect2(get_global_rect().position + Vector2((size.x - w) * 0.5, size.y * 0.765), Vector2(w, 44))
 
 
 func _draw() -> void:
@@ -57,7 +64,13 @@ func _draw() -> void:
 				y += 28
 			if touch_hint:
 				_line(y + 6, "Touch: left stick steers/moves · on-screen buttons", 19, CYAN)
-			_line(h * 0.86, "Click, tap or press Space to launch", 32, AMBER.lerp(Color.WHITE, 0.5 + 0.5 * sin(t * 4.0)))
+			var pulse := AMBER.lerp(Color.WHITE, 0.5 + 0.5 * sin(t * 4.0))
+			if continue_time >= 0.0:
+				var r := Rect2(Vector2((size.x - 380.0) * 0.5, h * 0.765), Vector2(380, 44))
+				draw_rect(r, Color(0.02, 0.1, 0.14, 0.9))
+				draw_rect(r, CYAN, false, 2.0)
+				_line(r.position.y + 31, "Continue (%d:%02d)  [C]" % [int(continue_time / 60.0), int(continue_time) % 60], 28, CYAN)
+			_line(h * 0.86, "Click, tap or press Space to launch" if continue_time < 0.0 else "Or click, tap or press Space for a New Game", 32 if continue_time < 0.0 else 26, pulse)
 			if best > 0:
 				_line(h * 0.92, "Best score %d" % best, 20, Color(1, 1, 1, 0.6))
 		"pause":

@@ -116,3 +116,8 @@
 - Task(s): VS-026 Serialize Universe (SaveGame capture/restore + selftest) — done, QA PASS (independent agent)
 - Check: PASS · Git: committed (see git log)
 - Notes: VS-029 still blocked awaiting Daniel. Restored runs reseed global RNG (not bit-identical). QA P3: validator accepts non-numeric rng strings (-> VS-028).
+
+## S0023 — 2026-10-27 13:10 — BUILD
+- Task(s): VS-027 Autosave + Continue on title — done (Developer -> independent QA PASS)
+- Check: PASS · Git: committed (see git log)
+- Notes: new scripts/run_save.gd; RunFlow autosave/continue_run; Overlay Continue button (key C/click/tap). P3: no selftest that finish() deletes save.

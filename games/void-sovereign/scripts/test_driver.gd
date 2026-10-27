@@ -10,6 +10,7 @@ const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before l
 var g: VoidMain
 var _ap_step: int = 0
 var _title_frames: int = 0
+var _save_checked: bool = false
 
 
 func _init(p_g: VoidMain) -> void:
@@ -32,6 +33,9 @@ func tick() -> void:
 	if g.shot_mode != "":
 		_shot_script(t)
 		return
+	if not _save_checked and t > 2.0 and g.state == VoidMain.State.PLAYING and g.mode == "flight":
+		_save_checked = true
+		_exercise_save_continue()
 	if _ap_step == 0 and t > 4.0:
 		_ap_step = 1
 		_exercise_audio()
@@ -55,6 +59,25 @@ func tick() -> void:
 		print("sfx: played %d, blocked before first input %d, muted %s" % [g.sfx.played, g.sfx.blocked, g.sfx.muted])
 		_exercise_hints()
 		g.surface.fps.take_damage(1000.0)
+
+
+func _exercise_save_continue() -> void:
+	# VS-027: start -> autosave -> Continue rebuilds the view around the restored Universe.
+	var old_u := g.u
+	var saved_t := old_u.time
+	var credits := old_u.credits
+	assert(g.flow.save_path == RunSave.AUTOPLAY_PATH, "autoplay never writes the real save")
+	assert(g.flow.autosave(), "autosave writes in flight")
+	assert(absf(RunSave.peek_time(g.flow.save_path) - saved_t) < 0.01, "save readable, run time matches")
+	var title_wait := g.flow.continue_run()   # same call the title's Continue button makes
+	assert(title_wait, "continue restores a valid save")
+	assert(g.state == VoidMain.State.PLAYING and g.mode == "flight" and g.u != old_u, "continue enters PLAYING on a new Universe")
+	assert(absf(g.u.time - saved_t) < 0.01 and absf(g.u.credits - credits) < 0.01, "restored run matches the save")
+	assert(g.hud.u == g.u and g.map.u == g.u and g.space.u == g.u, "views rebound to the restored Universe")
+	assert(g.space.player != null and g.space.player.data == g.u.player_ship, "player flight bound to restored ship")
+	assert(g.get_child(0) == g.pause_gate, "PauseGate stays main's first child")
+	old_u.director = null
+	print("save/continue: restored at %.1fs, credits %.0f" % [g.u.time, g.u.credits])
 
 
 func _exercise_audio() -> void:

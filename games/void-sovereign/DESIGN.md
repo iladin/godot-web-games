@@ -31,6 +31,11 @@ First-run tips (`tutorial_hints.gd`) show one at a time; a tip waits until it ca
 
 Pause (P, or focus loss; `ui/pause_gate.gd`): the world freezes and the mouse is released. Any key, one click, or a tap away from the touch buttons resumes (the resume click never fires or captures; the next click does). While paused only N / SND work (mute without resuming); MAP, TRVL, dock and map buttons are inert.
 
+Title: Space, Enter, click or tap starts a New Game. When a valid autosave exists a "Continue (mm:ss)" button appears above the prompt: press C, click it or tap it to resume.
+
+## Persistence: autosave and Continue (VS-027)
+`SaveGame` (VS-026) is the data layer; `RunSave` (`scripts/run_save.gd`) does the file I/O at `user://run.save` (JSON). `RunFlow` autosaves every `AUTOSAVE_INTERVAL` (60 s) of PLAYING and on focus loss (before pausing), and deletes the file when the run ends (win or lose). A save is skipped while on foot (surface) or dead awaiting respawn; the previous save stays. Continue calls `VoidMain._new_world(restored)`, the same path New Game uses, so every signal/message hook, the HUD, map and space view bind to the restored Universe; the player returns in flight (undocked, in their sector), PauseGate stays main's first child. A missing/corrupt/wrong-version file just hides Continue. Restored runs are valid continuations, not bit-identical (global RNG reseeded). Autoplay/`--shot` runs use `user://run_autoplay.save` and never touch a real save. Starting a New Game does not delete the save; the first autosave (60 s in) overwrites it (confirmation is VS-028).
+
 ## Win / lose / score
 - **Win:** both Hive Nests destroyed.
 - **Lose:** your HQ station is destroyed. (Dying in your ship respawns you at HQ for 25% of your credits; dying on foot evacuates you to orbit.)
@@ -59,4 +64,4 @@ Screen shake on hits, explosion flashes + debris, hit markers, damage vignette, 
 `scripts/test_driver.gd` also supports `-- --shot=<title|map|dock|surface|touch|over|over_map|win|death|combat> --shotfile=out.png` for rendered screenshots (run without `--headless`).
 
 ## Out of scope
-Ship interiors, boarding, research tree, diplomacy, save-anywhere (only best score persists), multiplayer, audio assets.
+Ship interiors, boarding, research tree, diplomacy, save-anywhere (only the best score and a single autosave persist; no manual slots, no on-foot saves), multiplayer, audio assets.

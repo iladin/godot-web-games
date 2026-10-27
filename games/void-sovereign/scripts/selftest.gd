@@ -255,6 +255,7 @@ func _init() -> void:
 	_test_hints()
 	_test_ledger()
 	_test_save_game()
+	_test_run_save_file()
 	_test_marker_layout()
 	_test_run_flow()
 	await _test_surface_over()
@@ -492,6 +493,35 @@ func _test_save_game() -> void:
 	assert(SaveGame.restore(bad) == null, "dangling hq id rejected")
 	assert(SaveGame.restore({}) == null, "empty dict rejected")
 	assert(SaveGame.restore({"version": SaveGame.VERSION}) == null, "version-only dict rejected")
+	for x: Universe in [u, r]:
+		x.director = null
+
+
+## VS-027: RunSave file I/O round trip; missing, garbage and wrong-version files give no save.
+func _test_run_save_file() -> void:
+	var path := "user://selftest_run.save"
+	RunSave.delete(path)
+	assert(RunSave.peek_time(path) < 0.0 and RunSave.load_universe(path) == null, "no file -> no save")
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	for i in 600:
+		u.step(JOURNEY_DT)
+	assert(RunSave.write(u, path), "write succeeds")
+	assert(absf(RunSave.peek_time(path) - u.time) < 0.001, "peek_time = saved run time")
+	var r := RunSave.load_universe(path)
+	assert(r != null and r.entities.size() == u.entities.size() and r.player_ship != null, "load_universe round trip")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("{not json")
+	f.close()
+	assert(RunSave.peek_time(path) < 0.0, "garbage file ignored")
+	var d := SaveGame.capture(u)
+	d["version"] = SaveGame.VERSION + 1
+	f = FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(d))
+	f.close()
+	assert(RunSave.peek_time(path) < 0.0, "wrong-version file ignored")
+	RunSave.delete(path)
+	assert(not FileAccess.file_exists(path), "delete removes the file")
 	for x: Universe in [u, r]:
 		x.director = null
 

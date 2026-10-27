@@ -45,12 +45,15 @@ func _ready() -> void:
 	pause_gate = PauseGate.new(self)
 	add_child(pause_gate)   # first child: its _input runs after TouchControls', before the GUI
 	best = flow.load_best()
+	flow.save_path = RunSave.PATH
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="):
 			shot_mode = a.trim_prefix("--shot=")
 		elif a.begins_with("--shotfile="):
 			shot_file = a.trim_prefix("--shotfile=")
 	autoplay = "--autoplay" in OS.get_cmdline_user_args() or shot_mode != ""
+	if autoplay:
+		flow.save_path = RunSave.AUTOPLAY_PATH   # never touch a real player's save
 	driver = TestDriver.new(self)
 	sfx = Sfx.new()
 	add_child(sfx)
@@ -105,7 +108,7 @@ func _build_ui() -> void:
 	root.add_child(fade)
 
 
-func _new_world() -> void:
+func _new_world(restored: Universe = null) -> void:
 	if space:
 		space.queue_free()
 	if surface:
@@ -113,8 +116,14 @@ func _new_world() -> void:
 		surface = null
 	if u:
 		u.director = null   # break the Universe <-> Director reference cycle
-	u = Universe.new()
-	u.setup(randi() % 100000 if not autoplay else 7)
+	if restored != null:   # VS-027: Continue — everything below rewires views/signals to the restored run
+		u = restored
+		u.player_ship.hidden = false
+	else:
+		u = Universe.new()
+		u.setup(randi() % 100000 if not autoplay else 7)
+	respawn_t = -1.0
+	docked_at = null
 	space = SpaceView.new()
 	space.autoplay = autoplay
 	add_child(space)
@@ -140,6 +149,7 @@ func _new_world() -> void:
 	hud.mode = "none"
 	overlay.screen = "title"
 	overlay.best = best
+	overlay.continue_time = -1.0 if restored != null else RunSave.peek_time(flow.save_path)
 
 
 # --- State machine ---------------------------------------------------------------------------
@@ -157,6 +167,7 @@ func _process(delta: float) -> void:
 	state_time += delta
 	if RunFlow.sim_runs(state):   # frozen behind the title and end screens
 		u.step(delta)
+		flow.autosave_tick(delta)
 	if state == State.PLAYING and respawn_t >= 0.0:
 		respawn_t -= delta
 		if respawn_t < 0.0:
@@ -275,7 +286,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match state:
 		State.TITLE:
-			if press:
+			if _wants_continue(event):
+				flow.continue_run()
+			elif press:
 				overlay.touch_hint = touch.active
 				_start_game()
 		State.OVER:
@@ -294,6 +307,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				_set_mode("flight")
 
 
+## Title: C key, or a click/tap on the Continue button (drawn by Overlay), when a valid save exists.
+func _wants_continue(event: InputEvent) -> bool:
+	if overlay.continue_time < 0.0:
+		return false
+	if event is InputEventKey:
+		var k := event as InputEventKey
+		return k.pressed and not k.echo and k.physical_keycode == KEY_C
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		return overlay.continue_rect().has_point((event as InputEventMouseButton).position)
+	if event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
+		return overlay.continue_rect().has_point((event as InputEventScreenTouch).position)
+	return false
+
+
 func _physics_process(_delta: float) -> void:
 	# Touch MAP button is polled (it doesn't produce an InputEvent action).
 	if state == State.PLAYING and mode == "flight" and touch.pressed("map"):
@@ -308,5 +335,6 @@ func _pause() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == State.PLAYING and not autoplay:
+		flow.autosave()
 		_pause()
 
