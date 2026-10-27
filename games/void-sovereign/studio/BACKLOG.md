@@ -437,6 +437,66 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS
 - notes: Depends on VS-027.
 
+## VS-029 · The Breach: one guaranteed early raid reaches the HQ
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: scout
+- created: S0019
+- why: S0019 critic #1 (3rd review running): raids never reach the HQ, and the 'Next raid' HUD timer promotes a promise the game breaks. Scout proposal 1.
+- acceptance:
+  - [ ] A scripted raid (constants in defs.gd, 4-6 raiders, no dreadnought) spawns in the HQ sector between 5:30 and 7:30 in 9/9 balance seeds regardless of platform deterrence
+  - [ ] HQ takes damage if the player does nothing; a player with wing + 1 platform repels it with HQ >= 70% (selftest or balance probe)
+  - [ ] 9-seed econ gates stay in target (nw20 >= 90k, HQ survives >= 6/9, passive HQ lost 20-35 min) plus a --perturb=1 run reported
+  - [ ] Raid warns once using VS-025 reporting; check.sh PASS
+- notes: Do after VS-025. Chaos-sensitive: re-run 9-seed gates in foreground seed batches.
+
+## VS-030 · First Sortie belongs to the player
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0019
+- why: S0019 critic #2: escorts win the first fight, player hull stays 600 for 95 s (combat_long). Scout proposal 2; supersedes parking-lot S0012 First Sortie item.
+- acceptance:
+  - [ ] --shot=combat_long shows player hull below 600 at least once before t=95 in the default scenario, and never below 150 with an idle player
+  - [ ] Escorts engage scouts only after SORTIE_ESCORT_DELAY (constant) or when the player sets a target via G
+  - [ ] Scouts revert to 1x hull on unmark; arrival cue plays once via Sfx; new --shot=sortie in shots.sh
+  - [ ] check.sh PASS; balance gates unchanged
+- notes: Keep damage tuned for touch accuracy.
+
+## VS-031 · Readable surface: Core spire and pylon beams
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0019
+- why: S0019 critic #3: On-foot FPS is the weakest pillar (5/10), flat terrain, no landmark. Scout proposal 3; extends VS-005.
+- acceptance:
+  - [ ] Procedural Core spire and per-pylon beam (unshaded, no textures) visible in shots.sh surface at >= 600 m
+  - [ ] Beam disappears when its pylon dies; spire changes colour/pulse at 'Core exposed'
+  - [ ] Marker labels get a dark outline (S0014 contrast item)
+  - [ ] surface_long timings stay: pylons down <= 60 s, core dead <= 65 s; Compatibility renderer, no extra lights; check.sh PASS
+- notes: 
+
+## VS-032 · First-minute touch and UX bundle
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0019
+- why: S0019 critic #5 + QA sweep P3s (RUN/JUMP overlap, wing row over world labels, map fold at 900x720, stale shot PNGs). Scout proposal 5; bundles parking-lot P3s.
+- acceptance:
+  - [ ] Touch OBJECTIVE and HQ dock text use ACT wording and an earn hint; screenshot reviewed at 1280x720 touch
+  - [ ] RUN and JUMP circles do not intersect; wing row off world labels (new --shot=touch_wing)
+  - [ ] Map side panel keeps BUY SHIPS / BUILD STATION visible at 900x720 without scrolling
+  - [ ] shots.sh exits non-zero if the PNG is stale; check.sh PASS
+- notes: Verify at 1280x720 and 900x720.
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -504,3 +564,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0015, QA VS-010, P3) selftest best_buyer assertion is not discriminating (passes without the guard: price tie) — make the player station clearly best-priced (lower the other buyer's price via stock near capacity). Also miners idle without a wait timer when no buyer exists.
 - (S0016, QA VS-007, P3) Touch wing row (HOLD/ESC/ATK) sits mid-screen at 1280x720 over world labels; consider moving it. Map order label prints raw lowercase "hold"; map order menu has no Hold entry. No `--shot` scenario for the wing HUD/buttons.
 - (S0016, dev VS-007, P3) Wing ships ordered ATTACK return to patrol (not escort) when the target dies; add a "resume last order" wing command.
+- (S0019, scout) Deterred raids redirect to the nearest Union station with an interception bounty (M, balance; needs VS-025 + VS-029 landed first; perturbed-econ tail nw30<90k in 4/9 seeds).
+- (S0019, balance) Optional: RAID_DETER_RANGE 3400 -> 3800 to lift the perturbed tail; keep only if passive HQ lost <= 35 min. Hive q3 61 > 60 guard.
+- (S0019, QA) over.png shows Net worth 45,000 vs 30,000 credits elsewhere — confirm net-worth formula is intended (P3).
