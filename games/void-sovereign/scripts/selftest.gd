@@ -309,6 +309,7 @@ func _init() -> void:
 	_test_marker_layout()
 	_test_run_flow()
 	await _test_surface_over()
+	await _test_surface_landmarks()
 	await _test_save_flow()
 	print("SELFTEST OK")
 	quit()
@@ -694,6 +695,47 @@ func _test_save_flow() -> void:
 	g.queue_free()
 	await process_frame
 	print("save flow: finish clears, confirm gate, continue from sector %d OK" % away)
+
+
+## VS-031: spire + per-pylon beams; beam goes with its pylon; spire changes colour when the Core is exposed.
+func _test_surface_landmarks() -> void:
+	var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+	root.add_child(g)
+	await process_frame
+	await process_frame
+	g._start_game()
+	await process_frame
+	g._on_land(0)
+	for i in 300:
+		await process_frame
+		if g.surface != null:
+			break
+	for i in 3:
+		await process_frame
+	var sv: SurfaceView = g.surface
+	assert(sv != null and sv.get_node_or_null("Spire") != null, "Core spire exists")
+	var shielded: Color = sv.spire_mat.albedo_color
+	var beams := 0
+	var pylons: Array = []
+	for f in sv.foes:
+		if f.kind == "pylon":
+			pylons.append(f)
+			if f.node.get_node_or_null("Beam") != null:
+				beams += 1
+	assert(pylons.size() > 0 and beams == pylons.size(), "one beam per pylon")
+	var first = pylons[0]
+	sv._kill(first)
+	await process_frame
+	assert(not is_instance_valid(first.node) or first.node.is_queued_for_deletion(), "dead pylon (and its beam) freed")
+	for f in pylons.slice(1):
+		sv._kill(f)
+	for i in 5:
+		await process_frame
+	assert(sv.pylons_left() == 0 and sv.spire_mat.albedo_color.to_html(false) == SurfaceView.SPIRE_EXPOSED.to_html(false), "spire colour switches at Core exposed")
+	assert(shielded.to_html(false) != sv.spire_mat.albedo_color.to_html(false), "spire colour differs from shielded")
+	g.queue_free()
+	await process_frame
+	print("surface landmarks OK")
 
 
 ## VS-022: ending a run while on foot freezes the surface, and a later death does not evacuate.

@@ -1,19 +1,18 @@
 # Void Sovereign — Handover
-_Last updated: S0027 · 2026-10-27 18:10 UTC · mode: BUILD_
+_Last updated: S0028 · 2026-10-27 19:12 UTC · mode: BUILD_
 
 ## TL;DR
-S0027 closed VS-030 (First Sortie): selftest now really exercises the scout hull/dps revert on unmark; QA PASS, check.sh PASS. Backlog has 6 ready tasks, 0 blocked on code. Studio is healthy.
+S0028 closed VS-031 (Core spire + pylon beams, outlined HUD text); QA PASS, check.sh PASS. Backlog has 5 ready tasks, studio healthy.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0028. builds_since_review = 3. Export `GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)` for EVERY check call (check.sh does not find godot itself).
-2. `backlog.py next` gives VS-031 (check its block first; VS-031 must precede VS-037). If it is size M/L, split per procedure. Otherwise BUILD it: Developer subagent -> fresh QA subagent.
-3. Then VS-033 atomic run save (S, `scripts/sim/run_save.gd`) and VS-035 fit-to-screen text guard (S); VS-032, VS-036, VS-037 (M).
-4. Check INBOX (empty at S0027). Next review round about S0031.
+1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0029. builds_since_review = 4. Export `GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)` for EVERY check call.
+2. `backlog.py next` -> BUILD it (VS-032 first-minute touch/UX bundle, S; then VS-033 atomic run save `scripts/sim/run_save.gd`, VS-035 text fit guard). Developer subagent -> fresh QA subagent.
+3. VS-037 (on-foot flanking Hive) depends on VS-031 which is now DONE, so it is unblocked; VS-036 (M) also ready. Split if size L.
+4. Check INBOX (empty at S0028). Review round due at builds_since_review >= 6 (about S0030).
 
 ## Last session
-- Did: VS-030 test-only fix (games/void-sovereign/scripts/selftest.gd) -> done. QA mutation-tested it.
-- Check: PASS · Git: committed this session · Roles collapsed: Developer (Producer did the 20-line test fix)
-- Note: the full selftest takes ~3 min wall on the mount; use timeout_ms 180000. A ~143-file mode change (644->755) shows in raw git status: mount artifact, ignore, use `-c core.fileMode=false`.
+- Did: VS-031 -> done. surface_view.gd (Spire + per-pylon Beam, _pulse_spire), hud.gd `_txt` outline, test_driver.gd `--shot=surface_far`, selftest `_test_surface_landmarks`. Criterion 1 wording amended (map max ~553 m on foot; visible at 511 m).
+- Check: PASS · Git: committed this session · Roles collapsed: none
 
 ## In-flight / uncommitted work
 Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md`, untracked `_to_delete/`.
@@ -23,9 +22,10 @@ Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md
 - Latest metrics: see Next session #2 (post-VS-030 gate numbers).
 
 ## Backlog snapshot
-todo 6 · in-progress 0 · done 27 · blocked 1 · split 3 · Top ready: VS-031, VS-033, VS-035
+todo 5 · in-progress 0 · done 28 · blocked 1 · split 3 · Top ready: VS-032, VS-033, VS-035
 
 ## Watch out for
+- HUD `_txt` outline now applies to ALL HUD text (check touch readability/draw cost in a real browser). Spire is a 260 m pulsing pink pillar; some may find it intrusive. Optional: add surface_far to shots.sh list.
 - Idle player drops to ~261 hull in the sortie (touch players may find it harsh); tune SORTIE_ESCORT_DELAY / OPENING_WAVE_DPS in defs.gd.
 - Passive tail near the edge of the 20-35 window (seed 186 survives to 40).
 - Restored runs are not bit-identical. RunSave.write non-atomic until VS-033. RaidTracker keys hard-coded in SaveGame._valid.
@@ -42,6 +42,7 @@ todo 6 · in-progress 0 · done 27 · blocked 1 · split 3 · Top ready: VS-031,
 - none
 
 ## Session history (newest first, keep 10)
+- S0028 2026-10-27 BUILD — VS-031 spire + beams, QA PASS -> done
 - S0027 2026-10-27 BUILD — VS-030 selftest fix, QA PASS -> done
 - S0026 2026-10-27 BUILD — VS-030 First Sortie implemented, QA FAIL on dead selftest assertion -> blocked (code kept, check PASS)
 - S0025 2026-10-27 PLANNING+BUILD — review round -> VS-033..037; VS-034 Breach retune done (QA PASS), VS-029 closed
@@ -52,4 +53,3 @@ todo 6 · in-progress 0 · done 27 · blocked 1 · split 3 · Top ready: VS-031,
 - S0020 2026-10-27 BUILD — VS-029 Breach implemented, QA pending
 - S0019 2026-10-27 PLANNING+BUILD — review round (critic 6.1) -> VS-029..032; VS-025 raid reports done (QA PASS)
 - S0018 2026-10-27 BUILD — VS-009 split into VS-026..028; VS-023 raid deterrent range done (QA PASS)
-- S0016 2026-10-27 BUILD — VS-007 wing commands done (QA FAIL touch overlap → fix → PASS)

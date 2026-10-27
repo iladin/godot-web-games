@@ -89,6 +89,7 @@ func _draw() -> void:
 
 
 func _txt(p: Vector2, s: String, fs: int, c: Color, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, w: float = -1.0) -> void:
+	draw_string_outline(font, p, s, align, w, fs, maxi(2, fs / 6), Color(0, 0, 0, 0.85 * c.a))   # VS-031 dark outline
 	draw_string(font, p + Vector2(1, 1), s, align, w, fs, Color(0, 0, 0, 0.7 * c.a))
 	draw_string(font, p, s, align, w, fs, c)
 

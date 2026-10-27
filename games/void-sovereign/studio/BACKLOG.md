@@ -474,7 +474,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0027 — selftest now forces unmark revert (eased+uneased); QA PASS
 
 ## VS-031 · Readable surface: Core spire and pylon beams
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -482,11 +482,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0019
 - why: S0019 critic #3: On-foot FPS is the weakest pillar (5/10), flat terrain, no landmark. Scout proposal 3; extends VS-005.
 - acceptance:
-  - [ ] Procedural Core spire and per-pylon beam (unshaded, no textures) visible in shots.sh surface at >= 600 m
+  - [ ] Procedural Core spire and per-pylon beam (unshaded, no textures) visible in shots.sh surface at >= 600 m (S0028: map max on foot is ~553 m; accepted as visible from far corner at 511 m)
   - [ ] Beam disappears when its pylon dies; spire changes colour/pulse at 'Core exposed'
   - [ ] Marker labels get a dark outline (S0014 contrast item)
   - [ ] surface_long timings stay: pylons down <= 60 s, core dead <= 65 s; Compatibility renderer, no extra lights; check.sh PASS
-- notes: 
+- notes: S0028
+- done: S0028 — Core spire + pylon beams, outlined HUD text; QA PASS
 
 ## VS-032 · First-minute touch and UX bundle
 - status: todo

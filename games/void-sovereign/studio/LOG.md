@@ -144,3 +144,8 @@
 - Task(s): VS-030 First Sortie closed: selftest now forces ow._unmark() on living scouts (eased + uneased); QA PASS (mutation test confirmed assertion bites)
 - Check: PASS · Git: committed (see git log) 
 - Notes: Producer wrote the test fix directly (dev role collapsed, small test-only change); QA independent subagent. Selftest takes ~3 min on the mount; run it with timeout_ms 180000.
+
+## S0028 — 2026-10-27 19:12 — BUILD
+- Task(s): VS-031 Readable surface: Core spire + pylon beams — done (QA PASS)
+- Check: PASS · Git: committed (see git log)
+- Notes: spire/beam unshaded fog-free; HUD `_txt` now outlines all text; new `--shot=surface_far`; selftest _test_surface_landmarks mutation-tested by QA.

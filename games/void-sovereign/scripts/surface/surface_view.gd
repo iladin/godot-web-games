@@ -18,6 +18,10 @@ const RIFLE_RANGE := 400.0
 const MAX_FOES := 16
 const FOE_SHOT_SPEED := 45.0
 const BOARD_DIST := 9.0
+const SPIRE_HEIGHT := 260.0         ## VS-031: Core spire landmark height (m); unshaded, ignores fog
+const BEAM_HEIGHT := 200.0          ## VS-031: pylon beam height (m)
+const SPIRE_SHIELDED := Color("ff3b8d")
+const SPIRE_EXPOSED := Color("fff2a8")
 
 class Foe extends RefCounted:
 	var kind: String = "crawler"   # crawler | drone | turret | pylon | core
@@ -48,6 +52,8 @@ var core_dead: bool = false
 var prompt: String = ""
 var autoplay: bool = false
 var half: float = GRID * SPACING * 0.5
+var spire_mat: StandardMaterial3D
+var spire_t: float = 0.0
 
 
 func setup(p_u: Universe, p_touch: TouchControls, idx: int) -> void:
@@ -209,6 +215,7 @@ func _static_box(p: Vector3, sz: Vector3, m: Material, rot: Vector3) -> void:
 
 func _build_base() -> void:
 	core = _make_foe("core", core_pos + Vector3(0, 9, 0))
+	_build_spire()
 	var n_pylons := level + 1
 	for i in n_pylons:
 		var a := TAU * float(i) / float(n_pylons)
@@ -227,6 +234,37 @@ func _build_base() -> void:
 		var p3 := core_pos + Vector3(cos(a3) * 20, 0, sin(a3) * 20)
 		ProxyFactory.part(self, ProxyFactory.prism(4, 14 + (i % 3) * 6, 4), body, p3 + Vector3(0, 6, 0), Vector3(randf_range(-20, 20), 0, randf_range(-20, 20)))
 	ProxyFactory.part(self, ProxyFactory.torus(26, 28, 32), ProxyFactory.mat(hive, 2.0, true), core_pos + Vector3(0, 0.5, 0))
+
+
+## VS-031: unshaded, fog-free landmarks so the base reads from across the map. The spire is a
+## free node (it outlives nothing); each pylon beam is a child of its pylon node so it vanishes with it.
+func _unlit(c: Color, alpha: float) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(c, alpha)
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.disable_fog = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if alpha < 1.0:
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return m
+
+
+func _build_spire() -> void:
+	spire_mat = _unlit(SPIRE_SHIELDED, 0.8)
+	var sp := Node3D.new()
+	sp.name = "Spire"
+	add_child(sp)
+	sp.position = core_pos
+	ProxyFactory.part(sp, ProxyFactory.cyl(0.6, 3.0, SPIRE_HEIGHT, 8), spire_mat, Vector3(0, SPIRE_HEIGHT * 0.5, 0))
+
+
+func _pulse_spire(delta: float) -> void:
+	spire_t += delta
+	var exposed := pylons_left() == 0 and core.alive
+	var rate := 7.0 if exposed else 1.6
+	var k := 0.5 + 0.5 * sin(spire_t * rate)
+	var c := SPIRE_EXPOSED if exposed else SPIRE_SHIELDED
+	spire_mat.albedo_color = Color(c, lerpf(0.45, 1.0, k))
 
 
 func _make_foe(kind: String, p: Vector3) -> Foe:
@@ -258,6 +296,8 @@ func _make_foe(kind: String, p: Vector3) -> Foe:
 			ProxyFactory.part(n, ProxyFactory.prism(3, 12, 3), body, Vector3.ZERO)
 			ProxyFactory.part(n, ProxyFactory.sphere(1.6, 8, 4), glow, Vector3(0, 6.5, 0))
 			ProxyFactory.part(n, ProxyFactory.box(0.4, 10, 0.4), glow, Vector3(0, 0, 1.2))
+			var beam := ProxyFactory.part(n, ProxyFactory.cyl(0.9, 0.9, BEAM_HEIGHT, 6), _unlit(Color("ff7ad0"), 0.7), Vector3(0, BEAM_HEIGHT * 0.5, 0))
+			beam.name = "Beam"
 		"turret":
 			f.hp_max = 180.0
 			f.radius = 2.0
@@ -328,6 +368,7 @@ func tick(delta: float) -> void:
 	var sh := core.node.get_node_or_null("Shield") as Node3D
 	if sh:
 		sh.visible = shield_up and core.alive
+	_pulse_spire(delta)
 	_update_foes(delta)
 	_update_shots(delta)
 	_update_fx(delta)
