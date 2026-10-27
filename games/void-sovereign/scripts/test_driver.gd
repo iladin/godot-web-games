@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: title map dock surface touch touch_surface over over_map win death combat hints
+## Scenarios: title map dock ledger ledger_dock ledger_map surface touch touch_surface over over_map win death combat hints
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -88,6 +88,18 @@ func _shot_script(t: float) -> void:
 				g.map._order_button("all")
 			"dock":
 				g._on_dock(g.u.hq)
+			"ledger", "ledger_dock", "ledger_map":   # VS-024: HUD cr/min + last-5-min breakdown
+				g.space.autoplay = false
+				g.u.add_credits(2400.0, "trade")
+				g.u.add_credits(1100.0, "mining")
+				g.u.add_credits(450.0, "bounty")
+				g.u.add_credits(-6000.0, "ships")
+				if g.shot_mode == "ledger_dock":
+					for e: SimEntity in g.u.ents_in(g.u.hq.sector):
+						if e is StationData and (e as StationData).kind == "trade":
+							g._on_dock(e as StationData)
+				elif g.shot_mode == "ledger_map":
+					g._set_mode("map")
 			"surface", "surface_long":
 				g._on_land(0)
 			"touch":

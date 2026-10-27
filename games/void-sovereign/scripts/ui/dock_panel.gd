@@ -11,6 +11,7 @@ var u: Universe
 var st: StationData
 var _rows: Dictionary = {}   # ware -> {stock: Label, price: Label, mine: Label}
 var _info: Label
+var _ledger: Label
 var _repair: Button
 var _ship_btns: Dictionary = {}
 
@@ -33,6 +34,10 @@ func open(p_u: Universe, p_st: StationData) -> void:
 	box.add_child(title)
 	_info = Label.new()
 	box.add_child(_info)
+	_ledger = Label.new()
+	_ledger.modulate = Color(1, 1, 1, 0.8)
+	_ledger.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_ledger)
 
 	var trades := Defs.WARES.any(func(w: String) -> bool: return st.buys(w) or st.sells(w))
 	var grid := GridContainer.new()
@@ -117,6 +122,7 @@ func _process(_delta: float) -> void:
 func _refresh() -> void:
 	var ps := u.player_ship
 	_info.text = "Credits %s   ·   Hold %d / %d" % [Hud._fmt(u.credits), ps.cargo_used(), ps.cargo_cap]
+	_ledger.text = Hud.ledger_text(u, 5, true)
 	for w: String in _rows:
 		var r: Dictionary = _rows[w]
 		(r["stock"] as Label).text = "%d / %d" % [int(st.stock[w]), st.capacity]
@@ -136,6 +142,6 @@ func _do_repair() -> void:
 	var ps := u.player_ship
 	var missing := ps.hull_max - ps.hull
 	var afford := minf(missing, u.credits / REPAIR_COST)
-	u.credits -= afford * REPAIR_COST
+	u.add_credits(-afford * REPAIR_COST, "repair")
 	ps.hull += afford
 	ps.shield = ps.shield_max

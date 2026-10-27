@@ -71,7 +71,7 @@ static func hint_text(step: String, touch: bool, planet: String) -> String:
 		"target":
 			return "Tap TGT to lock onto a Hive ship, then FIRE" if touch else "Press R to lock onto a Hive ship, then fire with LMB or Space"
 		"dock":
-			return "Fly close to your HQ station and tap ACT to dock" if touch else "Fly close to your HQ station and press F to dock"
+			return "Dock at the Union Trade Hub (tap ACT) to trade" if touch else "Fly to the Union Trade Hub and press F to dock and trade wares"
 		"map":
 			return "Tap MAP to open the command map" if touch else "Press M to open the command map"
 		"land":

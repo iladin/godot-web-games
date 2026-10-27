@@ -164,6 +164,7 @@ func _init() -> void:
 	_test_ai_journeys()
 	_test_sfx()
 	_test_hints()
+	_test_ledger()
 	_test_run_flow()
 	print("SELFTEST OK")
 	quit()
@@ -300,6 +301,7 @@ func _test_hints() -> void:
 	assert(TutorialHints.hint_text("throttle", true, "Ember").contains("THR+"), "touch wording")
 	assert(TutorialHints.hint_text("throttle", false, "Ember").contains("W / S"), "keyboard wording")
 	assert(TutorialHints.hint_text("land", false, "Ember").contains("Ember"))
+	assert(TutorialHints.hint_text("dock", false, "X").contains("Trade Hub") and TutorialHints.hint_text("dock", true, "X").contains("Trade Hub"), "VS-024: tip 4 sends the player to a station that trades wares, not the HQ")
 	for st: String in TutorialHints.STEPS:
 		assert(TutorialHints.hint_text(st, false, "X") != "" and TutorialHints.hint_text(st, true, "X") != "")
 	h.skip()
@@ -312,6 +314,57 @@ func _test_hints() -> void:
 	print("hints: step order, latch and skip OK")
 	h.free()
 	h2.free()
+
+
+## VS-024: every change to the player's credits goes through Universe.add_credits() with a
+## category; the categorised totals must add up to the credit delta.
+func _test_ledger() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	var c0 := u.credits
+	var ps := u.player_ship
+	var hub: StationData = null
+	for e: SimEntity in u.ents_in(u.hq.sector):
+		if e is StationData and (e as StationData).kind == "trade":
+			hub = e
+	assert(hub != null, "the HQ sector has a Union Trade Hub (tip 4 sends the player there)")
+	assert(u.transact(ps, hub, "ore", 10, true) == 10)
+	assert(u.transact(ps, hub, "ore", 10, false) == 10)
+	var miner := u.buy_ship("miner", u.hq)
+	miner.cargo["ore"] = 20
+	assert(u.transact(miner, hub, "ore", 20, false) > 0)
+	var hauler := u.buy_ship("trader", u.hq)
+	assert(u.transact(hauler, hub, "energy", 5, true) == 5)
+	u.add_credits(200000.0, "trade")   # fund the build below (stands in for a run of profitable trades)
+	var pst := u.build_station("solar", u.hq.sector, u.hq.pos + Vector3(1500, 0, 0))
+	pst.stock["energy"] = 40
+	var npc := u.spawn_ship("trader", Defs.Faction.UNION, u.hq.sector, Vector3.ZERO)
+	assert(u.transact(npc, pst, "energy", 10, true) > 0)
+	var drone := u.spawn_ship("drone", Defs.Faction.HIVE, u.hq.sector, Vector3(0, 0, 3000))
+	u._on_killed(drone, ps.id)
+	u.add_credits(-42.0, "repair")
+	u.respawn_player()
+	u.core_destroyed(4)
+	for i in 50:
+		u.time += 0.5
+		u.add_credits(float(u.colonies()) * Defs.COLONY_INCOME / 60.0 * 0.5, "colonies")
+	for c: String in ["trade", "mining", "freight", "stations", "ships", "build", "bounty", "repair", "losses", "colonies"]:
+		assert(u.ledger.totals.has(c), "ledger category '%s' recorded" % c)
+	assert(absf(u.ledger.total() - (u.credits - c0)) < 0.01, "ledger categories sum to the credit delta (%.3f vs %.3f)" % [u.ledger.total(), u.credits - c0])
+	assert(float(u.ledger.totals["ships"]) < 0.0 and float(u.ledger.totals["bounty"]) == Defs.BOUNTY["drone"])
+	var rate := u.ledger.income_per_min(u.time)
+	assert(rate > 0.0, "cr/min counts recent income")
+	assert(not u.ledger.breakdown(u.time).is_empty())
+	# Rolling windows: after 6 quiet minutes the breakdown is empty and only new income counts.
+	u.time += 360.0
+	u.add_credits(600.0, "bounty")
+	var bd := u.ledger.breakdown(u.time)
+	assert(bd.size() == 1 and String(bd[0][0]) == "bounty", "breakdown forgets entries older than 5 min")
+	var r2 := u.ledger.income_per_min(u.time)
+	assert(r2 >= 600.0 - 0.01 and r2 <= 600.0 * 60.0 / (CreditLedger.RATE_WINDOW - CreditLedger.BUCKET) + 0.01, "cr/min = income over the last RATE_WINDOW (%.1f)" % r2)
+	assert(absf(u.ledger.total() - (u.credits - c0)) < 0.01)
+	u.director = null
+	print("ledger: %d categories sum to credit delta %+.0f OK" % [u.ledger.totals.size(), u.credits - c0])
 
 
 func _test_run_flow() -> void:

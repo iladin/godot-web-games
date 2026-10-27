@@ -486,7 +486,7 @@ func _kill(f: Foe) -> void:
 	_explode(f.node.position, 14.0 if big else (4.0 if f.kind == "pylon" else 2.0))
 	f.node.queue_free()
 	if f.kind == "crawler" or f.kind == "drone":
-		u.credits += 60.0
+		u.add_credits(60.0, "bounty")
 	if big:
 		core_dead = true
 		u.core_destroyed(sector_idx)

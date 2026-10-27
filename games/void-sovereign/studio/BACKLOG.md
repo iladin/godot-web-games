@@ -357,7 +357,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Balance analyst (S0012) says softening the per-platform factor (0.5) or redirecting cancelled raids breaks the nw30≥nw20 guardrail — keep 0.25. The econ balance bot places platforms near the HQ, so the range check should barely move the gate; verify. Reports: studio/reviews/S0012-balance.md, S0012-qa.md. Supersedes parking-lot items on deterrent strength and build_station inside planets.
 
 ## VS-024 · Credit ledger: income per minute and where the money came from
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -369,7 +369,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] HUD shows cr/min (rolling window constant) and the map/dock panel shows a "last 5 min" breakdown by category
   - [ ] Tutorial tip 4 points to a Union Trade Hub (a station that trades wares), not the HQ
   - [ ] Pure observer: econ30 9-seed gate numbers unchanged (nw20/nw30 medians identical to S0012 row); check.sh PASS; shots show the HUD line at 1280 and 900 wide
-- notes: Scout report studio/reviews/S0012-scout.md proposal 1. Keep RNG stream untouched. main.gd is ~306 lines — put the ledger in its own script.
+- notes: Scout report studio/reviews/S0012-scout.md proposal 1. Keep RNG stream untouched. main.gd is ~306 lines — put the ledger in its own script. S0013 started.
+- done: S0013 — CreditLedger (scripts/sim/ledger.gd) + Universe.add_credits sole writer, HUD cr/min, map/dock 5-min breakdown, tip 4 → Trade Hub; gates byte-identical; QA PASS first round
 
 ## VS-025 · Honest raid reports: every raid tracked to its end
 - status: todo
@@ -443,3 +444,9 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0012, QA) Command map: "Sovereign HQ" label hidden under player/escort icons at default zoom (P3).
 - (S0012, QA) World marker labels draw through the tutorial tip box (death.png "Solar Array 1.7km" over "H: skip tips") (P3).
 - (S0012, QA) shots.sh: reports success if a stale PNG exists; RES=900x720 overwrites 1280 PNGs of the same name (P3).
+- (S0013, QA VS-024, P3) Map side panel: ledger breakdown pushes BUY SHIPS / build / Tap-to-order below the fold at 1280x720 — compact or collapse the breakdown, or move buy/build up (map_view.gd).
+- (S0013, QA VS-024, P3) Tip 4 ("dock at the Union Trade Hub") latches on docking at ANY station incl. HQ (tutorial_hints.gd:108) — latch only on kind=="trade".
+- (S0013, QA VS-024, P3) HUD "+N cr/min" is gross income; label it "earned/min" or show net (seed 101 @20 min: +6,633/min while 5-min net is −22,848).
+- (S0013, QA VS-024, P3) cr/min inflated in the first 15 s (MIN_RATE_SPAN floor) — hide the rate until ≥15 s of data.
+- (S0013, dev VS-024, P3) Touch "ACT: Dock at Sovereign HQ" prompt shows under tip 4 at spawn (nearest station is HQ) — untested in a shot; add a touch hints shot at tip 4.
+- (S0013, dev, P3) End screen: per-category lifetime credit totals from CreditLedger.totals.

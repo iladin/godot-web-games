@@ -187,7 +187,7 @@ func _process(delta: float) -> void:
 			counts[c] = int(counts.get(c, 0)) + 1
 	var fleet := ", ".join(counts.keys().map(func(k: String) -> String: return "%s ×%d" % [k, counts[k]]))
 	var pstate := {"hive": "Hive Core (threat %d)" % s.level, "colony": "Your colony", "union": "Union world"}
-	_info.text = "%s\nPlanet %s: %s\nCredits %s\nFleet: %s" % [s.name, s.planet_name, pstate[s.planet_state], Hud._fmt(u.credits), fleet if fleet != "" else "none"]
+	_info.text = "%s\nPlanet %s: %s\nCredits %s\nFleet: %s\n%s" % [s.name, s.planet_name, pstate[s.planet_state], Hud._fmt(u.credits), fleet if fleet != "" else "none", Hud.ledger_text(u, 4)]
 	if selected.is_empty():
 		_sel_label.text = "Click or drag-box your ships to select. Right-click to order."
 	else:

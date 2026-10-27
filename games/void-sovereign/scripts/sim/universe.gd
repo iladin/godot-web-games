@@ -14,7 +14,8 @@ var entities: Dictionary = {}          # id -> SimEntity
 var sector_ents: Array = []            # per sector: Array[SimEntity], rebuilt each step
 var hive_presence: Array[int] = []     # per sector: live Hive warships, rebuilt each step
 var next_id: int = 1
-var credits: float = Defs.START_CREDITS
+var credits: float = Defs.START_CREDITS  # write only through add_credits() (VS-024)
+var ledger := CreditLedger.new()
 var time: float = 0.0
 var player_ship: ShipData
 var hq: StationData
@@ -122,7 +123,7 @@ func spawn_player(sector_idx: int, p: Vector3) -> ShipData:
 
 
 func respawn_player() -> void:
-	credits *= 1.0 - Defs.RESPAWN_PENALTY
+	add_credits(-credits * Defs.RESPAWN_PENALTY, "losses")
 	var p := hq.pos + Vector3(0, 60, hq.radius + 120.0)
 	spawn_player(hq.sector, p)
 	message.emit("Ship lost. New interceptor issued at HQ (-%d%% credits)" % int(Defs.RESPAWN_PENALTY * 100.0), Color.ORANGE)
@@ -280,7 +281,7 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
 	var total := st.batch_total(ware, qty, buy)
 	if ship_player != st_player:
 		var player_pays2 := (buy and ship_player) or (not buy and st_player)
-		credits += -total if player_pays2 else total
+		add_credits(-total if player_pays2 else total, _trade_category(ship, st_player))
 	if buy:
 		st.stock[ware] = int(st.stock[ware]) - qty
 		ship.cargo[ware] = int(ship.cargo.get(ware, 0)) + qty
@@ -292,11 +293,25 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
 	return qty
 
 
+## VS-024: the single writer of the player's credits. Every change carries a CreditLedger category.
+func add_credits(amount: float, cat: String) -> void:
+	credits += amount
+	ledger.record(time, amount, cat)
+
+
+func _trade_category(ship: ShipData, st_player: bool) -> String:
+	if st_player:
+		return "stations"
+	if ship.is_player:
+		return "trade"
+	return "mining" if ship.role == "miner" else "freight"
+
+
 func buy_ship(cls: String, at: StationData) -> ShipData:
 	var cost := float(Defs.SHIP[cls]["cost"])
 	if credits < cost or at == null or not at.alive:
 		return null
-	credits -= cost
+	add_credits(-cost, "ships")
 	var off := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.3, 0.3), rng.randf_range(-1, 1)).normalized()
 	var s := spawn_ship(cls, Defs.Faction.PLAYER, at.sector, at.pos + off * (at.radius + 150.0))
 	match s.role:
@@ -318,7 +333,7 @@ func build_station(kind: String, sector_idx: int, p: Vector3) -> StationData:
 	if sector_has_nest(sector_idx):
 		message.emit("Cannot build in a Hive sector", Color.ORANGE_RED)
 		return null
-	credits -= cost
+	add_credits(-cost, "build")
 	var st := spawn_station(kind, Defs.Faction.PLAYER, sector_idx, p)
 	for w: String in Defs.WARES:
 		st.stock[w] = 0
@@ -343,7 +358,7 @@ func step(delta: float) -> void:
 		return
 	time += delta
 	_rebuild_cache()
-	credits += float(colonies()) * Defs.COLONY_INCOME / 60.0 * delta
+	add_credits(float(colonies()) * Defs.COLONY_INCOME / 60.0 * delta, "colonies")
 	for e: SimEntity in entities.values():
 		if not e.alive:
 			continue
@@ -422,7 +437,7 @@ func _on_killed(t: SimEntity, killer_id: int) -> void:
 	var killer := get_ent(killer_id)
 	if t.faction == Defs.Faction.HIVE and killer != null and killer.faction == Defs.Faction.PLAYER and t is ShipData:
 		var b: float = Defs.BOUNTY.get((t as ShipData).cls, 0.0)
-		credits += b
+		add_credits(b, "bounty")
 		kills += 1
 	if t is StationData:
 		var st := t as StationData
@@ -432,7 +447,7 @@ func _on_killed(t: SimEntity, killer_id: int) -> void:
 				over = true
 				finished.emit(false)
 			"nest":
-				credits += 20000.0
+				add_credits(20000.0, "bounty")
 				message.emit("Hive Nest in %s destroyed! +20000 cr" % sectors[st.sector].name, Defs.faction_color(Defs.Faction.PLAYER))
 				if alive_nests().filter(func(n: StationData) -> bool: return n != st).is_empty():
 					over = true

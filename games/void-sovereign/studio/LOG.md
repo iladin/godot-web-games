@@ -63,3 +63,8 @@
 - Task(s): review round 2 (Critic 5.5/10, up from 5.1; QA sweep; Balance; Scout). New tasks: VS-022 surface frozen under end screen (P2 S), VS-023 deterrent range check + no building in planets + DREAD_TIME A/B (P2 M), VS-024 credit ledger (P1 M), VS-025 honest raid reports (P2 S). VS-005 and VS-006 notes updated; VS-006 kept blocked until VS-023. No BUILD (time budget used by review agents).
 - Check: PASS · Git: see commit studio(S0012): review round
 - Notes: Balance gates identical to S0011 (all 8 targets met; hive_20 max 75 over guard). 57% of late raid rolls cancelled by the deterrent; all tail collapses are the 18–19.7 min dreadnought raid. QA found far/in-planet platforms deter raids. ~3 h 50 min wall time (subagents ran 15–35 min each on the 2-core device).
+
+## S0013 — 2026-10-27 04:20 — BUILD
+- Task(s): VS-024 credit ledger — done (QA PASS first round). New `scripts/sim/ledger.gd` (CreditLedger); `Universe.add_credits(amount, cat)` is the sole writer of player credits (9 sites, 10 categories); HUD "+N cr/min", map/dock "Last 5 min" breakdown; tip 4 → Union Trade Hub.
+- Check: PASS · Git: see commit studio(S0013): VS-024
+- Notes: Pure observer confirmed — econ30 and passive40 BALANCE_JSON byte-identical to S0012. QA's per-step invariant (20 min, seeds 101/186) drift 0. Six P3 follow-ups to parking lot. Repo mount moved to $HOME/mnt/git/godot-web-games mid-session. ~50 min wall time.

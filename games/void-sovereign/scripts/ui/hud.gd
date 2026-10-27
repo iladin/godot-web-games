@@ -100,20 +100,26 @@ func _bar(r: Rect2, frac: float, c: Color) -> void:
 
 
 func _draw_top(sz: Vector2) -> void:
-	draw_rect(Rect2(0, 0, 430, 92), PANEL)
+	draw_rect(Rect2(0, 0, 500, 92), PANEL)
 	var loc := u.sectors[space.sector_idx].name if space and mode == "flight" else ("Surface of " + u.sectors[surface.sector_idx].planet_name if surface else "")
-	_txt(Vector2(14, 32), "%s cr" % _fmt(u.credits), 28, AMBER)
+	var cr := "%s cr" % _fmt(u.credits)
+	_txt(Vector2(14, 32), cr, 28, AMBER)
+	# VS-024: rolling income rate (CreditLedger.RATE_WINDOW) right of the balance.
+	var rate_x := 14.0 + font.get_string_size(cr, HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x + 10.0
+	var rate := "+%s cr/min" % _fmt(u.ledger.income_per_min(u.time))
+	_txt(Vector2(rate_x, 32), rate, 16, Color(AMBER, 0.75))
+	var pop_x := rate_x + font.get_string_size(rate, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 10.0
 	_txt(Vector2(14, 58), loc, 20, CYAN)
 	var mins := int(u.time / 60.0)
 	_txt(Vector2(14, 82), "T+%02d:%02d   Nests %d   Colonies %d   Kills %d" % [mins, int(u.time) % 60, u.alive_nests().size(), u.colonies(), u.kills], 16, DIM)
-	_txt(Vector2(250, 32), "HQ", 16, DIM)
+	_txt(Vector2(340, 32), "HQ", 16, DIM)
 	if u.hq:
-		_bar(Rect2(280, 20, 130, 10), u.hq.hull_frac(), AMBER if u.hq.hull_frac() > 0.35 else HIVE)
+		_bar(Rect2(370, 20, 115, 10), u.hq.hull_frac(), AMBER if u.hq.hull_frac() > 0.35 else HIVE)
 	var raid := u.director.raid_t
-	_txt(Vector2(250, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 else DIM)
+	_txt(Vector2(340, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 else DIM)
 	for p: Dictionary in popups:
 		var k := float(p["t"]) / 1.4
-		_txt(Vector2(160, 32 - k * 30.0), p["text"], 22, Color(AMBER, 1.0 - k))
+		_txt(Vector2(pop_x, 32 - k * 30.0), p["text"], 22, Color(AMBER, 1.0 - k))
 
 
 func _draw_messages(sz: Vector2) -> void:
@@ -282,6 +288,21 @@ func objective() -> String:
 	if not shielded.is_empty():
 		return "Kill the Hive Cores on %s to drop the Nest shields" % ", ".join(PackedStringArray(shielded))
 	return "Hold the line"
+
+
+## VS-024: "last 5 min" credit breakdown for the map (one category per line) and dock (inline).
+static func ledger_text(p_u: Universe, max_lines: int = 10, inline: bool = false) -> String:
+	var head := "Income +%s cr/min%sLast 5 min:" % [_fmt(p_u.ledger.income_per_min(p_u.time)), "  ·  " if inline else "\n"]
+	var parts: Array[String] = []
+	var rows := p_u.ledger.breakdown(p_u.time)
+	for r: Array in rows.slice(0, max_lines):
+		var amt := float(r[1])
+		parts.append("%s %s%s" % [CreditLedger.LABELS[r[0]], "+" if amt > 0.0 else "-", _fmt(absf(amt))])
+	if parts.is_empty():
+		parts.append("no credit changes yet")
+	if inline:
+		return head + "  " + "  ·  ".join(PackedStringArray(parts))
+	return head + "\n  " + "\n  ".join(PackedStringArray(parts))
 
 
 static func _fmt(v: float) -> String:
