@@ -126,3 +126,8 @@
 - Task(s): VS-028 save robustness / new-game confirm — done (QA PASS)
 - Check: PASS · Git: committed (see log)
 - Notes: builds_since_review=6 -> PLANNING due next. QA P3: title FLIGHT line clipped (pre-existing).
+
+## S0025 — 2026-10-27 15:45 — PLANNING+BUILD
+- Task(s): review round (critic 6.1 flat, QA sweep no P0/P1, balance 6/8 targets) -> VS-033..037; VS-034 Breach retune (BREACH_SIZE 4->6) done, QA PASS (numbers reproduced); VS-029 closed by it.
+- Check: PASS · Git: committed (see git log)
+- Notes: passive-40 HQ-lost median 36.0->28.3; seed 169 still survives passive 40 min. Roles collapsed: none.

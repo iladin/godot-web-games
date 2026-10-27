@@ -442,7 +442,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0024 — new-game overwrite confirm (keyboard+touch), title_continue shots, save-flow selftests; QA PASS
 
 ## VS-029 · The Breach: one guaranteed early raid reaches the HQ
-- status: blocked
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -455,6 +455,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] 9-seed econ gates stay in target (nw20 >= 90k, HQ survives >= 6/9, passive HQ lost 20-35 min) plus a --perturb=1 run reported
   - [ ] Raid warns once using VS-025 reporting; check.sh PASS
 - notes: S0021 QA verify: all criteria PASS except passive 40 min HQ-lost median 36.0 min (gate 20-35; 6 lost at 27.7-37.5, 3 survive; dev's 'median 28.3' was one seed). Blocked pending decision: accept 36.0 as in tolerance (then mark done) or small retune of BREACH_DPS/HULL + harness --nobreach baseline. Also P3: perturbed seeds 118 (37k), 169 (81k) fragile; bare-HQ breach damage modest (min hull 0.39-0.76). S0020: Developer finished (Breach t=360s, 4 drones, station-only, 24x hull/5x dps; constants BREACH_* in defs.gd; probe scripts/tools/breach_probe.gd). QA verify NOT yet run (budget). Dev numbers: nw20 med 111k min 98k HQ 9/9; perturbed med 127k (2 seeds <90k); passive harness median 28.3 (3 seeds survive 40m).
+- done: S0025 — closed by VS-034 retune (passive median 28.3 <= 35); QA noted seed 169 still survives passive 40 min
 
 ## VS-030 · First Sortie belongs to the player
 - status: todo
@@ -500,6 +501,82 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Map side panel keeps BUY SHIPS / BUILD STATION visible at 900x720 without scrolling
   - [ ] shots.sh exits non-zero if the PNG is stale; check.sh PASS
 - notes: Verify at 1280x720 and 900x720.
+
+## VS-033 · Atomic run save and honest save failures
+- status: todo
+- priority: P2
+- type: tech
+- size: S
+- source: scout
+- created: S0025
+- why: S0025 QA P2: RunSave.write truncates then writes and ignores the result; a crash or quota failure mid-write loses the only save. Scout proposal 1.
+- acceptance:
+  - [ ] RunSave.write writes run.save.tmp, verifies it parses, then renames over run.save; previous good file kept as .bak
+  - [ ] load_universe falls back to .bak when the main file is truncated or invalid
+  - [ ] Selftest: truncated main file still leaves Continue enabled via .bak; a corrupt tmp never replaces a good save
+  - [ ] A failed autosave shows one throttled HUD message; check.sh PASS
+- notes: Web rename/IDBFS behaviour unverified; real-browser pass still needed. No on-foot saving.
+
+## VS-034 · Breach retune and clean passive baseline (closes VS-029)
+- status: done
+- priority: P1
+- type: balance
+- size: S
+- source: scout
+- created: S0025
+- why: S0025 balance: passive HQ-lost median 36.0 min vs 20-35 target; econ Hive ships @20 = 61 vs 60 guard. Critic problem 3. Unblocks VS-029 (blocked on Daniel decision).
+- acceptance:
+  - [ ] Try BREACH_SIZE 4->6 and/or BREACH_TIME 360->300 in defs.gd; leave DREAD_TIME alone
+  - [ ] 9-seed passive median HQ-lost lands 20-35 min
+  - [ ] Econ gates hold: nw20 >= 90k, HQ survives >= 6/9, first raid 3-4 min; Hive ships @20 <= 60
+  - [ ] --perturb=1 run reported; VS-029 marked done or remaining gap stated
+- notes: S0025 in progress. Use the 9-seed harness, sequential runs only (timeout 175). If Daniel answers VS-029 in INBOX with accept, mark VS-029 done and re-scope this to the Hive ship count only.
+- done: S0025 — BREACH_SIZE 4->6; passive-40 HQ-lost median 36.0->28.3 min, econ nw20 113.6k, HQ 9/9, Hive@20 51 (QA PASS, numbers reproduced)
+
+## VS-035 · Fit-to-screen text guard and map/title label fixes
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0025
+- why: S0025 critic problem 4 + QA P3s: title FLIGHT line clipped at 1280, map Sovereign HQ label hidden, touch HUD +0 cr/min. VS-032 covers touch buttons/ACT wording/map fold, not these.
+- acceptance:
+  - [ ] --shot=title at 1280x720 and 900x720 passes a check that no text leaves the viewport; FLIGHT line wraps or is shortened
+  - [ ] Map Sovereign HQ label drawn above player/escort icons at default zoom
+  - [ ] Touch HUD cr/min matches desktop in same state; rate hidden for first 15 s
+  - [ ] check.sh PASS
+- notes: Layout only; re-shot at both sizes.
+
+## VS-036 · Raids you can fight: intercept bounty and honest outcome reports
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: scout
+- created: S0025
+- why: S0025 critic problem 1 and bold idea (war fronts); parking-lot raid outcome and redirect items. Scout proposal 3.
+- acceptance:
+  - [ ] Each raid outcome is exactly one of: intercepted (k/n), withdrew, redirected to <station>, succeeded (destroyed X)
+  - [ ] Intercept kills outside the HQ sector pay a bounty via Universe.add_credits(amount, "intercept"), shown in ledger breakdown
+  - [ ] Deterred raids redirect to nearest Union station with the same ETA marker
+  - [ ] Union ships @20 and nw30 tail do not worsen; Hive ships @20 <= 60; check.sh and balance gates PASS
+- notes: Do after VS-034. Watch perturbed-econ tail and VS-006 perf guard.
+
+## VS-037 · On-foot pressure: flanking Hive and hit/kill feedback
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: scout
+- created: S0025
+- why: S0025 critic problem 5: bot clears pylons and Core in ~55 s taking 0 damage. Deepens VS-031 (spire + beams only). Scout proposal 5.
+- acceptance:
+  - [ ] After the first pylon dies, 2-3 Hive units spawn 60-120 degrees off the player heading and chase (constants in defs.gd)
+  - [ ] surface_long shows player hull below 600 before the Core dies, never below 150 for a bot that keeps moving
+  - [ ] Hit-marker and kill flash/sound via Sfx synthesis, no assets
+  - [ ] Pylons down <= 90 s, Core dead <= 100 s; check.sh PASS
+- notes: Depends on VS-031 landing first. Keep dps low for touch aim.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -573,3 +650,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0019, QA) over.png shows Net worth 45,000 vs 30,000 credits elsewhere — confirm net-worth formula is intended (P3).
 - (S0019, QA VS-025, P3) Map inset raid label 'RAID xN ON TARGET' overlaps sector name / clips left edge (map_view.gd offset rp+(-60,32)); clamp to inset rect and offset from sector names. No --shot scenario for an active raid (QA used a temporary one).
 - (S0019, QA VS-025, P3) A raid that kills its target reports 'intercepted'/'withdrew'; add an honest 'raid succeeded / destroyed X' outcome. Countdown stays red when HQ go-chance >= 0.5 though some such raids are still turned back.
+- (S0025, QA, P3) Autosave never fires on foot/dead and no save on focus-out; closing tab after a long surface fight restores an old in-space save.
+- (S0025, QA, P3) Touch surface RUN/JUMP buttons overlap each other and the weapon model (covered by VS-032 if it lands).

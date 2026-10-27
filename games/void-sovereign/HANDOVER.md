@@ -1,47 +1,48 @@
 # Void Sovereign — Handover
-_Last updated: S0024 · 2026-10-27 14:10 UTC · mode: BUILD_
+_Last updated: S0025 · 2026-10-27 15:45 UTC · mode: PLANNING+BUILD_
 
 ## TL;DR
-S0024 shipped VS-028 (New Game over a save now asks to confirm; title_continue shots; save-flow selftests), QA PASS by independent agent. check.sh PASS. VS-029 still blocked on Daniel. Lock released.
+S0025 ran a review round (critic 6.1/10 flat, QA sweep no P0/P1, balance 6/8 targets) and queued VS-033..037. It then shipped VS-034 (BREACH_SIZE 4->6): passive-40 HQ-lost median 36.0 -> 28.3 min, econ gates hold, QA PASS. That closes VS-029. check.sh PASS, lock released.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0025. builds_since_review = 6 -> run PLANNING first (Critic + QA sweep + Balance in parallel, then Feature Scout), then BUILD VS-030 if budget remains.
-2. Check INBOX for Daniel's answer on VS-029 (passive-40 HQ-lost median 36.0 vs ceiling 35). Accept -> `backlog.py set ... VS-029 status done`; else one small retune (BREACH_DPS/BREACH_HULL in defs.gd), QA re-run `GATE_OFFSETS="0 3" bash scripts/studio/balance_gate.sh void-sovereign passive 40`.
-3. BUILD VS-030 First Sortie, then VS-031, VS-032.
-4. Parked: title FLIGHT controls line clipped at 1280 (QA P3, pre-existing; consider small task), touch Cancel button on New Game confirm prompt, deterred-raid redirect, RAID_DETER_RANGE 3800 trial, raid map label clamp, VS-006 Hive count guard, on-screen "The Breach" cue, save on manual pause / on-surface, split main.gd.
+1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0026. builds_since_review = 1, so BUILD. `backlog.py next` gives VS-030.
+2. BUILD VS-030 First Sortie (S, P2): escorts hold fire for SORTIE_ESCORT_DELAY so the player takes the first fight; add `--shot=sortie`.
+3. Then in order: VS-033 atomic run save (S, `scripts/sim/run_save.gd`), VS-035 fit-to-screen text guard (S), VS-031 (spire/beams) before VS-037 (flanking Hive), VS-032 touch/UX, VS-036 raids you can fight (M, after VS-034).
+4. Check INBOX for Daniel's replies. Next review round due after ~6 builds (about S0031).
 
 ## Last session
-- Did: VS-028 implemented (RunFlow.request_new_game confirm gate, 0.35s guard, Esc cancels) and QA-verified.
+- Did: PLANNING (critic/QA/balance/scout reports in `studio/reviews/S0025-*.md`) -> VS-033..037 created; BUILD VS-034 (defs.gd BREACH_SIZE 6), QA PASS reproduced all numbers; VS-029 marked done.
 - Check: PASS · Git: committed this session · Roles collapsed: none
+- Note: two Agent calls hit a transient classifier error and were retried once, then succeeded.
 
 ## In-flight / uncommitted work
-None from this session. Unrelated uncommitted, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md`, untracked `_to_delete/` (Daniel's).
+None from this session after commit. Unrelated uncommitted, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md`, untracked `_to_delete/` (Daniel's). `defs.gd` also shows a harmless file-mode change (644->755; use core.fileMode=false).
 
 ## Build health
 - check.sh: PASS (use `timeout 175`) · known noise: ObjectDB leak at exit, ALSA.
-- Latest metrics: econ20 nw20 median ~99-110k; HQ 3/3; passive40 median 36.0 (VS-029 blocked).
+- Latest metrics (S0025 post-retune): passive40 HQ-lost median 28.3 (IQR 27.2-32.7), 1/9 survive; econ30 nw20 113.6k, HQ 9/9, first raid 3.3, Hive@20 51; perturb nw20 122.8k, HQ 9/9.
 
 ## Backlog snapshot
-todo 4 · in-progress 0 · done 23 · blocked 2 · split 3 · Top ready: VS-028, VS-030, VS-031
+todo 7 · in-progress 0 · done 26 · blocked 1 · split 3 · Top ready: VS-030, VS-033, VS-035
 
 ## Watch out for
-- Restored runs are NOT bit-identical. Saves skipped on foot / while dead (previous save stays). Autoplay/shots use `user://run_autoplay.save`.
-- New Game over a save requires a second press (confirm); Continue on touch is the only cancel.
+- Passive tail is close to the edge: seed 186 loses HQ at 35.9; seed 169 survives passive to 40 min. Perturbed econ nw30 IQR wide (83.6k-178k); watch for VS-036.
+- Restored runs are NOT bit-identical. Saves skipped on foot / while dead. RunSave.write is non-atomic until VS-033. Autoplay/shots use `user://run_autoplay.save`.
 - RaidTracker raid dict keys hard-coded in SaveGame._valid; bump VERSION if fields change.
 - nw20 gate is chaos-fragile to RNG-order changes. Stale `.tools/balance_gate/*` summaries mislead; re-run.
-- Background jobs do not survive past one device_bash call; use foreground `timeout 175`.
-- RaidTracker RNG-free. Credits via `Universe.add_credits`. PauseGate first child of main. Sounds via `Sfx.play()`.
+- Background jobs do not survive past one device_bash call; use foreground `timeout 175`, balance runs sequential.
 - Git writes may leave stale .lock files; mv them aside.
 
 ## Open questions for Daniel
-- VS-029: accept passive-40 HQ-lost median 36.0 min (ceiling 35), or retune?
-- Fortified HQ nearly raid-free after minute 20 - want the Breach nastier?
-- HUD income gross vs net? Target session length? over.png Net worth 45,000 vs 30,000 credits - confirm formula.
+- Fortified HQ nearly raid-free after minute 20: want the Breach nastier?
+- HUD income gross vs net? Target session length? over.png Net worth 45,000 vs 30,000 credits: confirm formula.
+- A real-browser pass is still needed for IndexedDB persistence of the run save and audio unlock.
 
 ## Answers to Daniel
-- None (INBOX empty).
+- VS-029 question resolved: the retune landed (passive median 28.3 min), so no decision needed.
 
 ## Session history (newest first, keep 10)
+- S0025 2026-10-27 PLANNING+BUILD — review round -> VS-033..037; VS-034 Breach retune done (QA PASS), VS-029 closed
 - S0024 2026-10-27 BUILD — VS-028 save robustness + new-game confirm done (QA PASS)
 - S0023 2026-10-27 BUILD — VS-027 autosave + Continue done (QA PASS)
 - S0022 2026-10-27 BUILD — VS-026 save data layer done (QA PASS)
@@ -51,4 +52,3 @@ todo 4 · in-progress 0 · done 23 · blocked 2 · split 3 · Top ready: VS-028,
 - S0018 2026-10-27 BUILD — VS-009 split into VS-026..028; VS-023 raid deterrent range done (QA PASS)
 - S0016 2026-10-27 BUILD — VS-007 wing commands done (QA FAIL touch overlap → fix → PASS)
 - S0017 2026-10-27 SKIPPED — lock held by S0016
-- S0015 2026-10-27 BUILD — VS-010 NPC traders vs broke player station done
