@@ -7,11 +7,13 @@ extends RefCounted
 
 const SAVE_PATH := "user://save.cfg"
 const CONFIRM_GUARD := 0.35      # seconds before the confirming press counts (VS-028)
+const SAVE_FAIL_MSG_GAP := 300.0  # seconds between "autosave failed" HUD messages (VS-033)
 const AUTOSAVE_INTERVAL := 60.0   # seconds of PLAYING between autosaves (VS-027)
 
 var g: VoidMain
 var save_path: String = RunSave.PATH
 var _save_t: float = 0.0
+var _fail_msg_at: float = -1.0   # when the last save-failure HUD message was shown
 var _confirm_at: float = -1.0   # >= 0 while the title asks "replace your saved run?"
 
 
@@ -57,7 +59,19 @@ func autosave() -> bool:
 	_save_t = 0.0
 	if g.state != VoidMain.State.PLAYING or g.surface != null or g.mode == "surface" or g.respawn_t >= 0.0:
 		return false
-	return RunSave.write(g.u, save_path)
+	if RunSave.write(g.u, save_path):
+		return true
+	report_save_failure(Time.get_ticks_msec() / 1000.0)
+	return false
+
+
+## One HUD warning per SAVE_FAIL_MSG_GAP seconds when an autosave write fails. Returns true if shown.
+func report_save_failure(now: float) -> bool:
+	if _fail_msg_at >= 0.0 and now - _fail_msg_at < SAVE_FAIL_MSG_GAP:
+		return false
+	_fail_msg_at = now
+	g.u.message.emit("Autosave failed — storage may be full or blocked", Color("ff6b5a"))
+	return true
 
 
 ## Title "New Game" gate (VS-028): with a valid save the first press only arms a confirmation, and a

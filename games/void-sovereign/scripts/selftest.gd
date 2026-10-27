@@ -573,6 +573,23 @@ func _test_run_save_file() -> void:
 	f.store_string(JSON.stringify(d))
 	f.close()
 	assert(RunSave.peek_time(path) < 0.0, "wrong-version file ignored")
+	# VS-033: atomic write keeps .bak; truncated main falls back to .bak; a corrupt tmp never replaces a good save.
+	RunSave.delete(path)
+	assert(RunSave.write(u, path) and RunSave.write(u, path), "two writes succeed")
+	assert(FileAccess.file_exists(path + RunSave.BAK_EXT) and not FileAccess.file_exists(path + RunSave.TMP_EXT), "second write keeps .bak, no tmp left")
+	var good := FileAccess.get_file_as_string(path)
+	f = FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(good.substr(0, good.length() / 2))   # truncated main
+	f.close()
+	assert(absf(RunSave.peek_time(path) - u.time) < 0.001, "truncated main -> .bak still gives Continue")
+	assert(RunSave.write(u, path), "write after truncation succeeds")
+	assert(FileAccess.get_file_as_string(path) == good, "main replaced by a fresh good file")
+	f = FileAccess.open(path + RunSave.TMP_EXT, FileAccess.WRITE)
+	f.store_string("{corrupt")
+	f.close()
+	assert(RunSave.peek_time(path) >= 0.0 and FileAccess.get_file_as_string(path) == good, "stale corrupt tmp ignored, good save intact")
+	assert(RunSave.write(u, path) and RunSave.peek_time(path) >= 0.0, "write over stale tmp works")
+	assert(not RunSave.write(u, "user://no_such_dir/x.save"), "unwritable path reports failure")
 	RunSave.delete(path)
 	assert(not FileAccess.file_exists(path), "delete removes the file")
 	for x: Universe in [u, r]:
@@ -686,6 +703,16 @@ func _test_save_flow() -> void:
 	g.state = VoidMain.State.TITLE
 	assert(not g.flow.request_new_game(true, 20.0) and g.flow.request_new_game(true, 20.5), "second press confirms")
 	assert(not FileAccess.file_exists(path), "confirmed New Game deletes the old save")
+	# VS-033: failed autosave shows one throttled HUD message.
+	var fails: Array = [0]
+	g.u.message.connect(func(_t: String, _c: Color) -> void: fails[0] += 1)
+	g.flow.save_path = "user://no_such_dir/x.save"
+	g.state = VoidMain.State.PLAYING
+	assert(not g.flow.autosave() and fails[0] == 1, "failed autosave shows a HUD message")
+	assert(not g.flow.autosave() and fails[0] == 1, "second failure is throttled")
+	assert(g.flow.report_save_failure(Time.get_ticks_msec() / 1000.0 + RunFlow.SAVE_FAIL_MSG_GAP + 1.0) and fails[0] == 2, "message returns after the gap")
+	g.flow.save_path = path
+	g.state = VoidMain.State.TITLE
 	# A corrupt file leaves no Continue and continue_run fails cleanly.
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string("garbage")

@@ -506,7 +506,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0029 — touch ACT wording + earn hint, wing column, map fold, shots.sh stale guard; QA PASS
 
 ## VS-033 · Atomic run save and honest save failures
-- status: todo
+- status: done
 - priority: P2
 - type: tech
 - size: S
@@ -519,6 +519,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Selftest: truncated main file still leaves Continue enabled via .bak; a corrupt tmp never replaces a good save
   - [ ] A failed autosave shows one throttled HUD message; check.sh PASS
 - notes: Web rename/IDBFS behaviour unverified; real-browser pass still needed. No on-foot saving.
+- done: S0030 — atomic RunSave (tmp+verify+rename, .bak fallback), throttled autosave-fail HUD msg; QA PASS
 
 ## VS-034 · Breach retune and clean passive baseline (closes VS-029)
 - status: done

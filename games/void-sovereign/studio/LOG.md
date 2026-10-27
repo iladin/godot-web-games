@@ -154,3 +154,8 @@
 - Task(s): VS-032 First-minute touch and UX bundle -> done (QA PASS, 3 P3s parked)
 - Check: PASS · Git: committed (see git log)
 - Notes: Touch ACT wording + earn hint, wing column moved left, map panel reordered (fold_ok), shots.sh stale-PNG guard, selftest _test_touch_ux. Review round due at builds_since_review>=6.
+
+## S0030 — 2026-10-27 21:10 — BUILD
+- Task(s): VS-033 atomic run save + honest save failures — done (QA PASS)
+- Check: PASS · Git: committed (see git log)
+- Notes: run_save.gd tmp+verify+rename with .bak fallback; run_flow.gd throttled "Autosave failed" msg; selftest extended. QA P3s: _parses only checks "version" key; HUD message rendering untested on screen. builds_since_review now 6 -> PLANNING next.
