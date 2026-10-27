@@ -8,6 +8,7 @@ var speed: float = 200.0
 var cargo_cap: int = 0
 var cargo: Dictionary = {}
 var is_player: bool = false
+var breach: bool = false          # VS-029 Breach raider: attacks stations only, so it threatens the HQ, not the player's fleet
 var sortie: bool = false          # VS-018 First Sortie scout: only the player's wing fights it (OpeningWave.allows)
 var hidden: bool = false          # docked or parked on a planet: untargetable
 

@@ -98,3 +98,11 @@
 - Task(s): Review round (critic 6.1/10, QA sweep no P0-P2, balance 8/8 targets, scout 5 proposals) -> VS-029..032 added. VS-025 honest raid reports — done (QA PASS round 1; built before VS-029 because it is VS-029's prerequisite).
 - Check: PASS · Git: review round committed 1e49fff; VS-025 committed after this log (see git log -1)
 - Notes: Deterred-raid redirect idea parked (needs VS-025+VS-029). Stale git locks HEAD.lock/maintenance.lock moved to .git/stale-*-S0019 (no delete permission).
+
+## S0021 — 2026-10-27 09:57 — SKIPPED
+- Lock held by S0020 since 08:56Z; files modified at 09:40Z so it looks active. No work done, HANDOVER untouched.
+
+## S0020 — 2026-10-27 10:20 — BUILD
+- Task(s): VS-029 The Breach — Developer done, independent QA NOT run (dev took ~80 min); left in-progress
+- Check: PASS · Git: committed (see git log)
+- Notes: Breach = 4 station-only Hive drones at 6:00. Dev gates: nw20 med 111k, HQ 9/9, perturbed med 127k, passive median 28.3 (3/9 survive 40m).

@@ -122,6 +122,13 @@ const RAID_DETER_RANGE := 3400.0
 const RAID_TRACK_INTERVAL := 0.5
 const RAID_TURNED_BACK_THROTTLE := 300.0
 const RAID_HOP_ETA := 40.0
+# VS-029 The Breach: one scripted raid (never deterred, no dreadnought) appears BREACH_RANGE from the HQ at BREACH_TIME s
+# and heads straight for it, so every run sees at least one raid actually reach the HQ. Drones are scaled by BREACH_HULL/DPS.
+const BREACH_TIME := 360.0
+const BREACH_SIZE := 4
+const BREACH_RANGE := 2600.0
+const BREACH_HULL := 24.0
+const BREACH_DPS := 5.0
 const RAID_DETER_FROM := 1200.0   # s; before this the Hive raids regardless (early game unchanged)
 const RAVAGER_TIME := 300.0
 const DREAD_TIME := 1200.0

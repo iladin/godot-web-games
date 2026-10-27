@@ -124,6 +124,12 @@ func _init() -> void:
 			assert(TutorialHints.hostile_in(u, u.hq.sector), "the wave makes the target tip reachable at home")
 			assert(absf(u.director.raid_t - (Defs.FIRST_RAID - u.time)) < 0.2, "the wave does not reset or delay the raid timer")
 		assert(ow.spawn_count <= 1, "the opening wave spawns only once")
+		# VS-029 The Breach: nothing before BREACH_TIME, then exactly one scripted raid in the HQ sector.
+		if u.time < Defs.BREACH_TIME - 0.5:
+			assert(u.director.breach_count == 0, "the breach waits for BREACH_TIME")
+		assert(u.director.breach_count <= 1, "the breach spawns only once")
+	assert(u.director.breach_count == 1 and Defs.BREACH_TIME >= 330.0 and Defs.BREACH_TIME <= 450.0, "the breach raid spawned once in 5:30-7:30")
+	assert(Defs.BREACH_SIZE >= 4 and Defs.BREACH_SIZE <= 6, "breach has 4-6 raiders")
 	assert(ow.spawn_count == 1 and wave_hostile_seen, "the opening wave spawned once")
 	# Sortie scouts are the player's fight: only the player and Sovereign warships trade fire with them.
 	var scout := ShipData.new()
@@ -194,6 +200,7 @@ func _init() -> void:
 		rs.order_target = u.hq.id
 		rs.order_sector = u.hq.sector
 		raiders.append(rs)
+	dir.tracker.raids.clear()   # the scripted Breach / earlier raids may still be in flight
 	dir.tracker.add(raiders, u.hq)
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	assert(msgs.is_empty(), "no raid warning while the raid is still far from its target")

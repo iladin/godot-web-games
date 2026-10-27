@@ -11,6 +11,8 @@ var rebuild_queue: Array[Dictionary] = []
 var tracker: RaidTracker          # VS-025 follows every launched raid
 var turned_back_at: float = -1.0e9
 var turned_back_pending: int = 0
+var breach_t: float = Defs.BREACH_TIME   # VS-029
+var breach_count: int = 0
 var opening: OpeningWave          # VS-018 one-off First Sortie wave
 
 
@@ -51,6 +53,7 @@ func step(delta: float) -> void:
 	opening.step(delta)
 	tracker.step(delta)
 	_nests(delta)
+	_breach(delta)
 	_raids(delta)
 	_union(delta)
 	_rebuild(delta)
@@ -72,6 +75,32 @@ func _nests(delta: float) -> void:
 			var d := u.spawn_ship(cls, Defs.Faction.HIVE, nest.sector, nest.pos + _rand_dir() * (nest.radius + 80.0))
 			d.order = "patrol"
 			d.order_sector = nest.sector
+
+
+## VS-029: the scripted early raid. Fixed offsets (no extra RNG beyond spawn_ship's own); tracked like any raid.
+func _breach(delta: float) -> void:
+	if breach_t <= 0.0:
+		return
+	breach_t -= delta
+	if breach_t > 0.0 or u.hq == null or not u.hq.alive:
+		return
+	breach_count += 1
+	var hq := u.hq
+	var base := Vector3(1, 0.05, 0.6).normalized() * Defs.BREACH_RANGE
+	var side := base.cross(Vector3.UP).normalized()
+	var launched: Array[ShipData] = []
+	for i in Defs.BREACH_SIZE:
+		var p := hq.pos + base + side * (float(i) - float(Defs.BREACH_SIZE - 1) * 0.5) * 120.0
+		var s := u.spawn_ship("drone", Defs.Faction.HIVE, hq.sector, p)
+		s.hull_max *= Defs.BREACH_HULL
+		s.hull = s.hull_max
+		s.dps *= Defs.BREACH_DPS
+		s.breach = true
+		s.order = "raid"
+		s.order_target = hq.id
+		s.order_sector = hq.sector
+		launched.append(s)
+	tracker.add(launched, hq)
 
 
 func raid_interval() -> float:

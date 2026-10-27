@@ -143,6 +143,8 @@ func valid_target(e: SimEntity, t: SimEntity) -> bool:
 		return false
 	if t is ShipData and (t as ShipData).hidden:
 		return false
+	if e is ShipData and (e as ShipData).breach and not (t is StationData):
+		return false
 	return Defs.hostile(e.faction, t.faction) and OpeningWave.allows(e, t)
 
 
