@@ -41,6 +41,8 @@ static func update(u: Universe, s: ShipData, delta: float) -> void:
 				_wander(s, delta)
 		"escort":
 			_escort(u, s, t, has_target, delta)
+		"hold":   # VS-007: stay put (guns still fire at anything in range), never chase
+			_brake(s, delta)
 		"raid":
 			_raid(u, s, t, has_target, delta)
 		"trade":

@@ -96,7 +96,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0007: blocked on VS-011 — its raid-size/interval changes move the Hive ship count (S0007 balance: hive_20 median 59, max 65). Re-measure after VS-011 lands, then unblock or close. S0012: VS-020 done; still relevant (S0012 balance: hive_20 median 58, q3 61, max 75; 3/9 seeds > 60). Kept blocked until VS-023 lands, because its DREAD_TIME change moves Hive counts; re-measure then and unblock (open todo is at the cap of 8).
 
 ## VS-007 · Wing commands from the cockpit
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -108,6 +108,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] HUD shows a one-line wing status (count, current order)
   - [ ] DESIGN.md controls table and title screen updated
 - notes: S0007: parked by Producer to keep open todo ≤ 8 (no review finding asks for it this round). Daniel can reprioritise via INBOX. Daniel (2026-10-26, after S0007): restore to todo.
+- done: S0016 — G/C/V wing keys + ATK/ESC/HOLD touch buttons + HUD wing line (QA FAIL on ACT overlap → fix → PASS)
 
 ## VS-008 · Selftest coverage for ship AI journeys
 - status: done
@@ -455,3 +456,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0013, dev, P3) End screen: per-category lifetime credit totals from CreditLedger.totals.
 - (S0014, QA VS-005, P3) Surface marker text is dark pink on pink/orange terrain, low contrast — add a dark outline/shadow in Hud._txt for markers. Stacking+leader-line path only selftest-covered, not seen in a shot.
 - (S0015, QA VS-010, P3) selftest best_buyer assertion is not discriminating (passes without the guard: price tie) — make the player station clearly best-priced (lower the other buyer's price via stock near capacity). Also miners idle without a wait timer when no buyer exists.
+- (S0016, QA VS-007, P3) Touch wing row (HOLD/ESC/ATK) sits mid-screen at 1280x720 over world labels; consider moving it. Map order label prints raw lowercase "hold"; map order menu has no Hold entry. No `--shot` scenario for the wing HUD/buttons.
+- (S0016, dev VS-007, P3) Wing ships ordered ATTACK return to patrol (not escort) when the target dies; add a "resume last order" wing command.

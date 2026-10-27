@@ -23,7 +23,7 @@ Sovereign (you, amber) · Union (neutral-friendly, cyan) · Hive (hostile, magen
 ## Controls
 | | Keyboard / mouse | Touch |
 |---|---|---|
-| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G fleet attacks target · F dock/land · M map · X stop · P pause · N mute · H skip tips | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP, SND buttons · SKIP TIPS chip under the tip box |
+| Flight | Mouse (click to capture) or arrows steer · W/S throttle · Q/E roll · Shift boost · T travel drive · LMB/Space fire · R target · G wing attacks target · C wing returns/escorts · V wing holds position · F dock/land · M map · X stop · P pause · N mute · H skip tips | Left stick steer · FIRE, BOOST, THR±, TGT, ACT, MAP, SND buttons · ATK / ESC / HOLD wing buttons · SKIP TIPS chip under the tip box |
 | Map | LMB select (drag = box) · RMB order · wheel zoom · click galaxy to switch sector | Tap select · toggle ORDER, then tap to order |
 | Surface | WASD · mouse look · LMB fire · R reload · Space jump · Shift sprint · F board ship · N mute | Left stick move · drag right half to look · FIRE / JUMP / RELOAD / ACT / SND |
 

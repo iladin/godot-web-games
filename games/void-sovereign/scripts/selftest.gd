@@ -201,6 +201,24 @@ func _test_ai_journeys() -> void:
 	assert(pfrom != null and pfrom.sells(pware) and pto != null and pto.buys(pware))
 	assert(int(plan["qty"]) > 0 and int(plan["qty"]) <= tr.cargo_cap)
 
+	# VS-007: wing commands reach only armed player ships in the sector; status line reflects them.
+	var wsec := u.player_ship.sector
+	var w1 := u.spawn_ship("fighter", Defs.Faction.PLAYER, wsec, Vector3(300, 0, 0))
+	var wn := Wing.members(u, wsec).size()
+	assert(wn >= 1 and Wing.members(u, wsec).has(w1), "wing members include armed player ships")
+	assert(not Wing.members(u, wsec).has(u.player_ship), "the player is not in the wing")
+	assert(Wing.command(u, wsec, Wing.ATTACK, 0) == 0, "attack without a target orders nobody")
+	assert(Wing.command(u, wsec, Wing.HOLD) == wn and w1.order == "hold", "hold reaches the whole wing")
+	assert(Wing.status(u, wsec) == "WING %d · HOLD" % wn, "status shows count and order")
+	var hpos := w1.pos
+	for i in 60:
+		ShipAI.update(u, w1, 0.1)
+	assert(w1.pos.distance_to(hpos) < 400.0, "a holding ship does not wander off")
+	assert(Wing.command(u, wsec, Wing.ESCORT) == wn and w1.order == "escort", "escort recalls the wing")
+	w1.order = "patrol"
+	assert(Wing.status(u, wsec) == "WING %d · MIXED" % wn or wn == 1, "mixed orders read MIXED")
+	print("wing commands OK")
+
 	# Gate travel: a ship ordered to another sector arrives within the bound.
 	var hops := u.route(TRAVEL_FROM, TRAVEL_TO).size()
 	assert(hops == 2)

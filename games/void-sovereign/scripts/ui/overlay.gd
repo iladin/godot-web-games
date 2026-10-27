@@ -46,7 +46,7 @@ func _draw() -> void:
 				"Land, fight through on foot, kill the Cores — then send your fleet to burn the Nests.",
 				"Earn credits trading, mining and with stations. Keep your HQ alive.",
 				"",
-				"FLIGHT  mouse/arrows steer · W/S throttle · LMB/Space fire · R target · G fleet attack · F dock/land · T travel · M map",
+				"FLIGHT  mouse/arrows steer · W/S throttle · LMB/Space fire · R target · G wing attack · C wing escort · V wing hold · F dock/land · T travel · M map",
 				"FOOT  WASD · mouse look · LMB fire · R reload · Space jump · F board ship · N sound on/off",
 				"MAP  LMB select · drag box · RMB order · buy ships & build stations",
 				"P pause · H skip tips",

@@ -11,7 +11,7 @@ var is_player: bool = false
 var sortie: bool = false          # VS-018 First Sortie scout: only the player's wing fights it (OpeningWave.allows)
 var hidden: bool = false          # docked or parked on a planet: untargetable
 
-# Orders: idle | move | attack | patrol | escort | trade | mine | raid | goto
+# Orders: idle | move | attack | patrol | escort | hold | trade | mine | raid | goto
 var order: String = "idle"
 var order_pos: Vector3 = Vector3.ZERO
 var order_sector: int = 0

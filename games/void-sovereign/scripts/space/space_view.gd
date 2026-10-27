@@ -192,8 +192,12 @@ func _handle_flight_input() -> void:
 			u.message.emit("No hostiles in range", Color("8fd8ff"))
 	if (Input.is_action_just_pressed("act") or touch.pressed("act")) and _prompt_action.is_valid():
 		_prompt_action.call()
-	if Input.is_action_just_pressed("fleet_attack"):
+	if Input.is_action_just_pressed("fleet_attack") or touch.pressed("wing_atk"):
 		_fleet_attack()
+	if Input.is_action_just_pressed("wing_escort") or touch.pressed("wing_esc"):
+		_wing_order(Wing.ESCORT, "Wing: escorting you")
+	if Input.is_action_just_pressed("wing_hold") or touch.pressed("wing_hold"):
+		_wing_order(Wing.HOLD, "Wing: holding position")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -230,15 +234,18 @@ func _cycle_target() -> void:
 func _fleet_attack() -> void:
 	var t := u.get_ent(target_id)
 	if t == null:
+		u.message.emit("Wing: no target selected (R)", Color("8fd8ff"))
 		return
-	var n := 0
-	for e: SimEntity in u.ents_in(sector_idx):
-		if e is ShipData and e.faction == Defs.Faction.PLAYER and e.armed() and not (e as ShipData).is_player:
-			(e as ShipData).order = "attack"
-			(e as ShipData).order_target = t.id
-			n += 1
+	var n := Wing.command(u, sector_idx, Wing.ATTACK, t.id)
 	if n > 0:
 		u.message.emit("%d ships attacking %s" % [n, t.display_name], Defs.faction_color(Defs.Faction.PLAYER))
+
+
+func _wing_order(order: String, text: String) -> void:
+	if Wing.command(u, sector_idx, order) > 0:
+		u.message.emit(text, Defs.faction_color(Defs.Faction.PLAYER))
+	else:
+		u.message.emit("No wing in this sector", Color("8fd8ff"))
 
 
 func _lead_point() -> Variant:

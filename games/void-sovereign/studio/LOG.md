@@ -78,3 +78,13 @@
 - Task(s): VS-010 NPC traders stuck at broke player station — done (QA PASS round 1)
 - Check: PASS · Git: committed (see git log -1) — delete permission granted for C:\git
 - Notes: ShipAI.can_deliver_to guards plan_trade/best_buyer. credits_10 18.4k/22.1k/19.2k (seeds 101/118/135), HQ 3/3. QA P3: best_buyer selftest assertion not discriminating (parking lot).
+
+## S0017 — 2026-10-27 05:57 — SKIPPED
+- Lock held by S0016 since 05:45Z (11 min old, <4 h) and working tree has in-progress VS-007 edits; did not touch state, backlog or HANDOVER.
+- Check: not run · Git: untouched
+- Notes: left stray empty file moved to _to_delete/stray_touch_probe_S0017 (delete probe).
+
+## S0016 — 2026-10-27 06:10 — BUILD
+- Task(s): VS-007 wing commands (G attack / C escort / V hold, ATK/ESC/HOLD touch buttons, HUD "WING n · ORDER" line) — done. QA FAIL round 1 (ACT/ATK touch overlap at 1280x720) → dev fix → QA PASS round 2.
+- Check: PASS · Git: committing game paths only (S0017 skipped session had left unrelated edits to ai-studio/studio-cycle.md and docs/AI_STUDIO.md — not staged)
+- Notes: new scripts/sim/wing.gd (no RNG); `hold` order added to ShipAI. P3s parked (wing row mid-screen at 1280, map "hold" label, no wing shot scenario, resume-last-order).

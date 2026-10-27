@@ -147,7 +147,7 @@ func _draw_flight(sz: Vector2) -> void:
 	draw_line(c, cur, Color(CYAN, 0.2), 1.0)
 	# Bottom-left panel: hull, shield, speed.
 	var base := Vector2(20, sz.y - 120) if not space.touch.active else Vector2(20, 130)
-	draw_rect(Rect2(base - Vector2(8, 26), Vector2(330, 120)), PANEL)
+	draw_rect(Rect2(base - Vector2(8, 26), Vector2(330, 144)), PANEL)
 	_txt(base, "SHIELD", 16, DIM)
 	_bar(Rect2(base + Vector2(80, -12), Vector2(230, 12)), ps.shield_frac(), CYAN)
 	_txt(base + Vector2(0, 24), "HULL", 16, DIM)
@@ -165,6 +165,7 @@ func _draw_flight(sz: Vector2) -> void:
 	for w: String in ps.cargo:
 		cargo += "%s %d  " % [Defs.WARE_NAMES[w], int(ps.cargo[w])]
 	_txt(base + Vector2(150, 80), cargo, 14, DIM)
+	_txt(base + Vector2(0, 106), Wing.status(u, space.sector_idx), 16, Defs.faction_color(Defs.Faction.PLAYER))
 	if space.prompt != "" and TutorialHints.on_screen not in ["steer", "throttle"]:
 		_txt(Vector2(0, sz.y * 0.72), space.prompt, 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not space.touch.active and not space.docked \
