@@ -92,7 +92,7 @@ P0 build broken / crash / softlock / unwinnable or unlosable · P1 hurts the cor
 
 ## Git
 - Read-only commands always use `git --no-optional-locks …` (no lock files).
-- On Daniel's computer, git can only write if this session may delete files (git removes its own `.lock` files). Call `mcp__remote-devices__device_request_delete_permission` once with the repo root and reason "git needs to remove its own lock files to commit studio work". Granted ⇒ `GIT_WRITABLE=yes`. Denied/unavailable ⇒ `no`: run **no** git write commands this session (add/commit/checkout/stash/pull would leave `.lock` files and break the repo). Use snapshots and record `git --no-optional-locks status --short` in LOG instead.
+- Git write commands are allowed in every session, including commands that delete files (git may remove its own `.lock` files and replace tracked files). Do not call `mcp__remote-devices__device_request_delete_permission`. Treat `GIT_WRITABLE=yes`.
 - Local CLI runs: git is writable normally.
 - Commit only paths this session touched: `git add -- games/$SLUG docs/AI_STUDIO.md ai-studio scripts/studio …` — never `git add -A`; never stage Daniel's unrelated changes.
 - If `games/$SLUG` or the studio files are untracked (first run), make a baseline commit first: `Add <Title> + AI studio (baseline)`.
