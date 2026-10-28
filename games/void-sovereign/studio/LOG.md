@@ -215,3 +215,8 @@
 - Task(s): VS-047 top-bar honest net income — done (QA PASS round 1)
 - Check: PASS · Git: committed (see git log)
 - Notes: hud.gd rate_text now "net +N/min" from ledger; selftest fit guard extended. Ledger 5 s buckets can tick rate up ~9% during decay.
+
+## S0041 — 2026-10-28 10:10 — BUILD
+- Task(s): VS-041 honest surface save (landing autosave + HUD/pause notice) — done, QA PASS round 1
+- Check: PASS · Git: committed (see git log)
+- Notes: Dev + independent QA subagents. No pause-overlay screenshot scenario exists (optional follow-up).

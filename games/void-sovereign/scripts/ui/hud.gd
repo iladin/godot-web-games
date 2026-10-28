@@ -8,6 +8,8 @@ const CYAN := Color("5ee6ff")
 const HIVE := Color("ff3b8d")
 const DIM := Color(1, 1, 1, 0.55)
 const PANEL := Color(0.02, 0.03, 0.08, 0.55)
+const SAVE_NOTICE := "Progress is saved when you return to space"
+const SAVE_NOTICE_SECS := 8.0
 const MSG_LIFE := 7.0
 const MAX_MSGS := 6
 
@@ -23,6 +25,7 @@ var dmg_flash: float = 0.0
 var kill_flash: float = 0.0   ## VS-037: red X + screen tint on a confirmed kill
 var _last_credits: float = 0.0
 var t: float = 0.0
+var surface_t: float = 0.0   ## VS-041: seconds on foot, for the save notice
 
 
 func _ready() -> void:
@@ -57,6 +60,8 @@ func damaged(_amount: float) -> void:
 
 func _process(delta: float) -> void:
 	t += delta
+	if mode == "surface":
+		surface_t += delta
 	hit_flash = maxf(hit_flash - delta, 0.0)
 	dmg_flash = maxf(dmg_flash - delta * 1.2, 0.0)
 	kill_flash = maxf(kill_flash - delta, 0.0)
@@ -288,6 +293,8 @@ func _draw_surface(sz: Vector2) -> void:
 	var ammo_y := sz.y - 40 if not surface.touch.active else 250.0
 	_txt(Vector2(sz.x - 260, ammo_y), ammo, 32, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT, 220)
 	_txt(Vector2(0, 120), surface.objective_text(), 22, AMBER, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
+	if surface_t < SAVE_NOTICE_SECS:
+		_txt(Vector2(0, 150), SAVE_NOTICE, 18, Color(CYAN_HINT, 0.9), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if surface.prompt != "":
 		_txt(Vector2(0, sz.y * 0.7), surface.prompt, 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not surface.touch.active:

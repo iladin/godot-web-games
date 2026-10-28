@@ -34,6 +34,7 @@ func _input(event: InputEvent) -> void:
 func pause() -> void:
 	g.paused = true
 	g.overlay.screen = "pause"
+	g.overlay.on_surface = g.mode == "surface"
 	g.touch.paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 

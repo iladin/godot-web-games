@@ -242,6 +242,8 @@ func _on_land(sector_idx: int) -> void:
 	if state != State.PLAYING or u != run_u:   # run ended (or restarted) during the fade
 		_fade_to(0.0)
 		return
+	flow.autosave()   # VS-041: landing checkpoint; autosave never writes while on foot, so Continue returns here
+	hud.surface_t = 0.0
 	u.player_ship.hidden = true
 	space.visible = false
 	space.remove_child(space.env)   # only one WorldEnvironment may be active

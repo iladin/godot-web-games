@@ -637,7 +637,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0036 — empty-state income sources + net/gross label (QA PASS)
 
 ## VS-041 · Honest save on the surface: landing checkpoint and HUD notice
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -650,7 +650,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Selftest: save before descent, focus-out on surface, load -> state equals pre-descent state
   - [ ] Dying on the surface then Continue restores pre-descent state
   - [ ] DESIGN.md Out of scope unchanged; check.sh PASS
-- notes: 
+- notes: S0041 started
+- done: S0041 - landing autosave + surface/pause save notice (QA PASS round 1)
 
 ## VS-042 · Real-browser smoke: save round trip and late-game frame time
 - status: todo

@@ -16,6 +16,7 @@ var t: float = 0.0
 var touch_hint: bool = false
 var continue_time: float = -1.0   # saved run time in seconds; < 0 = no valid save (VS-027)
 var confirm_new: bool = false     # title asks to confirm replacing the save (VS-028)
+var on_surface: bool = false       # pause opened while on foot: show the save notice (VS-041)
 var font: Font = ThemeDB.fallback_font
 
 
@@ -114,6 +115,8 @@ func _draw() -> void:
 		"pause":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.6))
 			_line(h * 0.5, "PAUSED — click or press a key to resume", 36, Color.WHITE)
+			if on_surface:
+				_line(h * 0.5 + 44, Hud.SAVE_NOTICE, 22, CYAN)
 		"over":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.65))
 			_line(h * 0.3, "THE HIVE IS BROKEN" if won else "HQ LOST", 72, AMBER if won else HIVE)

@@ -436,6 +436,7 @@ func _init() -> void:
 	await _test_surface_landmarks()
 	await _test_surface_flank()
 	await _test_save_flow()
+	await _test_surface_save()
 	print("SELFTEST OK")
 	quit()
 
@@ -1012,6 +1013,45 @@ func _test_surface_flank() -> void:
 	g.queue_free()
 	await process_frame
 	print("surface flank OK")
+
+
+## VS-041: landing writes an in-space checkpoint; nothing saves on foot; death + Continue restores it.
+func _test_surface_save() -> void:
+	var path := "user://selftest_surf.save"
+	var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+	root.add_child(g)
+	await process_frame
+	await process_frame
+	g.flow.save_path = path
+	RunSave.delete(path)
+	g._start_game()
+	await process_frame
+	g.u.add_credits(777.0, "trade")
+	var credits := g.u.credits
+	var sector := g.u.player_ship.sector
+	g._on_land(0)
+	for i in 60:
+		await process_frame
+	assert(g.mode == "surface" and g.surface != null, "landed")
+	assert(FileAccess.file_exists(path), "landing wrote a checkpoint")
+	g.u.add_credits(5000.0, "trade")   # on-foot progress that must not be saved
+	assert(not g.flow.autosave(), "no autosave on foot")
+	g.hud.surface_t = 0.0
+	g._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	assert(g.paused and g.overlay.on_surface, "focus-out pauses on foot with the notice flag")
+	var r := RunSave.load_universe(path)
+	assert(r != null and absf(r.credits - credits) < 1.0 and r.player_ship.sector == sector, "focus-out on surface keeps the pre-descent save")
+	g.pause_gate.resume()
+	g.surface.fps.take_damage(5000.0)
+	for i in 90:
+		await process_frame
+	assert(g.mode == "flight" and g.surface == null, "death evacuates to orbit")
+	assert(g.flow.continue_run(), "continue after surface death")
+	assert(absf(g.u.credits - credits) < 1.0 and g.u.player_ship.sector == sector and g.surface == null, "continue restores pre-descent state")
+	RunSave.delete(path)
+	g.queue_free()
+	await process_frame
+	print("surface save: landing checkpoint, no on-foot save OK")
 
 
 ## VS-022: ending a run while on foot freezes the surface, and a later death does not evacuate.

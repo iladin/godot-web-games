@@ -1,18 +1,18 @@
 # Void Sovereign — Handover
-_Last updated: S0040 · 2026-10-28 09:05 UTC · mode: BUILD_
+_Last updated: S0041 · 2026-10-28 10:10 UTC · mode: BUILD_
 
 ## TL;DR
-S0040 shipped VS-047 (top-bar income is now labelled net cr/min from the ledger; QA PASS round 1). Build green. Backlog: 5 todo. builds_since_review = 3.
+S0041 shipped VS-041 (landing autosave + 'Progress is saved when you return to space' notice on surface HUD and pause; QA PASS round 1). Build green. Backlog: 4 todo. builds_since_review = 4.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0041. `export GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)`.
-2. BUILD S tasks: VS-041, VS-043 (prefer these; `backlog.py next` returns VS-048 first). Then VS-048 (M, persistent HQ damage + paid repair; split if L).
+1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0042. `export GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)`.
+2. BUILD S task VS-043 (raid panel fit; `backlog.py next` returns VS-048 first, so prefer VS-043 explicitly). Then VS-048 (M, persistent HQ damage + paid repair; split if L).
 3. Later: VS-044 (harness platform policy, re-enable redirect), VS-042 (real-browser smoke; recommended early).
 4. Balance watch: passive Hive ships at 20 min median 59 (guard 60); re-check after VS-048. Re-run surface_long after touching FLANK_*.
 5. Optional: smooth ledger denominator in hud rate_text so decay is strictly monotonic; confirm net rate reads sensibly in real play (goes negative when buying).
 
 ## Last session
-- Did: BUILD VS-047 (hud.gd Hud.rate_text -> "net +N/min", RATE_STEP 10; selftest _test_text_fit extended). QA PASS round 1.
+- Did: BUILD VS-041 (main.gd _on_land -> flow.autosave(); hud.gd SAVE_NOTICE 8 s; overlay.gd/pause_gate.gd on_surface; selftest _test_surface_save). QA PASS round 1. Optional: add a `surface_pause` shots.sh scenario (pause overlay never viewed rendered).
 - Check: PASS - Git: committed (see git log) - Roles collapsed: none
 
 ## In-flight / uncommitted work
@@ -23,13 +23,13 @@ Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md
 - Latest metrics: S0037 passive HQ lost 28.9 min; economic nw10 94k, nw20 121k, nw30 168k median (wide spread). Balance 9-seed economic call can exceed the device timeout: run seed offsets "0 3" separately.
 
 ## Backlog snapshot
-todo 5 - in-progress 0 - done 39 - blocked 1 - split 3 - Top ready: VS-041, VS-043, VS-048
+todo 4 - in-progress 0 - done 40 - blocked 1 - split 3 - Top ready: VS-043, VS-048, VS-044
 
 ## Watch out for
 - Tips hide while any Hive ship within 1500 m (incl. stationary nests); lock-on tip may be delayed in long fights. Loosen ENGAGE_RANGE in tutorial_hints.gd if Critic complains.
 - Flank squad is now 6-7 units at 3.8x (FLANK_* in defs.gd, shots and bites); chaotic tuning - re-run surface_long after any change. Stale lock moved to .git/stale-head-lock-S0038 (safe for Daniel to delete).
 - Redirect still off (RAID_REDIRECT_ENABLED=false). Do NOT `pkill -f godot`; use `pkill -x godot`. Foreground `timeout 175`, balance sequential.
-- Autosave never fires on foot/dead (run_flow.gd:60); parking lot.
+- Autosave still never fires on foot (by design now); landing checkpoint covers it (VS-041).
 - Subagent runs are slow (~12-40 min each).
 - `over` and `win` shots timed out for the Critic; not re-verified.
 
@@ -43,6 +43,7 @@ todo 5 - in-progress 0 - done 39 - blocked 1 - split 3 - Top ready: VS-041, VS-0
 - none
 
 ## Session history (newest first, keep 10)
+- S0041 2026-10-28 BUILD - VS-041 surface landing checkpoint + save notice done (QA PASS)
 - S0040 2026-10-28 BUILD - VS-047 top-bar net income label done (QA PASS)
 - S0039 2026-10-28 BUILD - VS-046 tips defer during fights done (QA PASS)
 - S0038 2026-10-28 BUILD - VS-045 flank pressure costs on-foot hp done (QA PASS)
@@ -53,5 +54,4 @@ todo 5 - in-progress 0 - done 39 - blocked 1 - split 3 - Top ready: VS-041, VS-0
 - S0033 2026-10-28 BUILD — VS-035 text fit guard + map/title labels + cr/min gate done (QA PASS)
 - S0032 2026-10-27 BUILD — VS-039 raid tracks + outcome history + Defend button done (QA PASS)
 - S0031 2026-10-27 PLANNING+BUILD — review round -> VS-038..042; VS-038 hot opening done (QA PASS round 2)
-- S0030 2026-10-27 BUILD — VS-033 atomic run save, QA PASS -> done
 - S0029 2026-10-27 BUILD — VS-032 touch/UX bundle, QA PASS -> done
