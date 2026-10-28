@@ -762,6 +762,85 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [x] check.sh PASS, 0 SCRIPT ERROR
 - notes: Scout proposal 1 (S0037-scout.md). Split further if Developer finds it L. Do VS-045 first or together to avoid conflicting tuning; run balance.sh sequentially (split seed offsets, timeout).
 
+## VS-049 · Surface scene must not freeze at 900-940 px wide windows
+- status: done
+- priority: P1
+- type: bug
+- size: S
+- source: qa
+- created: S0044
+- why: QA sweep S0044: surface and touch_surface shots hang (>100 s, CPU pegged) at 900x720, 900x721, 920x720 but finish in ~9 s at 960x720/1280x720; a real player in a ~900-940 px window landing on a planet could freeze.
+- acceptance:
+  - [ ] RES=900x720, 920x720, 900x721 `surface` and `touch_surface` shots finish within 20 s with a PNG
+  - [ ] Root cause identified and recorded in notes (viewport-dependent loop in surface/terrain/HUD, or llvmpipe-only with evidence)
+  - [ ] shots.sh enforces a wall-clock timeout so a hang fails fast
+  - [ ] check.sh PASS; surface_long unchanged (core dead ~67 s)
+- notes: S0044 root cause: infinite loop in Hud.layout_markers push-down `while moved` — float32 rounding makes (y+H)-y < H for some fractional y, so the overlap test never clears; NOT llvmpipe-only. Fix: MARKER_EPS tolerance + bounded passes; shots.sh SHOT_TIMEOUT (default 60). Selftest covers 12 dense markers.
+- done: S0044 — layout_markers float32 infinite loop fixed, shots.sh fail-fast timeout (QA PASS; root-cause note added by Producer)
+
+
+## VS-050 · Low hull bites: wounded HQ earns and defends less
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: critic
+- created: S0044
+- why: Critic S0044 problem 2: a damaged HQ has no consequence, so the 12k repair price is not a decision. Keep 0.4 cr/pt price.
+- acceptance:
+  - [ ] Hull % below 50 applies a linear penalty (cap -30%) to HQ station income and HQ shield regen via one Defs constant pair
+  - [ ] Dock and map text quote the penalty and repair cost next to the DAMAGED label
+  - [ ] Repair removes the penalty immediately; save/load round-trip selftest covers a wounded HQ
+  - [ ] 9-seed gate: economic HQ survives >= 7/9, passive HQ loss median still 20-35 min
+  - [ ] check.sh PASS, 0 SCRIPT ERROR
+- notes: Scout S0044 proposal 1. Risk: death spiral; keep cap low. Passive loss median 28.9 near edge. Do after or with VS-052.
+
+## VS-051 · Raids leave marks: chip damage when not intercepted
+- status: todo
+- priority: P2
+- type: balance
+- size: M
+- source: critic
+- created: S0044
+- why: Critic S0044 problem 1: wounds never occur organically (economic HQ survives 9/9), so VS-048 is invisible.
+- acceptance:
+  - [ ] Un-intercepted raid survivors deal hull damage to HQ once per raid, tuned so a typical Breach costs 10-25% hull
+  - [ ] Raid outcome text includes hull lost; a new hq_wounded shot shows it on map and dock
+  - [ ] 9-seed economic: HQ survives >= 7/9; passive loss median 20-35 min; perturb=1 not worse
+  - [ ] Selftest asserts damage applies once and is zero when intercepted
+- notes: Scout S0044 proposal 2. Tune together with VS-050/VS-052.
+
+## VS-052 · Economic bot repairs the HQ in the balance harness
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: balance
+- created: S0044
+- why: Critic S0044 problem 3 / balance: bots never repair, so the VS-048 sink is not in the 9-seed gate.
+- acceptance:
+  - [ ] Harness economic policy calls repair_station when hull < 80% and credits > configurable reserve (default 25000)
+  - [ ] 9-seed gate rerun: economic nw20 >= 90000, HQ survives >= 7/9, passive loss 20-35 min; metrics.csv row appended
+  - [ ] Passive policy stays no-repair (control)
+  - [ ] check.sh PASS
+- notes: Scout S0044 proposal 3. Unexercised without wounds: add a forced-wound control seed or run with VS-051.
+
+## VS-053 · Say what money did: signed deltas and status-style full-hull rows
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0044
+- why: Critic S0044 problem 4 (unlabelled +150 cr) and QA P3 (Hull 100% rows look like disabled buttons).
+- acceptance:
+  - [ ] Every CreditLedger entry above 100 cr shows a signed delta with category word, fading ~2 s, never replacing the net rate (cap 2 lines)
+  - [ ] Repair purchase shows a negative delta in a neutral colour
+  - [ ] Dock rows for ship/station hull at 100% render as status labels, not buttons
+  - [ ] 1280, 900 and touch layouts pass text-fit guard; selftest asserts delta text
+  - [ ] check.sh PASS
+- notes: Scout S0044 proposal 5.
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)

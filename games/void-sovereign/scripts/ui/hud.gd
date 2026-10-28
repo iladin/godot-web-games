@@ -323,6 +323,7 @@ func _draw_surface(sz: Vector2) -> void:
 
 const MARKER_MERGE_PX := 70.0   ## same-label markers closer than this on screen merge into one
 const MARKER_LINE_H := 17.0     ## vertical step between stacked marker labels
+const MARKER_EPS := 0.01        ## tolerance so a label pushed exactly one line down counts as clear
 const MARKER_LABEL_W := 150.0   ## approximate label width, for overlap tests
 
 
@@ -353,11 +354,13 @@ static func layout_markers(items: Array[Dictionary]) -> Array[Dictionary]:
 			txt = "%d\u00d7 %s" % [n, txt]
 		var tp: Vector2 = (g["sp"] as Vector2) + Vector2(12, 5)
 		var moved := true
-		while moved:
+		var guard := 0
+		while moved and guard < out.size() + 1:   # VS-049: bounded; float32 rounding made (op.y+H)-op.y < H spin forever
 			moved = false
+			guard += 1
 			for o: Dictionary in out:
 				var op: Vector2 = o["text_pos"]
-				if absf(op.x - tp.x) < MARKER_LABEL_W and absf(op.y - tp.y) < MARKER_LINE_H:
+				if absf(op.x - tp.x) < MARKER_LABEL_W and absf(op.y - tp.y) < MARKER_LINE_H - MARKER_EPS:
 					tp.y = op.y + MARKER_LINE_H
 					moved = true
 		out.append({"sp": g["sp"], "col": g["col"], "pts": g["pts"], "text": txt, "text_pos": tp})

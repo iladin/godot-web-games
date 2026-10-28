@@ -230,3 +230,8 @@
 - Task(s): VS-048 station wounds (paid HQ/station repair, DAMAGED label, dock button, HUD %) — done, QA PASS round 1
 - Check: PASS · Git: committed (see git log)
 - Notes: builds_since_review now 6 -> PLANNING forced next session. Balance verified on 6/6 economic + 3 passive seeds only (sim unchanged).
+
+## S0044 — 2026-10-28 13:50 — PLANNING+BUILD
+- Task(s): review round (critic 6.7, QA sweep, balance 8/9 targets) -> VS-050..053 + VS-049; BUILD VS-049 surface freeze (float32 loop in Hud.layout_markers) done, QA PASS
+- Check: PASS · Git: committed (see git log)
+- Notes: Critic: VS-048 price too soft, wounds never occur organically -> VS-050/051/052. Real-browser pass (VS-042) still outstanding.

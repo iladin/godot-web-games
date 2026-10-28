@@ -1172,7 +1172,13 @@ func _test_marker_layout() -> void:
 	for m: Dictionary in r:
 		if (m["text_pos"] as Vector2).x < 600.0:
 			ys.append((m["text_pos"] as Vector2).y)
-	assert(ys.size() == 2 and absf(ys[0] - ys[1]) >= Hud.MARKER_LINE_H, "overlapping labels are offset")
+	assert(ys.size() == 2 and absf(ys[0] - ys[1]) >= Hud.MARKER_LINE_H - Hud.MARKER_EPS, "overlapping labels are offset")
+	# VS-049: fractional screen positions once made the push-down loop spin forever (float32 rounding).
+	var c: Array[Dictionary] = []
+	for i in 12:
+		c.append({"sp": Vector2(300.37 + i * 80.0, 217.63 + i * 0.37), "col": col, "label": "M%d" % i, "dist": 100.0 + i})
+	r = Hud.layout_markers(c)
+	assert(r.size() == 12, "dense marker stack terminates")
 
 
 ## VS-043: raid panel stays compact; the inset raid label clears sector names, dots and hive counters.
