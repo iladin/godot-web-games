@@ -200,3 +200,8 @@
 - Task(s): review round (Critic 6.7/10, QA sweep no P0-P2, Balance 8/9 targets met); created VS-046, VS-047, VS-048; no BUILD (top task VS-048 is size M, wrap-up kept short)
 - Check: PASS · Git: committed (see git log)
 - Notes: 8 open todos. Parking lot gained prompt-clutter bundle, convoy beat, on-foot autosave, balance watch items.
+
+## S0038 — 2026-10-28 07:05 — BUILD
+- Task(s): VS-045 flank pressure costs on-foot hp — done (QA PASS round 1)
+- Check: PASS · Git: committed (see git log)
+- Notes: foe shots carry a mult key; FLANK_DAMAGE_MULT 1.8->3.8, FLANK_MIN/MAX 6/7. surface_long min_hp 84, min_foot 315, core dead 67.1s, pylons 55.4s.

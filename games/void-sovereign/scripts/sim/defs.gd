@@ -163,13 +163,13 @@ const SORTIE_EASE := 0.5   # scouts' damage multiplier once the escorts join in
 
 # --- VS-037: on-foot flank. When the first pylon dies, FLANK_MIN..FLANK_MAX Hive units appear FLANK_DIST m from the
 # player, FLANK_ANGLE_MIN..MAX degrees off the player's heading (either side), and chase. Every FLANK_DRONE_EVERY-th is a drone.
-const FLANK_MIN := 5
-const FLANK_MAX := 6
+const FLANK_MIN := 6
+const FLANK_MAX := 7
 const FLANK_ANGLE_MIN := 60.0
 const FLANK_ANGLE_MAX := 120.0
 const FLANK_DIST := 30.0
 const FLANK_SPEED_MULT := 1.8   # flankers run faster than normal crawlers
-const FLANK_DAMAGE_MULT := 1.8  # and bite/shoot harder
+const FLANK_DAMAGE_MULT := 3.8  # and bite/shoot harder
 const FLANK_DRONE_EVERY := 3
 
 # --- Union upkeep --------------------------------------------------------------------

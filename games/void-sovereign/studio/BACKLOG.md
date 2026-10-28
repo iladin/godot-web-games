@@ -699,7 +699,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0034 QA: also bounty is skipped for redirected raids; no-Union-station fallback has a selftest. Watch perturb=1 seed 101 nw30 tail (23k).
 
 ## VS-045 · Flank pressure should cost on-foot hp, not just shield
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -707,10 +707,11 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0035
 - why: S0035 QA: moving bot loses only shield (60->40); on-foot hp stays 100 and min_foot 525, so pressure is mild.
 - acceptance:
-  - [ ] surface_long (headless, --quit-after 9000) shows on-foot min_hp < 90 and min_foot >= 200 across 2 variants
-  - [ ] Core dead <= 100 s, pylons <= 90 s, 0 SCRIPT ERROR; touch aim stays forgiving
-  - [ ] check.sh PASS
-- notes: run is deterministic; vary FLANK_DAMAGE_MULT/FLANK_DIST in defs.gd. Needs --quit-after 9000 flag.
+  - [x] surface_long (headless, --quit-after 9000) shows on-foot min_hp < 90 and min_foot >= 200 across 2 variants
+  - [x] Core dead <= 100 s, pylons <= 90 s, 0 SCRIPT ERROR; touch aim stays forgiving
+  - [x] check.sh PASS
+- notes: run is deterministic; vary FLANK_DAMAGE_MULT/FLANK_DIST in defs.gd. Needs --quit-after 9000 flag. S0038
+- done: S0038 — flank shots carry FLANK_DAMAGE_MULT 3.8, squad 6-7; surface_long min_hp 84 min_foot 315 (QA PASS)
 
 ## VS-046 · Tips follow the threat: no tutorial tip over the opening fight
 - status: todo

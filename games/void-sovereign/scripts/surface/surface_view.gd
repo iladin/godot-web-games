@@ -482,7 +482,7 @@ func _try_shoot(f: Foe, d: float, rng: float, interval: float, delta: float) -> 
 	var aim := fps.global_position + Vector3(0, 1.2, 0) + fps.velocity * (d / FOE_SHOT_SPEED) * 0.5
 	var v := (aim - origin).normalized() * FOE_SHOT_SPEED
 	var mi := ProxyFactory.part(self, ProxyFactory.sphere(0.35, 8, 4), ProxyFactory.mat(Color("ff5aa8"), 5.0, true), origin)
-	shots.append({"node": mi, "vel": v, "life": 4.0})
+	shots.append({"node": mi, "vel": v, "life": 4.0, "mult": Defs.FLANK_DAMAGE_MULT if f.flank else 1.0})
 
 
 func _update_shots(delta: float) -> void:
@@ -494,7 +494,7 @@ func _update_shots(delta: float) -> void:
 		s["life"] = float(s["life"]) - delta
 		var dead := float(s["life"]) <= 0.0
 		if n.position.distance_to(pp) < 1.3:
-			_hurt_player(8.0 + 2.0 * float(level))
+			_hurt_player((8.0 + 2.0 * float(level)) * float(s.get("mult", 1.0)))
 			dead = true
 		elif n.position.y < height(n.position.x, n.position.z):
 			dead = true
