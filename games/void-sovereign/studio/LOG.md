@@ -220,3 +220,8 @@
 - Task(s): VS-041 honest surface save (landing autosave + HUD/pause notice) — done, QA PASS round 1
 - Check: PASS · Git: committed (see git log)
 - Notes: Dev + independent QA subagents. No pause-overlay screenshot scenario exists (optional follow-up).
+
+## S0042 — 2026-10-28 11:30 — BUILD
+- Task(s): VS-043 raid panel fit - done (QA PASS round 1)
+- Check: PASS · Git: committed
+- Notes: Defend 46 px (logical; ~30 px physical at 900 wide, QA P3). No balance change.

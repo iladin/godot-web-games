@@ -670,7 +670,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
 
 ## VS-043 · Raid panel fit: 900-wide and touch, shorter outcome list
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -683,6 +683,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Inset raid label does not overlap sector names in the raid_map shot
   - [ ] check.sh PASS
 - notes: Cap outcome list to 2 lines or move block below BUY. Defend empty-selection selects all armed ships incl. auto-trade; add tooltip.
+- done: S0042 — Defend button 46px under status, outcome below BUILD, inset raid label fixed strip (QA PASS round 1)
 
 ## VS-044 · Balance harness: platform-building policy, then re-enable raid redirect
 - status: todo

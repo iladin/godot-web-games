@@ -431,6 +431,7 @@ func _init() -> void:
 	_test_save_game()
 	_test_run_save_file()
 	_test_marker_layout()
+	_test_raid_panel_fit()
 	_test_run_flow()
 	await _test_surface_over()
 	await _test_surface_landmarks()
@@ -1171,3 +1172,30 @@ func _test_marker_layout() -> void:
 		if (m["text_pos"] as Vector2).x < 600.0:
 			ys.append((m["text_pos"] as Vector2).y)
 	assert(ys.size() == 2 and absf(ys[0] - ys[1]) >= Hud.MARKER_LINE_H, "overlapping labels are offset")
+
+
+## VS-043: raid panel stays compact; the inset raid label clears sector names, dots and hive counters.
+func _test_raid_panel_fit() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	var mv := MapView.new()
+	mv.u = u
+	var act: Array = []
+	var rec: Array = []
+	for i: int in 3:
+		act.append({"sector": 0, "target_sector": 0, "ships": 2, "eta": 30.0 + i, "arrived": false})
+		rec.append({"text": "Raid intercepted in Argent", "age": 42.0 + i})
+	var lines := mv.raid_lines(act, rec)
+	assert(lines.size() <= MapView.RAID_EXTRA_LINES + MapView.RAID_OUTCOME_LINES, "raid label stays short: %d lines" % lines.size())
+	assert(mv.raid_lines(act.slice(0, 1), rec.slice(0, 1)).size() == 1, "1 raid + 1 outcome = one label line (raid is in the Defend button)")
+	assert(MapView.DEFEND_BTN_H >= 44.0, "Defend button is a touch-sized target")
+	mv.free()
+	for sz: Vector2 in [Vector2(296, 190), Vector2(220, 190)]:
+		var r := Rect2(Vector2(10, 12), sz)
+		var lr := MapView.raid_label_rect(r)
+		assert(r.encloses(lr), "inset raid label fits inside the inset")
+		for sec: SectorData in u.sectors:
+			var p := r.position + sec.map_pos * r.size
+			assert(not lr.intersects(Rect2(p + Vector2(-60, -24), Vector2(120, 12))), "inset raid label overlaps the name of %s" % sec.name)
+			assert(not lr.intersects(Rect2(p + Vector2(-14, -14), Vector2(28, 28))), "inset raid label overlaps the dot of %s" % sec.name)
+			assert(not lr.intersects(Rect2(p + Vector2(-14, 4), Vector2(36, 22))), "inset raid label overlaps the hive counter of %s" % sec.name)

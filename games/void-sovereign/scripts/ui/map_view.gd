@@ -12,6 +12,9 @@ const AMBER := Color("ffb347")
 const CYAN := Color("5ee6ff")
 const HIVE := Color("ff3b8d")
 const VIEW_EXTENT := 7400.0
+const DEFEND_BTN_H := 46.0   # VS-043: >= 44 px touch target
+const RAID_OUTCOME_LINES := 1   # VS-043: finished-raid lines under the Defend button
+const RAID_EXTRA_LINES := 1     # VS-043: extra (2nd, 3rd..) active raids listed as one-line entries
 const PICK_PX := 16.0
 const DRAG_PX := 8.0
 const SHORT_NAMES: Dictionary = {"solar": "Solar Array", "refinery": "Refinery", "factory": "Munitions", "defense": "Defense"}
@@ -59,6 +62,12 @@ func _map_rect() -> Rect2:
 	return Rect2(Vector2.ZERO, Vector2(size.x - SIDE_W, size.y))
 
 
+## VS-043: inset raid labels sit in a fixed strip along the top of the galaxy inset (clear of the sector names
+## and hive counters, which cluster mid-inset), one line.
+static func raid_label_rect(r: Rect2) -> Rect2:
+	return Rect2(r.position.x + (r.size.x - 180.0) * 0.5, r.position.y + 2.0, 180.0, 12.0)
+
+
 func _galaxy_rect() -> Rect2:
 	return Rect2(Vector2(size.x - SIDE_W + 12, 12), Vector2(SIDE_W - 24, 190))
 
@@ -92,7 +101,7 @@ func _build_side() -> void:
 	_scroll = scroll
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size = Vector2(SIDE_W - 30, 0)
-	_side.add_theme_constant_override("separation", 6)
+	_side.add_theme_constant_override("separation", 4)   # VS-043: tighter so a raid block still leaves BUY/BUILD above the fold
 	scroll.add_child(_side)
 	# VS-032: one-line status first, details (fleet, ledger, selection) after the buy/build
 	# buttons, so BUY SHIPS / BUILD STATION stay on screen at 900x720 without scrolling.
@@ -102,12 +111,13 @@ func _build_side() -> void:
 	_head.add_theme_font_size_override("font_size", 15)
 	_side.add_child(_head)
 	var orders := GridContainer.new()
-	orders.columns = 2
+	orders.columns = 3   # VS-043: 2 rows instead of 3 (frees a row for the Defend button)
 	_side.add_child(orders)
-	for o: Array in [["patrol", "Patrol"], ["escort", "Escort me"], ["trade", "Auto-trade"], ["mine", "Auto-mine"], ["idle", "Stop"], ["all", "Select warships"]]:
+	for o: Array in [["patrol", "Patrol"], ["escort", "Escort me"], ["trade", "Auto-trade"], ["mine", "Auto-mine"], ["idle", "Stop"], ["all", "Warships"]]:
 		var b := Button.new()
 		b.text = o[1]
-		b.custom_minimum_size = Vector2(140, 34)
+		b.custom_minimum_size = Vector2(88, 34)
+		b.add_theme_font_size_override("font_size", 14)
 		var key: String = o[0]
 		b.pressed.connect(func() -> void: _order_button(key))
 		orders.add_child(b)
@@ -149,19 +159,22 @@ func _build_side() -> void:
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_side.add_child(_info)
 	_raid_label = Label.new()
-	_raid_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_raid_label.autowrap_mode = TextServer.AUTOWRAP_OFF   # VS-043: one line per entry, ellipsis instead of wrapping
+	_raid_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_raid_label.add_theme_color_override("font_color", HIVE)
-	_raid_label.add_theme_font_size_override("font_size", 14)
+	_raid_label.add_theme_font_size_override("font_size", 13)
 	_raid_label.visible = false
 	_side.add_child(_raid_label)
-	_side.move_child(_raid_label, 1)   # right under the status line: threats first (hidden when there are none)
+	_side.move_child(_raid_label, _side.get_child_count() - 2)   # VS-043: outcome lines sit below BUY/BUILD, above the selection text
 	_defend_btn = Button.new()
-	_defend_btn.custom_minimum_size = Vector2(0, 40)
+	_defend_btn.custom_minimum_size = Vector2(0, DEFEND_BTN_H)
 	_defend_btn.clip_text = true
+	_defend_btn.add_theme_font_size_override("font_size", 14)
+	_defend_btn.tooltip_text = "Orders your selected warships (or, with nothing selected, ALL armed ships you own, including auto-traders) to patrol the raid's target sector."
 	_defend_btn.visible = false
 	_defend_btn.pressed.connect(defend_raid_target)
 	_side.add_child(_defend_btn)
-	_side.move_child(_defend_btn, 2)
+	_side.move_child(_defend_btn, 1)   # right under the status line: the Defend button is the threat call to action
 	_sel_label = Label.new()
 	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sel_label.add_theme_color_override("font_color", AMBER)
@@ -233,22 +246,30 @@ func defend_raid_target() -> int:
 	return sec
 
 
+## VS-043: label lines (compact): extra active raids first, then at most RAID_OUTCOME_LINES recent outcomes.
+## The first raid itself lives in the Defend button text, so the block costs a button plus a line or two.
+func raid_lines(act: Array, rec: Array) -> Array[String]:
+	var tr := u.director.tracker
+	var lines: Array[String] = []
+	for i: int in range(1, mini(act.size(), 1 + RAID_EXTRA_LINES)):
+		lines.append(tr.label_for(act[i]))
+	for o: Dictionary in rec.slice(0, RAID_OUTCOME_LINES):
+		lines.append("%s (%s ago)" % [o["text"], "%ds" % int(float(o["age"])) if float(o["age"]) < 60.0 else "%dm" % int(float(o["age"]) / 60.0)])
+	return lines
+
+
 func _raid_panel() -> void:
 	var tr := u.director.tracker
 	var act := tr.active()
-	var lines: Array[String] = []
-	for rd: Dictionary in act:
-		lines.append(tr.label_for(rd))
-	var rec := tr.recent()
-	if not rec.is_empty():
-		lines.append("Last 5 min:")
-		for o: Dictionary in rec.slice(0, 4):
-			lines.append("%s (%dm%02ds ago)" % [o["text"], int(float(o["age"]) / 60.0), int(float(o["age"])) % 60])
+	var lines := raid_lines(act, tr.recent())
 	_raid_label.visible = not lines.is_empty()
 	_raid_label.text = "\n".join(lines)
+	_raid_label.tooltip_text = _raid_label.text
 	_defend_btn.visible = not act.is_empty()
 	if not act.is_empty():
-		_defend_btn.text = "Defend %s (patrol)" % u.sectors[int(act[0]["target_sector"])].name
+		var rd: Dictionary = act[0]
+		var more := "" if act.size() == 1 else " +%d" % (act.size() - 1)
+		_defend_btn.text = "Defend %s - %s%s" % [u.sectors[int(rd["target_sector"])].name, "ON SITE" if bool(rd["arrived"]) or int(rd["sector"]) == int(rd["target_sector"]) else "ETA %ds" % int(float(rd["eta"])), more]
 
 
 func _process(delta: float) -> void:
@@ -526,6 +547,7 @@ func _draw_galaxy() -> void:
 			_text(p + Vector2(-2, 24), "%d" % threat, 12, HIVE, 24)
 	# VS-025/039: every active raid: red ring on its sector, a line to the target sector (ringed), a "x3 > Ember ETA 42s" label.
 	var shown := 0
+	var first_lbl := ""
 	for rd: Dictionary in u.director.tracker.active():
 		var rp := r.position + u.sectors[int(rd["sector"])].map_pos * r.size
 		var tp := r.position + u.sectors[int(rd["target_sector"])].map_pos * r.size
@@ -533,10 +555,12 @@ func _draw_galaxy() -> void:
 			draw_dashed_line(rp, tp, Color(HIVE, 0.8), 2.0, 6.0)
 			draw_arc(tp, 15, 0, TAU, 20, Color(HIVE, 0.5 + 0.4 * sin(t * 6.0)), 1.5)
 		draw_arc(rp, 11, 0, TAU, 16, HIVE, 2.5)
-		var lbl := u.director.tracker.label_for(rd)
-		var lx := clampf(rp.x - 90.0, r.position.x + 2.0, r.end.x - 182.0)
-		_text(Vector2(lx, minf(rp.y + 32.0, r.end.y - 30.0) + 12.0 * float(shown)), lbl, 11, HIVE, 180)
+		if shown == 0:
+			first_lbl = u.director.tracker.label_for(rd)
 		shown += 1
+	if shown > 0:   # one label only (the soonest raid); the Defend button and panel carry the rest
+		var lr := raid_label_rect(r)
+		_text(Vector2(lr.position.x, lr.end.y), first_lbl + ("" if shown == 1 else " +%d" % (shown - 1)), 11, HIVE, lr.size.x)
 	_text(r.position + Vector2(6, r.size.y - 6), "Click sector to view · RMB send selection", 11, Color(1, 1, 1, 0.5), r.size.x)
 
 

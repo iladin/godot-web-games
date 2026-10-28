@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -122,7 +122,7 @@ func _shot_script(t: float) -> void:
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")
-			"raid_map":   # VS-039: one raid in flight on the inset + panel, one finished outcome listed
+			"raid_map", "raid_map_touch":   # VS-039/043: one raid in flight on the inset + panel, one finished outcome listed
 				var nst: StationData = g.u.alive_nests()[0]
 				var tr := g.u.director.tracker
 				var r1 := g.u.spawn_ship("drone", Defs.Faction.HIVE, nst.sector, nst.pos + Vector3(300, 0, 0))
@@ -132,6 +132,7 @@ func _shot_script(t: float) -> void:
 				var rl1: Array[ShipData] = [r1]
 				tr.add(rl1, g.u.hq)
 				tr.history.append({"t": g.u.time - 40.0, "kind": "intercepted", "text": "Raid intercepted in Argent (3/4 destroyed)"})
+				g.touch.active = g.shot_mode == "raid_map_touch"
 				g._set_mode("map")
 				g.map._order_button("all")
 			"dock", "dock_touch":
@@ -225,6 +226,10 @@ func _shot_script(t: float) -> void:
 		sv.fps.rotation.z = 0.0
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
 		assert(g.map.fold_ok(), "map side panel: BUILD STATION buttons below the fold at %s" % str(g.map.size))
+	if (g.shot_mode == "raid_map" or g.shot_mode == "raid_map_touch") and _ap_step == 1 and t > 2.5:   # VS-043
+		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (grid end %.0f, scroll end %.0f)" % [str(g.map.size), g.map._build_grid.get_global_rect().end.y, g.map._scroll.get_global_rect().end.y])
+		assert(g.map._defend_btn.visible and g.map._defend_btn.size.y >= 44.0, "Defend button is a >= 44 px target")
+		assert(g.map._defend_btn.get_global_rect().end.y <= g.map._scroll.get_global_rect().end.y, "Defend button is on screen")
 	var wait := 6.0 if g.shot_mode == "surface" or g.shot_mode == "surface_far" else 3.0
 	if g.shot_mode == "sortie":
 		wait = 9.0
@@ -252,7 +257,7 @@ func _exercise_raid_ui() -> void:
 	u.director.tracker.raids.clear()
 	u.director.tracker.add(rl, u.hq)
 	g.map._raid_panel()
-	assert(g.map._raid_label.visible and g.map._defend_btn.visible, "raid shows in the map panel")
+	assert(g.map._defend_btn.visible and "Defend" in g.map._defend_btn.text and "ETA" in g.map._defend_btn.text, "raid shows in the map panel (Defend button carries target + ETA)")
 	g.map.selected.clear()
 	assert(g.map.defend_raid_target() == u.hq.sector, "Defend orders patrol of the raid target")
 	for id: int in g.map.selected:
@@ -260,4 +265,4 @@ func _exercise_raid_ui() -> void:
 	rs.alive = false
 	u.director.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	g.map._raid_panel()
-	assert(not g.map._defend_btn.visible and "Last 5 min" in g.map._raid_label.text, "outcome listed in the map panel")
+	assert(not g.map._defend_btn.visible and "ago" in g.map._raid_label.text, "outcome listed in the map panel")
