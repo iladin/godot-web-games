@@ -125,6 +125,12 @@ const RAID_HOP_ETA := 40.0
 # VS-039: raid outcomes are listed in the map panel for RAID_HISTORY_WINDOW s (at most RAID_HISTORY_MAX kept).
 const RAID_HISTORY_WINDOW := 300.0
 const RAID_HISTORY_MAX := 12
+# VS-036: credits per raider killed when a raid is intercepted outside the HQ sector (ledger category "intercept").
+# Deliberately small next to BOUNTY (drone 150): it rewards forward defence without becoming an income source.
+const RAID_INTERCEPT_BOUNTY := 40.0
+# VS-036: deterred raids redirect to the nearest Union station. OFF: QA S0034 found it worsens Union/nw30 tails under
+# perturbation, so deterred raids just turn back. Director.redirect_enabled starts from this (tests flip the instance var).
+const RAID_REDIRECT_ENABLED := false
 # VS-029 The Breach: one scripted raid (never deterred, no dreadnought) appears BREACH_RANGE from the HQ at BREACH_TIME s
 # and heads straight for it, so every run sees at least one raid actually reach the HQ. Drones are scaled by BREACH_HULL/DPS.
 const BREACH_TIME := 360.0

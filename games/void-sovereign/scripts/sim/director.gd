@@ -5,6 +5,7 @@ extends RefCounted
 
 var u: Universe
 var raid_t: float = Defs.FIRST_RAID
+var redirect_enabled: bool = Defs.RAID_REDIRECT_ENABLED   # VS-036
 var union_t: float = Defs.UNION_SPAWN_TIME
 var raid_count: int = 0
 var rebuild_queue: Array[Dictionary] = []
@@ -119,14 +120,20 @@ func _raids(delta: float) -> void:
 	var nests := u.alive_nests()
 	if nests.is_empty():
 		return
+	var redirected_from := ""
 	var target := _pick_raid_target()
 	if target == null:
 		return
 	var go := raid_go_chance(target)
 	if go < 1.0 and randf() >= go:   # no extra randf() draw unless deterred (keeps early game identical)
 		# VS-020: the Hive scouts a fortified Sovereign sector and calls the raid off.
-		_report_turned_back(target)
-		return
+		# VS-036: ...and sends it at the nearest Union station instead (same tracker marker and ETA); no Union station = it just turns back.
+		var alt: StationData = nearest_union_station(target.sector) if redirect_enabled else null
+		_report_turned_back(target, alt)
+		if alt == null:
+			return
+		redirected_from = u.sectors[target.sector].name
+		target = alt
 	raid_count += 1
 	var nest: StationData = nests[randi() % nests.size()]
 	var n := raid_size()
@@ -142,18 +149,35 @@ func _raids(delta: float) -> void:
 		s.order_target = target.id
 		s.order_sector = target.sector
 		launched.append(s)
-	tracker.add(launched, target)   # VS-025: the warning comes when the raid actually arrives
+	tracker.add(launched, target, redirected_from)   # VS-025: the warning comes when the raid actually arrives
 
 
 ## VS-025: one "turned back" line per RAID_TURNED_BACK_THROTTLE s; deterred raids in between are counted into the next line.
-func _report_turned_back(target: StationData) -> void:
+func _report_turned_back(target: StationData, alt: StationData = null) -> void:
 	if u.time - turned_back_at < Defs.RAID_TURNED_BACK_THROTTLE:
 		turned_back_pending += 1
 		return
 	var extra := " (+%d earlier)" % turned_back_pending if turned_back_pending > 0 else ""
 	turned_back_pending = 0
 	turned_back_at = u.time
-	u.message.emit("Hive raid on %s turned back by your Defense Platforms%s" % [u.sectors[target.sector].name, extra], Defs.faction_color(Defs.Faction.PLAYER))
+	var detour := ", redirected to %s" % alt.display_name if alt != null else ""
+	u.message.emit("Hive raid on %s turned back by your Defense Platforms%s%s" % [u.sectors[target.sector].name, detour, extra], Defs.faction_color(Defs.Faction.PLAYER))
+
+
+## VS-036: the alive Union station fewest gate hops from `sector` (ties: lowest id); null if none.
+func nearest_union_station(sector: int) -> StationData:
+	var best: StationData = null
+	var best_hops := 1 << 30
+	for e: SimEntity in u.entities.values():
+		if not e.alive or not (e is StationData) or e.faction != Defs.Faction.UNION:
+			continue
+		var hops := 0 if e.sector == sector else u.route(sector, e.sector, false).size()
+		if hops == 0 and e.sector != sector:
+			continue   # unreachable
+		if hops < best_hops or (hops == best_hops and e.id < best.id):
+			best = e as StationData
+			best_hops = hops
+	return best
 
 
 ## VS-025: true when the HQ is fortified enough that the next raid will most likely be turned back (HUD shows it calm).

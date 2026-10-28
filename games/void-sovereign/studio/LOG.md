@@ -174,3 +174,11 @@
 - Task(s): VS-035 Fit-to-screen text guard and map/title label fixes — done (QA PASS round 1)
 - Check: PASS · Git: committed (see git log)
 - Notes: overlay.gd fit_lines word-wrap, map_view.gd station names second pass, Hud.rate_text 15 s gate, selftest _test_text_fit. QA P3: touch@900 hint shows "Union.Trade Hub" stray dot (unverified, may predate).
+
+## (skipped) — 2026-10-28 01:56 UTC — LOCKED
+- Lock held by S0034 since 00:56Z (<4h); VS-036 in-progress with uncommitted edits. Scheduled firing stood down, no changes made.
+
+## S0034 — 2026-10-28 02:25 — BUILD
+- Task(s): VS-036 raid intercept bounty — done (QA FAIL round 1 on perturbed gates due to redirect; fix round disabled redirect behind Defs.RAID_REDIRECT_ENABLED; QA PASS round 2). Created VS-044 (redirect re-enable via platform-building balance policy).
+- Check: PASS · Git: committed (see git log)
+- Notes: bounty 40 cr/raider, ledger 'Raid intercepts', no bounty for redirected raids. Roles collapsed: none.

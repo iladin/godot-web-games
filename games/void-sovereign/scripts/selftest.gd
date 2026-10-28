@@ -258,6 +258,7 @@ func _init() -> void:
 		rs.order_sector = u.hq.sector
 		raiders.append(rs)
 	dir.tracker.raids.clear()   # the scripted Breach / earlier raids may still be in flight
+	var intercept0 := float(u.ledger.totals.get("intercept", 0.0))   # earlier simulated raids may already have paid
 	dir.tracker.history.clear()
 	dir.tracker.add(raiders, u.hq)
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
@@ -301,6 +302,92 @@ func _init() -> void:
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
 	assert(msgs.size() == 4 and "SUCCEEDED" in msgs[3] and victim.display_name in msgs[3], "successful raid reported: %s" % [msgs])
 	assert(dir.tracker.history.size() == 3 and dir.tracker.history[2]["kind"] == "succeeded", "success written to history once")
+	# VS-036: the HQ-sector interception above paid no bounty; one outside the HQ sector pays per kill via add_credits("intercept").
+	assert(float(u.ledger.totals.get("intercept", 0.0)) == intercept0, "intercept in the HQ sector pays no bounty")
+	var far_sector := nest0.sector
+	assert(far_sector != u.hq.sector)
+	var bs: Array[ShipData] = []
+	for i in 3:
+		var b := u.spawn_ship("drone", Defs.Faction.HIVE, far_sector, nest0.pos + Vector3(300, 0, 0))
+		b.order = "raid"
+		bs.append(b)
+	dir.tracker.add(bs, u.hq)
+	bs[0].alive = false
+	bs[1].alive = false
+	bs[2].order = "patrol"
+	var cr_b := u.credits
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(absf(u.credits - cr_b - 2.0 * Defs.RAID_INTERCEPT_BOUNTY) < 0.001 and absf(float(u.ledger.totals.get("intercept", 0.0)) - intercept0 - 2.0 * Defs.RAID_INTERCEPT_BOUNTY) < 0.001, "intercept outside the HQ sector pays the bounty into the ledger")
+	assert(dir.tracker.history[-1]["kind"] == "intercepted" and Defs.RAID_INTERCEPT_BOUNTY < float(Defs.BOUNTY["drone"]), "bounty is modest and the outcome is still intercepted")
+	assert(u.ledger.breakdown(u.time).any(func(row: Array) -> bool: return row[0] == "intercept"), "intercept shows in the ledger breakdown")
+	# VS-036: a deterred raid is sent at the nearest Union station (same tracker marker) and reports "redirected to <station>" once.
+	var near_union := dir.nearest_union_station(u.hq.sector)
+	assert(near_union != null and near_union.faction == Defs.Faction.UNION, "a Union station exists to redirect to")
+	var hops_best := 0 if near_union.sector == u.hq.sector else u.route(u.hq.sector, near_union.sector, false).size()
+	for e: SimEntity in u.entities.values():
+		if e.alive and e is StationData and e.faction == Defs.Faction.UNION:
+			var h := 0 if e.sector == u.hq.sector else u.route(u.hq.sector, e.sector, false).size()
+			assert(h >= hops_best, "redirect picks the nearest Union station")
+	u.time = Defs.RAID_DETER_FROM
+	var pl1 := u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(900, 0, 900))
+	var pl2 := u.spawn_station("defense", Defs.Faction.PLAYER, u.hq.sector, u.hq.pos + Vector3(-900, 0, 700))
+	for e: SimEntity in u.entities.values():
+		if e.alive and e is StationData and e.faction == Defs.Faction.PLAYER and e != u.hq and (e as StationData).kind != "defense":
+			e.alive = false   # only the HQ is a player target, so _pick_raid_target is the HQ 65% of the time
+	dir.tracker.raids.clear()
+	dir.tracker.history.clear()
+	# Flag off (shipped default): a deterred raid just turns back, nothing is launched.
+	assert(not dir.redirect_enabled, "redirect ships disabled")
+	for i in 60:
+		dir.raid_t = 0.0
+		dir._raids(0.01)
+	assert(dir.tracker.raids.all(func(x: Dictionary) -> bool: return String(x["redirected_from"]) == ""), "with the flag off no raid is redirected")
+	dir.tracker.raids.clear()
+	dir.redirect_enabled = true
+	var redirected := false
+	for i in 400:
+		dir.raid_t = 0.0
+		dir._raids(0.01)
+		if not dir.tracker.raids.is_empty() and String(dir.tracker.raids[-1]["redirected_from"]) != "":
+			redirected = true
+			break
+		dir.tracker.raids.clear()
+	assert(redirected, "a deterred raid is redirected instead of vanishing")
+	var rr: Dictionary = dir.tracker.raids[-1]
+	var rt := u.get_ent(int(rr["target_id"]))
+	assert(rt.faction == Defs.Faction.UNION, "the redirected raid targets a Union station")
+	var rlive := dir.tracker.active()
+	assert(rlive.size() == 1 and float(rlive[0]["eta"]) >= 0.0 and "RAID x" in dir.tracker.label_for(rlive[0]), "redirected raid keeps the normal marker and ETA")
+	for id: int in rr["ids"]:
+		(u.get_ent(id) as ShipData).order = "patrol"   # called off with no losses
+	var icp := float(u.ledger.totals.get("intercept", 0.0))
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(float(u.ledger.totals.get("intercept", 0.0)) == icp, "redirected raids pay no intercept bounty")
+	assert(dir.tracker.history.size() == 1 and dir.tracker.history[0]["kind"] == "redirected" and ("redirected to " + str(rr["target_name"])) in String(dir.tracker.history[0]["text"]), "exactly one 'redirected to <station>' outcome: %s" % [dir.tracker.history])
+	# No Union station left: falls back to turning back, nothing launched.
+	var saved_union: Array[StationData] = []
+	for e: SimEntity in u.entities.values():
+		if e.alive and e is StationData and e.faction == Defs.Faction.UNION:
+			e.alive = false
+			saved_union.append(e as StationData)
+	assert(dir.nearest_union_station(u.hq.sector) == null, "no Union station, no redirect target")
+	dir.tracker.raids.clear()
+	var rc1 := dir.raid_count
+	var seen_redirect := false
+	for i in 60:
+		dir.raid_t = 0.0
+		dir._raids(0.01)
+		for x: Dictionary in dir.tracker.raids:
+			if String(x["redirected_from"]) != "":
+				seen_redirect = true
+	assert(not seen_redirect, "no Union station: deterred raids turn back instead of redirecting")
+	for e: StationData in saved_union:
+		e.alive = true
+	dir.redirect_enabled = Defs.RAID_REDIRECT_ENABLED
+	pl1.alive = false
+	pl2.alive = false
+	dir.tracker.history.clear()   # these entries were stamped at RAID_DETER_FROM, ahead of the restored clock
+	u.time = t_save
 	var tt := u.time
 	u.time += Defs.RAID_HISTORY_WINDOW + 1.0
 	assert(dir.tracker.recent().is_empty(), "outcomes older than 5 min leave the list")

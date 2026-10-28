@@ -554,7 +554,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0033 — title help text wraps to 92% width, map station names drawn above ships, Hud.rate_text hides cr/min for 15 s (QA PASS)
 
 ## VS-036 · Raids you can fight: intercept bounty and honest outcome reports
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: M
@@ -566,7 +566,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Intercept kills outside the HQ sector pay a bounty via Universe.add_credits(amount, "intercept"), shown in ledger breakdown
   - [ ] Deterred raids redirect to nearest Union station with the same ETA marker
   - [ ] Union ships @20 and nw30 tail do not worsen; Hive ships @20 <= 60; check.sh and balance gates PASS
-- notes: Do after VS-034. Watch perturbed-econ tail and VS-006 perf guard. S0032: VS-039 already ships outcome kinds intercepted/withdrew/succeeded + history; remaining here = bounty + redirect only.
+- notes: S0034 started. Do after VS-034. Watch perturbed-econ tail and VS-006 perf guard. S0032: VS-039 shipped outcome kinds; remaining = bounty + redirect only.
+- done: S0034 — intercept bounty (40 cr, ledger 'Raid intercepts') shipped; redirect implemented but disabled (RAID_REDIRECT_ENABLED=false) after QA found it halved perturb=1 nw30; QA PASS on 2nd verify (round 2)
 
 ## VS-037 · On-foot pressure: flanking Hive and hit/kill feedback
 - status: todo
@@ -679,6 +680,21 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Inset raid label does not overlap sector names in the raid_map shot
   - [ ] check.sh PASS
 - notes: Cap outcome list to 2 lines or move block below BUY. Defend empty-selection selects all armed ships incl. auto-trade; add tooltip.
+
+## VS-044 · Balance harness: platform-building policy, then re-enable raid redirect
+- status: todo
+- priority: P2
+- type: balance
+- size: M
+- source: qa
+- created: S0034
+- why: VS-036 redirect (Defs.RAID_REDIRECT_ENABLED, code + selftest exist) halved perturb=1 economic nw30 median (66.7k vs 138.9k) and doubled kills; the harness never builds platforms so redirect is unmeasured in the default gates.
+- acceptance:
+  - [ ] balance harness gains a policy that builds Defense Platforms so deterrence fires after minute 20
+  - [ ] with redirect on, 9-seed economic 30 (unperturbed, perturb=1, perturb=2): nw30 Q1/median no worse than redirect off, Union ships @20 no worse, Hive ships @20 <= 60
+  - [ ] if it still regresses, redirect only when Union has fewer than X ships or send a lighter raid; otherwise leave flag off and record why in DESIGN.md
+  - [ ] check.sh PASS
+- notes: S0034 QA: also bounty is skipped for redirected raids; no-Union-station fallback has a selftest. Watch perturb=1 seed 101 nw30 tail (23k).
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)

@@ -15,12 +15,12 @@ func _init(p_u: Universe) -> void:
 	u = p_u
 
 
-func add(ships: Array[ShipData], target: StationData) -> void:
+func add(ships: Array[ShipData], target: StationData, redirected_from: String = "") -> void:
 	var ids: Array[int] = []
 	for s: ShipData in ships:
 		ids.append(s.id)
 	raids.append({"ids": ids, "n": ids.size(), "target_id": target.id, "target_sector": target.sector, "target_name": target.display_name,
-			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0})
+			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0, "redirected_from": redirected_from})
 	_refresh(raids[-1])
 
 
@@ -52,12 +52,18 @@ func _refresh(r: Dictionary) -> bool:
 		var where: String = u.sectors[int(r["last_sector"])].name
 		var target := u.get_ent(int(r.get("target_id", -1)))
 		var green := Defs.faction_color(Defs.Faction.PLAYER)
+		var detour := ""   # VS-036: a deterred raid that was redirected to a Union station says so in its single outcome
+		if String(r.get("redirected_from", "")) != "":
+			detour = "redirected to %s: " % r["target_name"]
 		if int(r.get("target_id", -1)) >= 0 and (target == null or not target.alive):
-			_finish("succeeded", "Raid SUCCEEDED: %s destroyed in %s" % [r["target_name"], u.sectors[int(r["target_sector"])].name], hive)
+			_finish("redirected" if detour != "" else "succeeded", "Raid %sSUCCEEDED: %s destroyed in %s" % [detour, r["target_name"], u.sectors[int(r["target_sector"])].name], hive)
 		elif dead > 0:
-			_finish("intercepted", "Raid intercepted in %s (%d/%d destroyed)" % [where, dead, int(r["n"])], green)
+			_finish("redirected" if detour != "" else "intercepted", "Raid %sintercepted in %s (%d/%d destroyed)" % [detour, where, dead, int(r["n"])], green)
+			# VS-036: forward defence pays; fights in the HQ sector are the base's job and pay nothing extra.
+			if detour == "" and u.hq != null and int(r["last_sector"]) != u.hq.sector:
+				u.add_credits(float(dead) * Defs.RAID_INTERCEPT_BOUNTY, "intercept")
 		else:
-			_finish("withdrew", "Raid withdrew from %s" % where, green)
+			_finish("redirected" if detour != "" else "withdrew", "Raid %swithdrew from %s" % [detour, where], green)
 		return true
 	var lead := live[0]
 	r["last_sector"] = lead.sector

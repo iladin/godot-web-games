@@ -7,11 +7,11 @@ const BUCKET := 5.0               # seconds per history bucket
 const RATE_WINDOW := 60.0         # HUD cr/min: gross income over the last minute
 const BREAKDOWN_WINDOW := 300.0   # map / dock "last 5 min" breakdown
 const MIN_RATE_SPAN := 15.0       # early in a run, average over at least this many seconds
-const CATEGORIES: Array[String] = ["trade", "freight", "mining", "stations", "colonies", "bounty",
+const CATEGORIES: Array[String] = ["trade", "freight", "mining", "stations", "colonies", "bounty", "intercept",
 	"ships", "build", "repair", "losses"]
 const LABELS: Dictionary = {
 	"trade": "Trading (you)", "freight": "Freighters", "mining": "Mining", "stations": "Your stations",
-	"colonies": "Colonies", "bounty": "Bounties", "ships": "Ships bought", "build": "Construction",
+	"colonies": "Colonies", "bounty": "Bounties", "intercept": "Raid intercepts", "ships": "Ships bought", "build": "Construction",
 	"repair": "Repairs", "losses": "Ship losses",
 }
 
