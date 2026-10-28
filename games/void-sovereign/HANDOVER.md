@@ -1,18 +1,18 @@
 # Void Sovereign — Handover
-_Last updated: S0039 · 2026-10-28 08:35 UTC · mode: BUILD_
+_Last updated: S0040 · 2026-10-28 09:05 UTC · mode: BUILD_
 
 ## TL;DR
-S0039 shipped VS-046 (tutorial tips defer while a hostile is within 1500 m or after damage in last 4 s; QA PASS round 1). Build green. Backlog: 6 todo. builds_since_review = 2.
+S0040 shipped VS-047 (top-bar income is now labelled net cr/min from the ledger; QA PASS round 1). Build green. Backlog: 5 todo. builds_since_review = 3.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0040. `export GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)`.
-2. BUILD S tasks: VS-047 (top-bar net income label), VS-041, VS-043. Then VS-048 (M, persistent HQ damage + paid repair; split if L). Note `backlog.py next` returns VS-048 first - prefer S tasks.
+1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`; `git --no-optional-locks -c core.fileMode=false ...`). Next id S0041. `export GODOT=$(bash scripts/studio/ensure_godot.sh | tail -1)`.
+2. BUILD S tasks: VS-041, VS-043 (prefer these; `backlog.py next` returns VS-048 first). Then VS-048 (M, persistent HQ damage + paid repair; split if L).
 3. Later: VS-044 (harness platform policy, re-enable redirect), VS-042 (real-browser smoke; recommended early).
-4. Balance watch: passive Hive ships at 20 min median 59 (guard 60); re-check after VS-048. Flank retune is chaotic - always re-run surface_long after touching FLANK_*.
-5. QA suggestion: felt difficulty of flankers on desktop/touch (drone shot ~38 dmg at level 1).
+4. Balance watch: passive Hive ships at 20 min median 59 (guard 60); re-check after VS-048. Re-run surface_long after touching FLANK_*.
+5. Optional: smooth ledger denominator in hud rate_text so decay is strictly monotonic; confirm net rate reads sensibly in real play (goes negative when buying).
 
 ## Last session
-- Did: BUILD VS-046 (tutorial_hints.gd threat gate, hud.gd, selftest.gd, test_driver.gd sortie_fight shot). QA PASS round 1.
+- Did: BUILD VS-047 (hud.gd Hud.rate_text -> "net +N/min", RATE_STEP 10; selftest _test_text_fit extended). QA PASS round 1.
 - Check: PASS - Git: committed (see git log) - Roles collapsed: none
 
 ## In-flight / uncommitted work
@@ -23,7 +23,7 @@ Unrelated, Daniel's, not staged: `ai-studio/studio-cycle.md`, `docs/AI_STUDIO.md
 - Latest metrics: S0037 passive HQ lost 28.9 min; economic nw10 94k, nw20 121k, nw30 168k median (wide spread). Balance 9-seed economic call can exceed the device timeout: run seed offsets "0 3" separately.
 
 ## Backlog snapshot
-todo 6 - in-progress 0 - done 38 - blocked 1 - split 3 - Top ready: VS-047, VS-041, VS-043
+todo 5 - in-progress 0 - done 39 - blocked 1 - split 3 - Top ready: VS-041, VS-043, VS-048
 
 ## Watch out for
 - Tips hide while any Hive ship within 1500 m (incl. stationary nests); lock-on tip may be delayed in long fights. Loosen ENGAGE_RANGE in tutorial_hints.gd if Critic complains.
@@ -43,6 +43,7 @@ todo 6 - in-progress 0 - done 38 - blocked 1 - split 3 - Top ready: VS-047, VS-0
 - none
 
 ## Session history (newest first, keep 10)
+- S0040 2026-10-28 BUILD - VS-047 top-bar net income label done (QA PASS)
 - S0039 2026-10-28 BUILD - VS-046 tips defer during fights done (QA PASS)
 - S0038 2026-10-28 BUILD - VS-045 flank pressure costs on-foot hp done (QA PASS)
 - S0037 2026-10-28 PLANNING — review round (critic 6.7, balance 8/9) -> VS-046..048

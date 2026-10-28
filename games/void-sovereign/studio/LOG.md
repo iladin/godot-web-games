@@ -210,3 +210,8 @@
 - Task(s): VS-046 tips follow the threat — done (QA PASS round 1)
 - Check: PASS · Git: committed
 - Notes: Developer 23 min, QA 2 min. VS-047 left for next session.
+
+## S0040 — 2026-10-28 09:05 — BUILD
+- Task(s): VS-047 top-bar honest net income — done (QA PASS round 1)
+- Check: PASS · Git: committed (see git log)
+- Notes: hud.gd rate_text now "net +N/min" from ledger; selftest fit guard extended. Ledger 5 s buckets can tick rate up ~9% during decay.

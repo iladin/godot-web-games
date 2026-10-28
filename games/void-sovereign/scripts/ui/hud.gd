@@ -381,11 +381,17 @@ static func objective_for(u: Universe, touch: bool) -> String:
 	return "Hold the line"
 
 
-## VS-035: top-bar income rate; empty until the ledger has a meaningful window.
+## VS-047: top-bar income: labelled NET cr/min over the ledger's 60 s window (never a last-sale amount).
+## Empty for the first MIN_RATE_SPAN seconds. Rounded to RATE_STEP so it reads steady, and it eases to
+## "net 0/min" (not blank, not "+0") as income lapses, so the label never flickers in and out.
+const RATE_STEP := 10.0
 static func rate_text(p_u: Universe) -> String:
 	if p_u.time < CreditLedger.MIN_RATE_SPAN:
 		return ""
-	return "+%s cr/min" % _fmt(p_u.ledger.income_per_min(p_u.time))
+	var net := roundf(p_u.ledger.net_per_min(p_u.time) / RATE_STEP) * RATE_STEP
+	if net == 0.0:
+		return "net 0/min"
+	return "net %s%s/min" % ["+" if net > 0.0 else "-", _fmt(absf(net))]
 
 
 ## VS-024: "last 5 min" credit breakdown for the map (one category per line) and dock (inline).

@@ -730,7 +730,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0039 — tips defer while hostile within 1500 m or damage in last 4 s (QA PASS round 1)
 
 ## VS-047 · Honest top-bar income: net, labelled, smoothed
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -742,7 +742,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Empty/zero state reads sensibly and does not flicker under 60 s of lapsed income
   - [ ] Fits at 1280, 900 and 640 widths (fit guard); selftest asserts the text
   - [ ] check.sh PASS
-- notes: Scout proposal 3; also closes HANDOVER carry-over "top-bar HUD rate gross/unlabelled".
+- notes: Scout proposal 3; also closes HANDOVER carry-over top-bar HUD rate gross/unlabelled. S0040
+- done: S0040 — top-bar shows labelled net cr/min from ledger (QA PASS round 1)
 
 ## VS-048 · Station wounds that stay wounded (step 1: persistent HQ hull damage and paid repair)
 - status: todo

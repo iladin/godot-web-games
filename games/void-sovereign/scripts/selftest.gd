@@ -760,8 +760,34 @@ func _test_text_fit() -> void:
 	u.time = 5.0
 	assert(Hud.rate_text(u) == "", "cr/min hidden before %d s" % int(CreditLedger.MIN_RATE_SPAN))
 	u.time = CreditLedger.MIN_RATE_SPAN + 1.0
-	assert(Hud.rate_text(u).ends_with("cr/min"), "cr/min shown after the first window")
-	print("text fit: title wraps at 1280/900/640/480, cr/min gated OK")
+	assert(Hud.rate_text(u) == "net 0/min", "VS-047: zero state reads 'net 0/min' (got '%s')" % Hud.rate_text(u))
+	u.add_credits(420.0, "trade")
+	var rt := Hud.rate_text(u)
+	assert(rt.begins_with("net +") and rt.ends_with("/min") and not rt.contains("cr"), "VS-047: labelled net rate (got '%s')" % rt)
+	u.add_credits(-5000.0, "build")
+	assert(Hud.rate_text(u).begins_with("net -"), "VS-047: net goes negative when spending dominates")
+	# Lapsed income decays smoothly to zero over the 60 s window: never blank, never a sale amount.
+	var u2 := Universe.new()
+	u2.setup(JOURNEY_SEED)
+	u2.time = 100.0
+	u2.add_credits(150.0, "trade")
+	var first_v := -1.0
+	var seen_blank := false
+	while u2.time < 180.0:
+		u2.time += 1.0
+		var t2 := Hud.rate_text(u2)
+		seen_blank = seen_blank or t2 == ""
+		var v := float(t2.trim_prefix("net ").trim_suffix("/min").replace(",", "").replace("+", ""))
+		if first_v < 0.0:
+			first_v = v
+		assert(v <= first_v * 1.1 + 10.0, "VS-047: lapsing rate never jumps up (%s vs %.0f)" % [t2, first_v])
+	assert(not seen_blank and Hud.rate_text(u2) == "net 0/min", "VS-047: lapsed income settles on 'net 0/min'")
+	# Fit guard: widest plausible balance + rate fits the 500 px top panel, which fits every width.
+	var fnt := ThemeDB.fallback_font
+	var wid := 14.0 + fnt.get_string_size("1,234,567 cr", HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x + 10.0 + fnt.get_string_size("net -123,450/min", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+	for w: float in [1280.0, 900.0, 640.0]:
+		assert(wid <= minf(500.0, w * 0.92), "VS-047: top-bar income fits %d px wide (%.0f)" % [int(w), wid])
+	print("text fit: title wraps at 1280/900/640/480, net rate gated/labelled/fits OK")
 
 
 func _test_ledger() -> void:
