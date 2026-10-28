@@ -667,7 +667,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Reload then Continue restores credits and sector; removing the main save makes Continue use .bak (asserted)
   - [ ] Zero console errors on title, flight and surface
   - [ ] Failing thresholds are recorded, not hidden; VS-006 closed or reopened with real numbers
-- notes: S0049: blocked - no Web export templates in ~/.local/share/godot/export_templates and no headless browser on device; needs Daniel to install templates (Godot 4.7.2) or approve a download task. Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
+- notes: S0049: Web export templates 4.7.2 now installed (~/.local/share/godot/export_templates/4.7.2.stable, Daniel approved). Still blocked: Playwright chromium download refused by network allowlist (cdn.playwright.dev 403). Needs cdn.playwright.dev allowed in egress settings, or a chromium already installed. Then unblock to todo. Headless software GL is pessimistic: compare to a recorded baseline.
 
 ## VS-043 · Raid panel fit: 900-wide and touch, shorter outcome list
 - status: done

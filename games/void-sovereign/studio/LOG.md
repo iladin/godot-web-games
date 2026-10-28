@@ -260,3 +260,4 @@
 - Task(s): VS-042 blocked (no Web export templates, no headless browser); VS-044 done (redirect A/B: stays off, --redirect flag + telemetry added; QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: builds_since_review now 6 -> PLANNING due next session. Data in studio/reviews/S0049-redirect-ab.txt.
+- S0049 follow-up: chip 0.015 + templates installed (Daniel request); check PASS

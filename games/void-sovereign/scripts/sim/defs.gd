@@ -52,7 +52,7 @@ const WOUND_PENALTY_MAX := 0.3
 # VS-051: raids leave marks. When a raid reaches a Sovereign station, each surviving raider chips
 # RAID_CHIP_PER_SHIP of that station's max hull, once per raid, capped at RAID_CHIP_MAX (fraction of max hull).
 # The Breach (6 ships) costs ~12% hull. Raids that die before arriving cost nothing.
-const RAID_CHIP_PER_SHIP := 0.02
+const RAID_CHIP_PER_SHIP := 0.015
 const RAID_CHIP_MAX := 0.25
 
 ## Fractional penalty (0..WOUND_PENALTY_MAX) for a hull fraction.

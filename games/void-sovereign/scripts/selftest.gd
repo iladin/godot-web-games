@@ -288,7 +288,7 @@ func _init() -> void:
 	# VS-051: survivors at arrival chip the HQ hull exactly once per raid; the outcome and arrival text quote it.
 	var chip_exp := minf(3.0 * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX) * u.hq.hull_max
 	assert(absf((hull_before - u.hq.hull) - chip_exp) < 0.5, "arrived raid chips the HQ once: lost %.1f expected %.1f" % [hull_before - u.hq.hull, chip_exp])
-	assert("hull -6%" in msgs[0] and "hull -6%" in msgs[1] and "hull -6%" in String(dir.tracker.history[0]["text"]), "arrival and outcome name the hull lost: %s" % [msgs])
+	assert("hull -5%" in msgs[0] and "hull -5%" in msgs[1] and "hull -5%" in String(dir.tracker.history[0]["text"]), "arrival and outcome name the hull lost: %s" % [msgs])
 	# A raid wiped out before arriving costs nothing; a huge raid is capped and never kills the station.
 	var hull_mid := u.hq.hull
 	var ex: Array[ShipData] = []
