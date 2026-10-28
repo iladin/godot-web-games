@@ -1,13 +1,13 @@
 {
   "paused": false,
   "lock": {
-    "held": false,
-    "since": "",
-    "session": ""
+    "held": true,
+    "since": "2026-10-28T18:56:20Z",
+    "session": "S0050"
   },
-  "session_counter": 49,
+  "session_counter": 50,
   "last_session": "S0049",
   "last_mode": "BUILD",
-  "last_review_session": "S0044",
-  "builds_since_review": 6
+  "last_review_session": "S0050",
+  "builds_since_review": 0
 }

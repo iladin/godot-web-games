@@ -845,6 +845,83 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS
 - notes: Scout S0044 proposal 5. S0047 build
 
+## VS-054 · Raid forecast: show the hit 60 s before it lands
+- status: in-progress
+- priority: P1
+- type: feature
+- size: S
+- source: scout
+- created: S0050
+- why: Critic S0050 problem 3 (no pre-raid info) and 2 (chip never felt).
+- acceptance:
+  - [ ] At T-60 s before arrival the HUD shows 'RAID: N ships -> <sector>, ~X% hull', X from RAID_CHIP_PER_SHIP x N capped at RAID_CHIP_MAX
+  - [ ] Same line on map inset marker and raid panel; updates if the raid is thinned in transit
+  - [ ] Silent for Union targets and called-off raids
+  - [ ] Selftest asserts forecast percent equals hull actually lost on an uncontested arrival
+  - [ ] Shot (combat or new raid_warn) shows the line at 1280x720 and 900x720 without overlap; check.sh PASS
+- notes: Scout S0050 #1. No sim change.
+
+## VS-055 · HQ hull readout and hq_wounded/dock_wounded shots
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: scout
+- created: S0050
+- why: Critic S0050 problem 2 (HQ bar full, systems unseen); VS-048 follow-up.
+- acceptance:
+  - [ ] HUD HQ bar shows hull number or percent at all widths down to 900x720
+  - [ ] Colour steps at 80% and 50% match REPAIR_BELOW and WOUND_PENALTY_START; 'WOUNDED -x% income' tag when penalty bites
+  - [ ] shots.sh hq_wounded and dock_wounded exist and write PNGs; DAMAGED label not clipped (shows %)
+  - [ ] check.sh PASS
+- notes: Scout S0050 #2.
+
+## VS-056 · Trim Hive ship cap ~5% and add --fleet-floor harness policy
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: balance
+- created: S0050
+- why: Balance S0050: Hive ships @20 = 61 (guard 60); Critic fleet-floor idea.
+- acceptance:
+  - [ ] Hive ships @20 median <= 60 economic and passive on 9 seeds; passive HQ-lost earliest >= 20 min, median in 20-35
+  - [ ] --perturb=1 passes; economic HQ survives >= 8/9
+  - [ ] --fleet-floor=N documented in DESIGN.md; 9-seed floor N=10 run recorded in metrics.csv and a review file
+  - [ ] One defs.gd lever changed and noted in DESIGN.md; check.sh PASS
+- notes: Scout S0050 #5. Prerequisite for VS-057.
+
+## VS-057 · Fleet Reserve call-in: paid Union relief squadron (comeback button)
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: critic
+- created: S0050
+- why: Critic S0050 problem 1: late collapse is a cliff (seeds 101/135); nw30 Q1 48k.
+- acceptance:
+  - [ ] Map and dock button 'Call Reserve (N cr)', disabled with reason on cooldown (10 min) or short credits
+  - [ ] Spawns fixed Union squadron at HQ sector gate (tunables in defs.gd: cost, count, linger) defending HQ
+  - [ ] Ledger shows 'Reserve call -X cr'; selftest covers cost, cooldown, spawn, save/load
+  - [ ] Harness --reserve flag (default off): bot calls when warships under threshold after min 18
+  - [ ] 9-seed A/B economic 30: HQ survives >= 8/9, nw30 Q1 > 48,075, median >= 115k; passive unchanged; check.sh PASS
+- notes: Scout S0050 #3. Do after VS-056 (needs fleet-floor baseline).
+
+## VS-058 · One message lane for touch HUD
+- status: todo
+- priority: P2
+- type: polish
+- size: M
+- source: critic
+- created: S0050
+- why: Critic S0050 problem 4; QA P3 touch surface overlaps at 900x720.
+- acceptance:
+  - [ ] touch shots at 1280x720 and 900x720: tip box, trade hint, objective never overlap each other or touch buttons (rect-overlap assert in selftest)
+  - [ ] One of tip/trade hint/objective/raid forecast shown at a time; priority raid forecast > sortie > objective > trade hint > tips
+  - [ ] Surface touch: duplicate pylon labels deduped/staggered; ACT/JUMP/FIRE/RUN spacing >= 12 px at 900x720
+  - [ ] Desktop HUD unchanged; check.sh PASS
+- notes: Scout S0050 #4. After VS-054. Bundle P3s: Score/Best thousands separators (overlay.gd:124), map side panel clip at 900x720.
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -931,3 +1008,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0047 — signed credit deltas (touch-safe anchor) + full-hull dock status labels (QA PASS r2)
 - VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
 - Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing
+
+- (S0050, critic) Pre-raid info/reserve ideas now VS-054/057; real-browser pass VS-042 still blocked on allowlist (cdn.playwright.dev).
