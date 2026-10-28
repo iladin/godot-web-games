@@ -136,6 +136,9 @@ const RAID_INTERVAL_MIN := 75.0
 const RAID_SIZE_START := 3
 const RAID_SIZE_GROWTH := 90.0
 const RAID_SIZE_MAX := 16
+# VS-056: Nest drone cap per Nest sector = NEST_CAP_BASE + int(t / NEST_CAP_GROWTH) (was t/120; 126 trims the 20 min cap 16 -> 15, ~5% fewer Hive ships).
+const NEST_CAP_BASE := 6
+const NEST_CAP_GROWTH := 126.0
 # VS-020: from RAID_DETER_FROM on, each player Defense Platform in a raid target's sector multiplies the chance the raid
 # goes ahead (otherwise it is called off; the timer still resets). Union targets unaffected.
 const RAID_DETER_PER_PLATFORM := 0.25

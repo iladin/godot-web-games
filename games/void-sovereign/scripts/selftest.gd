@@ -1319,6 +1319,8 @@ func _test_station_wounds() -> void:
 	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e9 and before > 0.0, "full repair costs credits")
 	_test_wound_penalty()
 	_test_bot_repair()
+	_test_fleet_floor()
+	assert(Defs.NEST_CAP_BASE + int(1200.0 / Defs.NEST_CAP_GROWTH) == 15, "VS-056 Nest cap at 20 min is 15")
 
 
 ## VS-052: harness economic repair policy: only below 80% hull, only above the credit reserve.
@@ -1340,6 +1342,21 @@ func _test_bot_repair() -> void:
 	u.credits = 1.0e6
 	pol.repair_policy(u, 25000.0)
 	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e6 and u.credits > 25000.0, "full repair when rich")
+
+
+## VS-056: --fleet-floor policy buys fighters up to N, never beyond, and stops when poor.
+func _test_fleet_floor() -> void:
+	var pol: GDScript = load("res://scripts/tools/balance.gd")
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	u.credits = 1.0e6
+	var n0: int = pol.fleet_floor(u, 0)
+	assert(n0 == 0, "floor 0 buys nothing")
+	var b1: int = pol.fleet_floor(u, 3)
+	var b2: int = pol.fleet_floor(u, 3)
+	assert(b1 >= 0 and b2 == 0, "second call at the floor buys nothing")
+	u.credits = 100.0
+	assert(pol.fleet_floor(u, 50) == 0, "no credits, no ships")
 
 
 ## VS-050: wounded HQ (<50% hull) loses up to 30% colony income and shield regen; repair clears it; saves keep it.

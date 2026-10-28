@@ -15,6 +15,9 @@ extends SceneTree
 ##                (default REPAIR_RESERVE 25000; spends only the credits above N). Passive never repairs.
 ##   --wound=F    force the HQ to F (0..1) of max hull once at WOUND_AT (300 s), any policy: exercises the
 ##                repair path and the VS-050 penalty, since wounds do not occur organically yet (VS-051).
+##   --fleet-floor=N  VS-056: any policy keeps at least N Sovereign ships (not the pilot): every ECON_TICK it buys
+##                fighters (patrol at HQ) while below N and credits >= fighter cost (no reserve), so the fleet-loss
+##                cliff can be measured. Output gains floor_bought (ships rebuilt). Default 0 = off, identical numbers.
 ##   --redirect   VS-044: turn the VS-036 raid redirect ON for this run (Director.redirect_enabled; game default
 ##                Defs.RAID_REDIRECT_ENABLED stays false). Output gains deterred, redirected (raid counts) and platforms_end.
 ## 9-seed medians + IQR: scripts/studio/balance_gate.sh.
@@ -42,6 +45,7 @@ func _init() -> void:
 	var wound := -1.0
 	var reserve := REPAIR_RESERVE
 	var redirect := false
+	var floor_n := 0
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -57,20 +61,22 @@ func _init() -> void:
 			wound = clampf(float(a.get_slice("=", 1)), 0.01, 1.0)
 		elif a.begins_with("--repair-reserve="):
 			reserve = float(a.get_slice("=", 1))
+		elif a.begins_with("--fleet-floor="):
+			floor_n = maxi(0, int(a.get_slice("=", 1)))
 		elif a == "--redirect":
 			redirect = true
 		elif a == "--nowave":
 			nowave = true
 	var results: Array[Dictionary] = []
 	for i in range(first, first + seeds):
-		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve, redirect)
+		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve, redirect, floor_n)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
 	print("BALANCE_SUMMARY " + JSON.stringify(_summary(results, policy, minutes)))
 	quit()
 
 
-func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE, redirect: bool = false) -> Dictionary:
+func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE, redirect: bool = false, floor_n: int = 0) -> Dictionary:
 	var u := Universe.new()
 	u.setup(rng_seed)
 	if redirect:
@@ -84,6 +90,8 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 	var perturb_done := perturb <= 0
 	var wound_done := wound < 0.0
 	var repaired := 0.0   # credits spent on HQ repair
+	var floor_t := 0.0
+	var floor_bought := 0
 	while u.time < float(minutes) * 60.0:
 		u.step(DT)
 		if not perturb_done and u.time >= PERTURB_AT:
@@ -93,6 +101,11 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 		if not wound_done and u.time >= WOUND_AT and u.hq != null and u.hq.alive:
 			wound_done = true
 			u.hq.hull = minf(u.hq.hull, u.hq.hull_max * wound)
+		if floor_n > 0:
+			floor_t -= DT
+			if floor_t <= 0.0:
+				floor_t = ECON_TICK
+				floor_bought += fleet_floor(u, floor_n)
 		if policy == "economic":
 			econ_t -= DT
 			if econ_t <= 0.0:
@@ -127,6 +140,8 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 	r["deterred"] = u.director.deterred_count
 	r["redirected"] = u.director.redirected_count
 	r["repair_spent"] = int(repaired)
+	if floor_n > 0:
+		r["floor_bought"] = floor_bought
 	if u.hq != null and u.hq.alive:
 		r["hq_hull_end"] = snappedf(u.hq.hull_frac(), 0.01)
 	r["raids"] = u.director.raid_count
@@ -149,6 +164,27 @@ static func repair_policy(u: Universe, reserve: float) -> float:
 	var spent := (before - reserve) - u.credits
 	u.credits += reserve
 	return spent
+
+
+## VS-056: --fleet-floor=N policy. Buys fighters (patrol at HQ) until the Sovereign fleet (pilot excluded) has N ships
+## or credits run out. Returns ships bought. Static so selftest can exercise it.
+static func fleet_floor(u: Universe, n: int) -> int:
+	if u.hq == null or not u.hq.alive:
+		return 0
+	var have := 0
+	for e: SimEntity in u.entities.values():
+		if e.alive and e.faction == Defs.Faction.PLAYER and e is ShipData and not (e as ShipData).is_player:
+			have += 1
+	var bought := 0
+	var cost := float(Defs.SHIP["fighter"]["cost"])
+	while have + bought < n and u.credits >= cost:
+		var f := u.buy_ship("fighter", u.hq)
+		if f == null:
+			break
+		f.order = "patrol"
+		f.order_sector = u.hq.sector
+		bought += 1
+	return bought
 
 
 func _counts(u: Universe) -> Dictionary:

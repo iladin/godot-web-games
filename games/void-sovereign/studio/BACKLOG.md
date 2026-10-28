@@ -879,7 +879,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0051 — HQ bar in-bar hull %, hq_color steps at Defs.HQ_HULL_OK_FRAC/WOUND_PENALTY_START, WOUNDED tag, hq_wounded_hud+dock_wounded shots (QA PASS r1)
 
 ## VS-056 · Trim Hive ship cap ~5% and add --fleet-floor harness policy
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -887,11 +887,12 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0050
 - why: Balance S0050: Hive ships @20 = 61 (guard 60); Critic fleet-floor idea.
 - acceptance:
-  - [ ] Hive ships @20 median <= 60 economic and passive on 9 seeds; passive HQ-lost earliest >= 20 min, median in 20-35
-  - [ ] --perturb=1 passes; economic HQ survives >= 8/9
-  - [ ] --fleet-floor=N documented in DESIGN.md; 9-seed floor N=10 run recorded in metrics.csv and a review file
-  - [ ] One defs.gd lever changed and noted in DESIGN.md; check.sh PASS
-- notes: Scout S0050 #5. Prerequisite for VS-057.
+  - [x] Hive ships @20 median <= 60 economic and passive on 9 seeds; passive HQ-lost earliest >= 20 min, median in 20-35
+  - [x] --perturb=1 passes; economic HQ survives >= 8/9
+  - [x] --fleet-floor=N documented in DESIGN.md; 9-seed floor N=10 run recorded in metrics.csv and a review file
+  - [x] One defs.gd lever changed and noted in DESIGN.md; check.sh PASS
+- notes: Scout S0050 #5. Prerequisite for VS-057. S0052.
+- done: S0052 — Hive cap growth 120->126 (cap@20 16->15), --fleet-floor harness flag; QA PASS r1
 
 ## VS-057 · Fleet Reserve call-in: paid Union relief squadron (comeback button)
 - status: todo

@@ -63,7 +63,7 @@ func step(delta: float) -> void:
 
 
 func _nests(delta: float) -> void:
-	var cap := 6 + int(u.time / 120.0)
+	var cap := Defs.NEST_CAP_BASE + int(u.time / Defs.NEST_CAP_GROWTH)
 	for nest: StationData in u.alive_nests():
 		nest.spawn_t -= delta
 		if nest.spawn_t > 0.0:

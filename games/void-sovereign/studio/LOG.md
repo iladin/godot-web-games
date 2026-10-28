@@ -271,3 +271,8 @@
 - Task(s): VS-055 HQ hull readout + hq_wounded_hud/dock_wounded shots — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: Defs.HQ_HULL_OK_FRAC added (balance.gd REPAIR_BELOW uses it). Wounded tag + raid forecast not shot together.
+
+## S0052 — 2026-10-28 21:55 — BUILD
+- Task(s): VS-056 Hive cap trim + --fleet-floor harness flag — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: NEST_CAP_GROWTH 120->126 (cap@20 16->15). Passive hive@20 median 60 = exactly the guard (no margin). Fleet floor 10 delays passive collapse ~10 min (median 35.7, 1/9 survives) = VS-057 baseline.

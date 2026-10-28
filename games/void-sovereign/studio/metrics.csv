@@ -34,3 +34,7 @@ S0048,2026-10-28,economic,30,9,8/9,-1,3.3,-1,94229,103637,,,,"S0048 VS-051 raid 
 S0048,2026-10-28,passive,40,9,0/9,27.3,,,,,,,,"S0048 VS-051 passive control: HQ lost median 27.3 IQR 24.7-27.6"
 S0050,2026-10-28,economic,30,9,8/9,-1,3.3,-1,94229,104952,61,13,,"S0050 9-seed gate (chip 0.015 + bot repair): HQ 8/9 (seed 135 lost 29.7); nw30 median 122997 IQR 48075-152600; nw20 IQR 103637-115694; hive_ships_20 IQR 52-61 (median 61 over 60 guard); surface pylons 55 s core 67 s; perturb not run"
 S0050,2026-10-28,passive,40,9,0/9,27.3,3.3,,62130,67408,59,10,,"S0050 9-seed passive: HQ lost median 27.3 IQR 24.7-27.6 min 22.1 max 32.0; union collapse q1 31.2 median >40; hive_ships_20 IQR 53-61"
+S0052,2026-10-28,economic,30,9,9/9,-1,3.3,-1,97689,120755,56,11,,"S0052 VS-056 Hive cap t/126: HQ 9/9; nw30 median 168407 IQR 146057-174636; hive_ships_20 IQR 51-60"
+S0052,2026-10-28,economic,30,9,8/9,-1,3.3,-1,86673,81000,56,12,,"S0052 VS-056 --perturb=1: HQ 8/9; nw30 median 135264 IQR 106916-158669"
+S0052,2026-10-28,passive,40,9,0/9,25.8,3.3,-1,59653,69152,60,11,,"S0052 VS-056 passive: HQ lost median 25.8 IQR 23.1-27.7 earliest 21.1 latest 30.9; hive_ships_20 IQR 56-65"
+S0052,2026-10-28,passive,40,9,1/9,35.7,3.3,29.0,,74589,53,,,"S0052 VS-056 --fleet-floor=10 passive: HQ lost median 35.7 (28.2-38.9, seed 118 survives) vs 25.8 floor off; floor_bought 17-29 fighters/run; player_ships_20 = 10 all seeds"
