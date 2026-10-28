@@ -22,6 +22,7 @@ var player_ship: ShipData
 var hq: StationData
 var player_evasion: float = 0.0        # set by the flight view from player speed
 var kills: int = 0
+var reserve_ready_at: float = 0.0     # VS-059: sim time the Fleet Reserve can be called again
 var over: bool = false
 var director: Director
 var rng := RandomNumberGenerator.new()
@@ -362,6 +363,35 @@ func buy_ship(cls: String, at: StationData) -> ShipData:
 	return s
 
 
+## VS-059: seconds until the Fleet Reserve can be called again (0 = ready).
+func reserve_cooldown_left() -> float:
+	return maxf(0.0, reserve_ready_at - time)
+
+
+## VS-059: call in the Fleet Reserve: RESERVE_COUNT Union fighters appear at the HQ sector's first gate and patrol the
+## HQ sector for RESERVE_LINGER s. Returns "" on success, otherwise the reason it was refused.
+func call_reserve() -> String:
+	if hq == null or not hq.alive:
+		return "No HQ to defend"
+	var left := reserve_cooldown_left()
+	if left > 0.0:
+		return "Reserve on cooldown (%d:%02d)" % [int(left) / 60, int(left) % 60]
+	if credits < Defs.RESERVE_COST:
+		return "Reserve needs %d cr" % int(Defs.RESERVE_COST)
+	var sec := sectors[hq.sector]
+	var gate_pos: Vector3 = (sec.gates[0]["pos"] as Vector3) if not sec.gates.is_empty() else hq.pos + Vector3(Defs.SECTOR_RADIUS * 0.5, 0, 0)
+	add_credits(-Defs.RESERVE_COST, "reserve")
+	reserve_ready_at = time + Defs.RESERVE_COOLDOWN
+	for i in Defs.RESERVE_COUNT:
+		var off := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.2, 0.2), rng.randf_range(-1, 1)).normalized()
+		var s := spawn_ship("fighter", Defs.Faction.UNION, hq.sector, gate_pos + off * (120.0 + 40.0 * i))
+		s.order = "patrol"
+		s.order_sector = hq.sector
+		s.expires = time + Defs.RESERVE_LINGER
+	message.emit("Fleet Reserve inbound: %d Union fighters (-%d cr)" % [Defs.RESERVE_COUNT, int(Defs.RESERVE_COST)], Defs.faction_color(Defs.Faction.UNION))
+	return ""
+
+
 func build_station(kind: String, sector_idx: int, p: Vector3) -> StationData:
 	var cost := float(Defs.STATION[kind]["cost"])
 	if credits < cost:
@@ -413,6 +443,9 @@ func step(delta: float) -> void:
 		if e.armed():
 			_combat(e, delta)
 	director.step(delta)
+	for e: SimEntity in entities.values():
+		if e.alive and e is ShipData and (e as ShipData).expires >= 0.0 and time >= (e as ShipData).expires:
+			e.alive = false   # Fleet Reserve squadron leaves: no kill, no loss
 	_reap()
 
 

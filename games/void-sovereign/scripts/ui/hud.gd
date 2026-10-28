@@ -18,7 +18,7 @@ const MAX_DELTAS := 2
 const NEUTRAL := Color("c9d3e6")   # spending: neutral, not alarm red
 const DELTA_WORD: Dictionary = {
 	"trade": "trade", "freight": "freight", "mining": "mining", "stations": "station", "colonies": "colony",
-	"bounty": "bounty", "intercept": "intercept", "ships": "ship", "build": "build", "repair": "repair", "losses": "loss",
+	"bounty": "bounty", "intercept": "intercept", "ships": "ship", "build": "build", "repair": "repair", "losses": "loss", "reserve": "reserve",
 }
 
 var u: Universe

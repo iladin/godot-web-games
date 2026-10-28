@@ -10,6 +10,7 @@ var cargo: Dictionary = {}
 var is_player: bool = false
 var breach: bool = false          # VS-029 Breach raider: attacks stations only, so it threatens the HQ, not the player's fleet
 var sortie: bool = false          # VS-018 First Sortie scout: only the player's wing fights it (OpeningWave.allows)
+var expires: float = -1.0         # VS-059 Fleet Reserve: sim time when the ship leaves (-1 = never)
 var hidden: bool = false          # docked or parked on a planet: untargetable
 
 # Orders: idle | move | attack | patrol | escort | hold | trade | mine | raid | goto

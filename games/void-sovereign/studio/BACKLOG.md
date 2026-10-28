@@ -926,7 +926,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Scout S0050 #4. After VS-054. Bundle P3s: Score/Best thousands separators (overlay.gd:124), map side panel clip at 900x720.
 
 ## VS-059 · Fleet Reserve call-in: sim logic, tunables, harness flag
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -937,7 +937,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] defs.gd tunables RESERVE_COST, RESERVE_COUNT, RESERVE_LINGER, RESERVE_COOLDOWN (10 min); a sim function call_reserve() spawns a Union squadron at the HQ sector gate defending HQ, returns reason string when on cooldown or credits short
   - [ ] Ledger entry 'Reserve call -X cr'; selftest covers cost, cooldown, spawn, save/load
   - [ ] Harness --reserve flag (default off): bot calls when warships under threshold after min 18; check.sh PASS
-- notes: Split from VS-057 (S0053). A/B results go in VS-061.
+- notes: Split from VS-057 (S0053). A/B results go in VS-061. S0054 building.
+- done: S0054 — call_reserve() + tunables + ledger + save + selftest + --reserve harness flag (QA PASS r1)
 
 ## VS-060 · Fleet Reserve call-in: map and dock button
 - status: todo
@@ -966,6 +967,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 
 
 # Ideas parking lot
+- (S0054, QA VS-059, P3) Reserve fighters (expires>=0) count toward Director UNION_QUOTA (director.gd ~246) and delay Union fighter respawns for 180 s; skip ships with expires>=0 in that count. Also reserve spawns at sec.gates[0]; unverified whether it leads toward Hive. Untuned: RESERVE_COST 4000 / COUNT 6 / LINGER 180 (VS-061).
 - (S0050, QA VS-054, P3) Map side panel at 1280x720: raid forecast line sits below the fold under the build list — move raid block above buy/build lists; add raid_warn_touch shot; HUD forecast shows only soonest raid.
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)

@@ -1361,6 +1361,7 @@ func _test_station_wounds() -> void:
 	_test_wound_penalty()
 	_test_bot_repair()
 	_test_fleet_floor()
+	_test_reserve()
 	assert(Defs.NEST_CAP_BASE + int(1200.0 / Defs.NEST_CAP_GROWTH) == 15, "VS-056 Nest cap at 20 min is 15")
 
 
@@ -1398,6 +1399,53 @@ func _test_fleet_floor() -> void:
 	assert(b1 >= 0 and b2 == 0, "second call at the floor buys nothing")
 	u.credits = 100.0
 	assert(pol.fleet_floor(u, 50) == 0, "no credits, no ships")
+
+
+## VS-059: Fleet Reserve call-in: cost, cooldown, spawn, expiry, save/load, ledger, harness policy.
+func _test_reserve() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	u.credits = Defs.RESERVE_COST - 1.0
+	assert(u.call_reserve() != "" and u.credits == Defs.RESERVE_COST - 1.0, "reserve refused when credits are short")
+	u.credits = Defs.RESERVE_COST + 500.0
+	var n0 := u.entities.size()
+	assert(u.call_reserve() == "", "reserve call succeeds")
+	assert(is_equal_approx(u.credits, 500.0), "reserve costs RESERVE_COST")
+	assert(u.entities.size() == n0 + Defs.RESERVE_COUNT, "reserve spawns RESERVE_COUNT ships")
+	assert(is_equal_approx(float(u.ledger.totals.get("reserve", 0.0)), -Defs.RESERVE_COST), "ledger records 'reserve' -cost")
+	var squad: Array[ShipData] = []
+	for e: SimEntity in u.entities.values():
+		if e is ShipData and (e as ShipData).expires >= 0.0:
+			squad.append(e as ShipData)
+	assert(squad.size() == Defs.RESERVE_COUNT, "squadron is flagged to expire")
+	for s in squad:
+		assert(s.faction == Defs.Faction.UNION and s.sector == u.hq.sector and s.order == "patrol" and s.order_sector == u.hq.sector, "reserve ship defends the HQ sector")
+	u.credits = 1.0e6
+	var why := u.call_reserve()
+	assert(why != "" and why.contains("cooldown") and u.entities.size() == n0 + Defs.RESERVE_COUNT, "second call on cooldown: " + why)
+	var r := SaveGame.restore(JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary)
+	assert(r != null and is_equal_approx(r.reserve_ready_at, u.reserve_ready_at), "cooldown round-trips")
+	var rsq := 0
+	for e: SimEntity in r.entities.values():
+		if e is ShipData and is_equal_approx((e as ShipData).expires, squad[0].expires) and (e as ShipData).faction == Defs.Faction.UNION:
+			rsq += 1
+	assert(rsq == Defs.RESERVE_COUNT, "squadron expiry round-trips")
+	var t_end := u.time + Defs.RESERVE_LINGER
+	while u.time < t_end + 0.2:
+		u.step(0.5)
+	var left := 0
+	for e: SimEntity in u.entities.values():
+		if e is ShipData and (e as ShipData).expires >= 0.0:
+			left += 1
+	assert(left == 0, "squadron leaves after RESERVE_LINGER")
+	assert(u.reserve_cooldown_left() > 0.0, "still on cooldown after the squadron leaves")
+	u.time = u.reserve_ready_at
+	assert(u.call_reserve() == "", "callable again after RESERVE_COOLDOWN")
+	var pol: GDScript = load("res://scripts/tools/balance.gd")
+	var v := Universe.new()
+	v.setup(JOURNEY_SEED)
+	v.credits = 1.0e6
+	assert(not pol.reserve_policy(v), "harness does not call before minute 18")
 
 
 ## VS-050: wounded HQ (<50% hull) loses up to 30% colony income and shield regen; repair clears it; saves keep it.

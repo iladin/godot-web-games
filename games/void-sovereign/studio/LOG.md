@@ -281,3 +281,8 @@
 - Task(s): VS-057 split into VS-059/060/061; VS-058 One touch HUD message lane — done (QA FAIL r1 on pinned map Close button breaking VS-043 fold assert; fixed by reverting it; QA PASS r2)
 - Check: PASS · Git: committed (see git log)
 - Notes: New scripts/ui/hud_lane.gd; touch buttons respaced (BTN_GAP 12); pylon labels merge on touch. Map Close pin dropped -> parking lot P3.
+
+## S0054 — 2026-10-28 23:05 — BUILD
+- Task(s): VS-059 Fleet Reserve sim logic — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: Tunables RESERVE_COST 4000/COUNT 6/LINGER 180/COOLDOWN 600 are dev picks, untuned. P3 QA bug parked (Director UNION_QUOTA counts reserve ships).

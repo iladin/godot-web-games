@@ -38,7 +38,7 @@ static func capture(u: Universe) -> Dictionary:
 	return {
 		"version": VERSION,
 		"time": u.time, "credits": u.credits, "kills": u.kills, "over": u.over, "next_id": u.next_id,
-		"player_evasion": u.player_evasion,
+		"player_evasion": u.player_evasion, "reserve_ready_at": u.reserve_ready_at,
 		"player_id": u.player_ship.id if u.player_ship != null else 0,
 		"hq_id": u.hq.id if u.hq != null else 0,
 		"rng": {"seed": str(u.rng.seed), "state": str(u.rng.state)},
@@ -82,6 +82,7 @@ static func _cap_ent(e: SimEntity) -> Dictionary:
 		d["breach"] = s.breach
 		d["sortie"] = s.sortie
 		d["hidden"] = s.hidden
+		d["expires"] = s.expires
 		d["order"] = s.order
 		d["order_pos"] = _v(s.order_pos)
 		d["order_sector"] = s.order_sector
@@ -106,6 +107,7 @@ static func restore(d: Dictionary) -> Universe:
 	u.over = bool(d["over"])
 	u.next_id = int(d["next_id"])
 	u.player_evasion = float(d["player_evasion"])
+	u.reserve_ready_at = float(d.get("reserve_ready_at", 0.0))
 	var rg: Dictionary = d["rng"]
 	u.rng.seed = int(str(rg["seed"]))
 	u.rng.state = int(str(rg["state"]))
@@ -200,6 +202,7 @@ static func _rest_ent(d: Dictionary) -> SimEntity:
 		s.breach = bool(d["breach"])
 		s.sortie = bool(d["sortie"])
 		s.hidden = bool(d["hidden"])
+		s.expires = float(d.get("expires", -1.0))
 		s.order = str(d["order"])
 		s.order_pos = _unv(d["order_pos"])
 		s.order_sector = int(d["order_sector"])

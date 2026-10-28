@@ -8,11 +8,11 @@ const RATE_WINDOW := 60.0         # HUD cr/min: gross income over the last minut
 const BREAKDOWN_WINDOW := 300.0   # map / dock "last 5 min" breakdown
 const MIN_RATE_SPAN := 15.0       # early in a run, average over at least this many seconds
 const CATEGORIES: Array[String] = ["trade", "freight", "mining", "stations", "colonies", "bounty", "intercept",
-	"ships", "build", "repair", "losses"]
+	"ships", "build", "repair", "losses", "reserve"]
 const LABELS: Dictionary = {
 	"trade": "Trading (you)", "freight": "Freighters", "mining": "Mining", "stations": "Your stations",
 	"colonies": "Colonies", "bounty": "Bounties", "intercept": "Raid intercepts", "ships": "Ships bought", "build": "Construction",
-	"repair": "Repairs", "losses": "Ship losses",
+	"repair": "Repairs", "losses": "Ship losses", "reserve": "Reserve call",
 }
 
 var totals: Dictionary = {}           # category -> net credits since the run started

@@ -18,6 +18,9 @@ extends SceneTree
 ##   --fleet-floor=N  VS-056: any policy keeps at least N Sovereign ships (not the pilot): every ECON_TICK it buys
 ##                fighters (patrol at HQ) while below N and credits >= fighter cost (no reserve), so the fleet-loss
 ##                cliff can be measured. Output gains floor_bought (ships rebuilt). Default 0 = off, identical numbers.
+##   --reserve    VS-059: bot calls the Fleet Reserve (Universe.call_reserve) when Sovereign warships (not the pilot) are
+##                below RESERVE_BELOW after RESERVE_AFTER (18 min); checked every ECON_TICK. Output gains reserve_calls.
+##                Default off, identical numbers.
 ##   --redirect   VS-044: turn the VS-036 raid redirect ON for this run (Director.redirect_enabled; game default
 ##                Defs.RAID_REDIRECT_ENABLED stays false). Output gains deterred, redirected (raid counts) and platforms_end.
 ## 9-seed medians + IQR: scripts/studio/balance_gate.sh.
@@ -31,6 +34,8 @@ const RESERVE := 3000.0
 const REPAIR_BELOW := Defs.HQ_HULL_OK_FRAC       # econ policy repairs the HQ below this hull fraction...
 const REPAIR_RESERVE := 25000.0 # ...if credits exceed this reserve (--repair-reserve=N overrides)
 const WOUND_AT := 300.0         # sim seconds; when --wound=F forces the HQ hull
+const RESERVE_AFTER := 1080.0   # --reserve: earliest call (18 min)
+const RESERVE_BELOW := 4        # --reserve: call when fewer Sovereign warships than this
 const DEFENSE_AFTER := 600.0    # econ policy builds a Defense Platform at HQ after 10 min...
 const DEFENSE2_AFTER := 1080.0  # ...and a second one after 18 min
 
@@ -46,6 +51,7 @@ func _init() -> void:
 	var reserve := REPAIR_RESERVE
 	var redirect := false
 	var floor_n := 0
+	var use_reserve := false
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -63,20 +69,22 @@ func _init() -> void:
 			reserve = float(a.get_slice("=", 1))
 		elif a.begins_with("--fleet-floor="):
 			floor_n = maxi(0, int(a.get_slice("=", 1)))
+		elif a == "--reserve":
+			use_reserve = true
 		elif a == "--redirect":
 			redirect = true
 		elif a == "--nowave":
 			nowave = true
 	var results: Array[Dictionary] = []
 	for i in range(first, first + seeds):
-		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve, redirect, floor_n)
+		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve, redirect, floor_n, use_reserve)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
 	print("BALANCE_SUMMARY " + JSON.stringify(_summary(results, policy, minutes)))
 	quit()
 
 
-func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE, redirect: bool = false, floor_n: int = 0) -> Dictionary:
+func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE, redirect: bool = false, floor_n: int = 0, use_reserve: bool = false) -> Dictionary:
 	var u := Universe.new()
 	u.setup(rng_seed)
 	if redirect:
@@ -92,6 +100,8 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 	var repaired := 0.0   # credits spent on HQ repair
 	var floor_t := 0.0
 	var floor_bought := 0
+	var reserve_t := 0.0
+	var reserve_calls := 0
 	while u.time < float(minutes) * 60.0:
 		u.step(DT)
 		if not perturb_done and u.time >= PERTURB_AT:
@@ -106,6 +116,12 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 			if floor_t <= 0.0:
 				floor_t = ECON_TICK
 				floor_bought += fleet_floor(u, floor_n)
+		if use_reserve:
+			reserve_t -= DT
+			if reserve_t <= 0.0:
+				reserve_t = ECON_TICK
+				if reserve_policy(u):
+					reserve_calls += 1
 		if policy == "economic":
 			econ_t -= DT
 			if econ_t <= 0.0:
@@ -140,6 +156,8 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 	r["deterred"] = u.director.deterred_count
 	r["redirected"] = u.director.redirected_count
 	r["repair_spent"] = int(repaired)
+	if use_reserve:
+		r["reserve_calls"] = reserve_calls
 	if floor_n > 0:
 		r["floor_bought"] = floor_bought
 	if u.hq != null and u.hq.alive:
@@ -164,6 +182,20 @@ static func repair_policy(u: Universe, reserve: float) -> float:
 	var spent := (before - reserve) - u.credits
 	u.credits += reserve
 	return spent
+
+
+## VS-059: --reserve policy. After RESERVE_AFTER, with fewer than RESERVE_BELOW Sovereign warships (pilot excluded),
+## call the Fleet Reserve. Returns true if a squadron was called. Static so selftest can exercise it.
+static func reserve_policy(u: Universe) -> bool:
+	if u.time < RESERVE_AFTER:
+		return false
+	var warships := 0
+	for e: SimEntity in u.entities.values():
+		if e.alive and e.faction == Defs.Faction.PLAYER and e is ShipData and not (e as ShipData).is_player and (e as ShipData).role == "combat":
+			warships += 1
+	if warships >= RESERVE_BELOW:
+		return false
+	return u.call_reserve() == ""
 
 
 ## VS-056: --fleet-floor=N policy. Buys fighters (patrol at HQ) until the Sovereign fleet (pilot excluded) has N ships

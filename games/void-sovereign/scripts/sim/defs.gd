@@ -203,6 +203,12 @@ const FLANK_SPEED_MULT := 1.8   # flankers run faster than normal crawlers
 const FLANK_DAMAGE_MULT := 3.8  # and bite/shoot harder
 const FLANK_DRONE_EVERY := 3
 
+# --- VS-059: Fleet Reserve call-in. Pay credits, a Union squadron arrives at the HQ sector gate and defends the HQ for a while.
+const RESERVE_COST := 4000.0
+const RESERVE_COUNT := 6
+const RESERVE_LINGER := 180.0     # s; the squadron then leaves
+const RESERVE_COOLDOWN := 600.0   # s (10 min) between calls
+
 # --- Union upkeep --------------------------------------------------------------------
 const UNION_QUOTA: Dictionary = {"fighter": 10, "trader": 8, "miner": 6}
 const UNION_SPAWN_TIME := 40.0
