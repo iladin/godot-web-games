@@ -15,6 +15,8 @@ extends SceneTree
 ##                (default REPAIR_RESERVE 25000; spends only the credits above N). Passive never repairs.
 ##   --wound=F    force the HQ to F (0..1) of max hull once at WOUND_AT (300 s), any policy: exercises the
 ##                repair path and the VS-050 penalty, since wounds do not occur organically yet (VS-051).
+##   --redirect   VS-044: turn the VS-036 raid redirect ON for this run (Director.redirect_enabled; game default
+##                Defs.RAID_REDIRECT_ENABLED stays false). Output gains deterred, redirected (raid counts) and platforms_end.
 ## 9-seed medians + IQR: scripts/studio/balance_gate.sh.
 
 const DT := 0.05
@@ -39,6 +41,7 @@ func _init() -> void:
 	var nowave := false
 	var wound := -1.0
 	var reserve := REPAIR_RESERVE
+	var redirect := false
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -54,20 +57,24 @@ func _init() -> void:
 			wound = clampf(float(a.get_slice("=", 1)), 0.01, 1.0)
 		elif a.begins_with("--repair-reserve="):
 			reserve = float(a.get_slice("=", 1))
+		elif a == "--redirect":
+			redirect = true
 		elif a == "--nowave":
 			nowave = true
 	var results: Array[Dictionary] = []
 	for i in range(first, first + seeds):
-		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve)
+		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve, redirect)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
 	print("BALANCE_SUMMARY " + JSON.stringify(_summary(results, policy, minutes)))
 	quit()
 
 
-func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE) -> Dictionary:
+func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE, redirect: bool = false) -> Dictionary:
 	var u := Universe.new()
 	u.setup(rng_seed)
+	if redirect:
+		u.director.redirect_enabled = true
 	if nowave:
 		u.director.opening.state = OpeningWave.State.CLEARED
 	u.player_ship.hidden = true   # the pilot is "away"; only the economy and fleet act
@@ -116,6 +123,9 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 						r["net_worth_%d" % CHECKPOINTS[k]] = 0
 			break
 	r["nests_left"] = u.alive_nests().size()
+	r["platforms_end"] = _counts(u)["platforms"]
+	r["deterred"] = u.director.deterred_count
+	r["redirected"] = u.director.redirected_count
 	r["repair_spent"] = int(repaired)
 	if u.hq != null and u.hq.alive:
 		r["hq_hull_end"] = snappedf(u.hq.hull_frac(), 0.01)
@@ -142,7 +152,7 @@ static func repair_policy(u: Universe, reserve: float) -> float:
 
 
 func _counts(u: Universe) -> Dictionary:
-	var c := {"hive_ships": 0, "union_ships": 0, "union_stations": 0, "player_ships": 0}
+	var c := {"hive_ships": 0, "union_ships": 0, "union_stations": 0, "player_ships": 0, "platforms": 0}
 	for e: SimEntity in u.entities.values():
 		if not e.alive:
 			continue
@@ -157,6 +167,8 @@ func _counts(u: Universe) -> Dictionary:
 						c["player_ships"] += 1
 		elif e.faction == Defs.Faction.UNION:
 			c["union_stations"] += 1
+		elif e.faction == Defs.Faction.PLAYER and e is StationData and (e as StationData).kind == "defense":
+			c["platforms"] += 1
 	return c
 
 

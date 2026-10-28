@@ -654,7 +654,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0041 - landing autosave + surface/pause save notice (QA PASS round 1)
 
 ## VS-042 · Real-browser smoke: save round trip and late-game frame time
-- status: todo
+- status: blocked
 - priority: P2
 - type: tech
 - size: M
@@ -667,7 +667,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Reload then Continue restores credits and sector; removing the main save makes Continue use .bak (asserted)
   - [ ] Zero console errors on title, flight and surface
   - [ ] Failing thresholds are recorded, not hidden; VS-006 closed or reopened with real numbers
-- notes: Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
+- notes: S0049: blocked - no Web export templates in ~/.local/share/godot/export_templates and no headless browser on device; needs Daniel to install templates (Godot 4.7.2) or approve a download task. Headless software GL is pessimistic: compare to a recorded baseline. Export templates may be needed.
 
 ## VS-043 · Raid panel fit: 900-wide and touch, shorter outcome list
 - status: done
@@ -686,7 +686,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0042 — Defend button 46px under status, outcome below BUILD, inset raid label fixed strip (QA PASS round 1)
 
 ## VS-044 · Balance harness: platform-building policy, then re-enable raid redirect
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: M
@@ -699,6 +699,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] if it still regresses, redirect only when Union has fewer than X ships or send a lighter raid; otherwise leave flag off and record why in DESIGN.md
   - [ ] check.sh PASS
 - notes: S0034 QA: also bounty is skipped for redirected raids; no-Union-station fallback has a selftest. Watch perturb=1 seed 101 nw30 tail (23k).
+- done: S0049 — harness already built platforms; added --redirect + deterred/redirected telemetry; redirect ON worse (nw30 med 93.6k vs 121.3k, mitigations 98.7k/105k) so flag stays off, recorded in DESIGN.md; QA PASS r1
 
 ## VS-045 · Flank pressure should cost on-foot hp, not just shield
 - status: done

@@ -1,0 +1,1 @@
+S0049 redirect A/B (economic 30, 9 seeds, unperturbed): off nw30 med 121347 Q1 105058 | on 93610/28732 | on half-size 98674/55155 | on half+min8 union 105058/55292

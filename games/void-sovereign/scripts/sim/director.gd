@@ -6,6 +6,8 @@ extends RefCounted
 var u: Universe
 var raid_t: float = Defs.FIRST_RAID
 var redirect_enabled: bool = Defs.RAID_REDIRECT_ENABLED   # VS-036
+var deterred_count: int = 0      # VS-044 telemetry: raids called off by Defense Platforms
+var redirected_count: int = 0    # ...of which sent at a Union station
 var union_t: float = Defs.UNION_SPAWN_TIME
 var raid_count: int = 0
 var rebuild_queue: Array[Dictionary] = []
@@ -128,15 +130,19 @@ func _raids(delta: float) -> void:
 	if go < 1.0 and randf() >= go:   # no extra randf() draw unless deterred (keeps early game identical)
 		# VS-020: the Hive scouts a fortified Sovereign sector and calls the raid off.
 		# VS-036: ...and sends it at the nearest Union station instead (same tracker marker and ETA); no Union station = it just turns back.
-		var alt: StationData = nearest_union_station(target.sector) if redirect_enabled else null
+		var alt: StationData = nearest_union_station(target.sector) if redirect_enabled and union_ship_count() >= Defs.RAID_REDIRECT_MIN_UNION_SHIPS else null
 		_report_turned_back(target, alt)
+		deterred_count += 1
 		if alt == null:
 			return
+		redirected_count += 1
 		redirected_from = u.sectors[target.sector].name
 		target = alt
 	raid_count += 1
 	var nest: StationData = nests[randi() % nests.size()]
 	var n := raid_size()
+	if redirected_from != "":
+		n = maxi(1, roundi(float(n) * Defs.RAID_REDIRECT_SIZE_MULT))
 	var launched: Array[ShipData] = []
 	for i in n:
 		var cls := "drone"
@@ -162,6 +168,15 @@ func _report_turned_back(target: StationData, alt: StationData = null) -> void:
 	turned_back_at = u.time
 	var detour := ", redirected to %s" % alt.display_name if alt != null else ""
 	u.message.emit("Hive raid on %s turned back by your Defense Platforms%s%s" % [u.sectors[target.sector].name, detour, extra], Defs.faction_color(Defs.Faction.PLAYER))
+
+
+## VS-044: alive Union ships (the redirect gate).
+func union_ship_count() -> int:
+	var n := 0
+	for e: SimEntity in u.entities.values():
+		if e.alive and e is ShipData and e.faction == Defs.Faction.UNION:
+			n += 1
+	return n
 
 
 ## VS-036: the alive Union station fewest gate hops from `sector` (ties: lowest id); null if none.

@@ -392,6 +392,10 @@ func _init() -> void:
 			break
 		dir.tracker.raids.clear()
 	assert(redirected, "a deterred raid is redirected instead of vanishing")
+	# VS-044: shipped knobs are neutral (full-size raids, no Union-strength condition); the redirect gate counts Union ships.
+	assert(Defs.RAID_REDIRECT_SIZE_MULT == 1.0 and Defs.RAID_REDIRECT_MIN_UNION_SHIPS == 0, "redirect tunables ship neutral")
+	assert(dir.union_ship_count() == u.entities.values().filter(func(e: SimEntity) -> bool: return e.alive and e is ShipData and e.faction == Defs.Faction.UNION).size(), "union_ship_count counts live Union ships")
+	assert(dir.deterred_count >= 1 and dir.redirected_count >= 1 and dir.redirected_count <= dir.deterred_count, "director counts deterred/redirected raids")
 	var rr: Dictionary = dir.tracker.raids[-1]
 	var rt := u.get_ent(int(rr["target_id"]))
 	assert(rt.faction == Defs.Faction.UNION, "the redirected raid targets a Union station")

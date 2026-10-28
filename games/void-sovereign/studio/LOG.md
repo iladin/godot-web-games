@@ -255,3 +255,8 @@
 - Task(s): VS-051 Raids leave marks (chip damage 2%/surviving ship, cap 25%, once per raid at arrival) — done, QA PASS r1
 - Check: PASS · Git: committed (see git log)
 - Notes: nw30 median fell 158k -> 121k; economic HQ 8/9 (seed 135 lost 23.7 min); passive loss median 27.3 min; perturb=1 9/9. P3 follow-ups: dock has no raid-outcome line; DAMAGED label overlaps ships.
+
+## S0049 — 2026-10-28 18:35 — BUILD
+- Task(s): VS-042 blocked (no Web export templates, no headless browser); VS-044 done (redirect A/B: stays off, --redirect flag + telemetry added; QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: builds_since_review now 6 -> PLANNING due next session. Data in studio/reviews/S0049-redirect-ab.txt.

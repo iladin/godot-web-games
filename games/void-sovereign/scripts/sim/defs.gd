@@ -150,6 +150,10 @@ const RAID_INTERCEPT_BOUNTY := 40.0
 # VS-036: deterred raids redirect to the nearest Union station. OFF: QA S0034 found it worsens Union/nw30 tails under
 # perturbation, so deterred raids just turn back. Director.redirect_enabled starts from this (tests flip the instance var).
 const RAID_REDIRECT_ENABLED := false
+# VS-044: a redirected raid carries RAID_REDIRECT_SIZE_MULT of the normal raid size (min 1 ship), and is only redirected
+# while the Union still fields at least RAID_REDIRECT_MIN_UNION_SHIPS ships (0 = no condition); otherwise it turns back.
+const RAID_REDIRECT_SIZE_MULT := 1.0
+const RAID_REDIRECT_MIN_UNION_SHIPS := 0
 # VS-029 The Breach: one scripted raid (never deterred, no dreadnought) appears BREACH_RANGE from the HQ at BREACH_TIME s
 # and heads straight for it, so every run sees at least one raid actually reach the HQ. Drones are scaled by BREACH_HULL/DPS.
 const BREACH_TIME := 360.0
