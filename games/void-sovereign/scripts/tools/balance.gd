@@ -11,6 +11,10 @@ extends SceneTree
 ##                The global stream (seeded in Universe.setup) is chaotic: use this to check that
 ##                a result survives noise, not just one lucky trajectory.
 ##   --nowave     disable the VS-018 opening wave (marks it CLEARED before the first step).
+##   --repair-reserve=N  economic policy repairs the HQ when hull < REPAIR_BELOW (80%) and credits > N
+##                (default REPAIR_RESERVE 25000; spends only the credits above N). Passive never repairs.
+##   --wound=F    force the HQ to F (0..1) of max hull once at WOUND_AT (300 s), any policy: exercises the
+##                repair path and the VS-050 penalty, since wounds do not occur organically yet (VS-051).
 ## 9-seed medians + IQR: scripts/studio/balance_gate.sh.
 
 const DT := 0.05
@@ -19,6 +23,9 @@ const CHECKPOINTS: Array[int] = [5, 10, 20, 30]
 const SEED_BASE := 101
 const ECON_TICK := 30.0
 const RESERVE := 3000.0
+const REPAIR_BELOW := 0.8       # econ policy repairs the HQ below this hull fraction...
+const REPAIR_RESERVE := 25000.0 # ...if credits exceed this reserve (--repair-reserve=N overrides)
+const WOUND_AT := 300.0         # sim seconds; when --wound=F forces the HQ hull
 const DEFENSE_AFTER := 600.0    # econ policy builds a Defense Platform at HQ after 10 min...
 const DEFENSE2_AFTER := 1080.0  # ...and a second one after 18 min
 
@@ -30,6 +37,8 @@ func _init() -> void:
 	var first := 0
 	var perturb := 0
 	var nowave := false
+	var wound := -1.0
+	var reserve := REPAIR_RESERVE
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--minutes="):
 			minutes = int(a.get_slice("=", 1))
@@ -41,18 +50,22 @@ func _init() -> void:
 			first = maxi(0, int(a.get_slice("=", 1)))
 		elif a.begins_with("--perturb="):
 			perturb = maxi(0, int(a.get_slice("=", 1)))
+		elif a.begins_with("--wound="):
+			wound = clampf(float(a.get_slice("=", 1)), 0.01, 1.0)
+		elif a.begins_with("--repair-reserve="):
+			reserve = float(a.get_slice("=", 1))
 		elif a == "--nowave":
 			nowave = true
 	var results: Array[Dictionary] = []
 	for i in range(first, first + seeds):
-		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave)
+		var r := _run(SEED_BASE + i * 17, minutes, policy, perturb, nowave, wound, reserve)
 		results.append(r)
 		print("BALANCE_JSON " + JSON.stringify(r))
 	print("BALANCE_SUMMARY " + JSON.stringify(_summary(results, policy, minutes)))
 	quit()
 
 
-func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false) -> Dictionary:
+func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave: bool = false, wound: float = -1.0, reserve: float = REPAIR_RESERVE) -> Dictionary:
 	var u := Universe.new()
 	u.setup(rng_seed)
 	if nowave:
@@ -62,16 +75,22 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 	var econ_t := 0.0
 	var next_cp := 0
 	var perturb_done := perturb <= 0
+	var wound_done := wound < 0.0
+	var repaired := 0.0   # credits spent on HQ repair
 	while u.time < float(minutes) * 60.0:
 		u.step(DT)
 		if not perturb_done and u.time >= PERTURB_AT:
 			perturb_done = true
 			for k in perturb:
 				randf()
+		if not wound_done and u.time >= WOUND_AT and u.hq != null and u.hq.alive:
+			wound_done = true
+			u.hq.hull = minf(u.hq.hull, u.hq.hull_max * wound)
 		if policy == "economic":
 			econ_t -= DT
 			if econ_t <= 0.0:
 				econ_t = ECON_TICK
+				repaired += repair_policy(u, reserve)
 				_economic(u)
 		if float(r["first_raid_at"]) < 0.0 and u.director.raid_count > 0:
 			r["first_raid_at"] = snappedf(u.time / 60.0, 0.1)
@@ -97,11 +116,29 @@ func _run(rng_seed: int, minutes: int, policy: String, perturb: int = 0, nowave:
 						r["net_worth_%d" % CHECKPOINTS[k]] = 0
 			break
 	r["nests_left"] = u.alive_nests().size()
+	r["repair_spent"] = int(repaired)
+	if u.hq != null and u.hq.alive:
+		r["hq_hull_end"] = snappedf(u.hq.hull_frac(), 0.01)
 	r["raids"] = u.director.raid_count
 	r["kills"] = u.kills
 	r["minutes_simulated"] = snappedf(u.time / 60.0, 0.1)
 	u.director = null
 	return r
+
+
+## VS-052: the economic player repairs a wounded HQ from the dock (Universe.repair_station): hull below
+## REPAIR_BELOW and credits above `reserve`; only the credits above the reserve are spent.
+## Returns credits spent. Static so selftest can exercise the exact policy.
+static func repair_policy(u: Universe, reserve: float) -> float:
+	var hq := u.hq
+	if hq == null or not hq.alive or hq.hull_frac() >= REPAIR_BELOW or u.credits <= reserve:
+		return 0.0
+	var before := u.credits
+	u.credits = before - reserve
+	u.repair_station(hq)
+	var spent := (before - reserve) - u.credits
+	u.credits += reserve
+	return spent
 
 
 func _counts(u: Universe) -> Dictionary:

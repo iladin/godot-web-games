@@ -1231,6 +1231,28 @@ func _test_station_wounds() -> void:
 	u.repair_station(hq)
 	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e9 and before > 0.0, "full repair costs credits")
 	_test_wound_penalty()
+	_test_bot_repair()
+
+
+## VS-052: harness economic repair policy: only below 80% hull, only above the credit reserve.
+func _test_bot_repair() -> void:
+	var pol: GDScript = load("res://scripts/tools/balance.gd")
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	var hq := u.hq
+	u.credits = 1.0e6
+	assert(pol.repair_policy(u, 25000.0) == 0.0 and u.credits == 1.0e6, "no repair at full hull")
+	hq.hull = hq.hull_max * 0.85
+	assert(pol.repair_policy(u, 25000.0) == 0.0, "no repair at 85% hull")
+	hq.hull = hq.hull_max * 0.5
+	u.credits = 20000.0
+	assert(pol.repair_policy(u, 25000.0) == 0.0 and is_equal_approx(hq.hull_frac(), 0.5), "no repair under the reserve")
+	u.credits = 25000.0 + 1000.0
+	var spent: float = pol.repair_policy(u, 25000.0)
+	assert(is_equal_approx(spent, 1000.0) and is_equal_approx(u.credits, 25000.0) and hq.hull_frac() > 0.5, "partial repair spends only above reserve")
+	u.credits = 1.0e6
+	pol.repair_policy(u, 25000.0)
+	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e6 and u.credits > 25000.0, "full repair when rich")
 
 
 ## VS-050: wounded HQ (<50% hull) loses up to 30% colony income and shield regen; repair clears it; saves keep it.

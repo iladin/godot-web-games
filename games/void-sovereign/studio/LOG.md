@@ -240,3 +240,8 @@
 - Task(s): VS-050 wounded-HQ penalty (<50% hull: linear, cap -30% on colony income + shield regen) — done, QA FAIL r1 (map label clipped price) → fix → PASS r2
 - Check: PASS · Git: committed (see git log)
 - Notes: econ HQ 9/9, passive loss median 28.9 min. New --shot wound_map / wound_dock. P3: map label backdrop faint, ship glyph can cross it.
+
+## S0046 — 2026-10-28 15:25 — BUILD
+- Task(s): VS-052 Economic bot repairs the HQ in the balance harness — done (QA PASS r1). Chosen over VS-042 (next's pick) per HANDOVER plan; VS-042 needs export templates.
+- Check: PASS · Git: committed (see git log)
+- Notes: Gate economic 9/9 HQ, nw20 median 120726, passive loss median 28.9. Seed 135 nw30 swings 20.8k vs 103k with/without a 293 cr repair = RNG chaos. Wounds occur organically on most seeds.

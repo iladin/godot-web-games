@@ -809,10 +809,10 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Raid outcome text includes hull lost; a new hq_wounded shot shows it on map and dock
   - [ ] 9-seed economic: HQ survives >= 7/9; passive loss median 20-35 min; perturb=1 not worse
   - [ ] Selftest asserts damage applies once and is zero when intercepted
-- notes: Scout S0044 proposal 2. Tune together with VS-050/VS-052.
+- notes: S0046 QA: wounds DO occur organically on most economic seeds (hull ends 0.67-0.82, repair_spent nonzero on 6/9), so re-baseline before tuning chip damage. Scout S0044 proposal 2. Tune together with VS-050/VS-052.
 
 ## VS-052 · Economic bot repairs the HQ in the balance harness
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -824,7 +824,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] 9-seed gate rerun: economic nw20 >= 90000, HQ survives >= 7/9, passive loss 20-35 min; metrics.csv row appended
   - [ ] Passive policy stays no-repair (control)
   - [ ] check.sh PASS
-- notes: Scout S0044 proposal 3. Unexercised without wounds: add a forced-wound control seed or run with VS-051.
+- done: S0046 — economic bot repairs HQ above 25k reserve; --wound flag; QA PASS r1 (seed 135 nw30 swing is RNG chaos, not repair)
+- notes: S0046. Scout S0044 proposal 3. Unexercised without wounds: add a forced-wound control seed or run with VS-051.
 
 ## VS-053 · Say what money did: signed deltas and status-style full-hull rows
 - status: todo
