@@ -12,6 +12,14 @@ const SAVE_NOTICE := "Progress is saved when you return to space"
 const SAVE_NOTICE_SECS := 8.0
 const MSG_LIFE := 7.0
 const MAX_MSGS := 6
+const DELTA_MIN := 100.0      # VS-053: credit changes above this (either sign) show a signed, labelled delta
+const DELTA_LIFE := 2.0
+const MAX_DELTAS := 2
+const NEUTRAL := Color("c9d3e6")   # spending: neutral, not alarm red
+const DELTA_WORD: Dictionary = {
+	"trade": "trade", "freight": "freight", "mining": "mining", "stations": "station", "colonies": "colony",
+	"bounty": "bounty", "intercept": "intercept", "ships": "ship", "build": "build", "repair": "repair", "losses": "loss",
+}
 
 var u: Universe
 var space: SpaceView
@@ -19,11 +27,10 @@ var surface: SurfaceView
 var mode: String = "flight"     # flight | surface | none
 var font: Font = ThemeDB.fallback_font
 var msgs: Array[Dictionary] = []
-var popups: Array[Dictionary] = []
+var popups: Array[Dictionary] = []   ## VS-053: signed credit deltas {text, neg, t}, newest first, max MAX_DELTAS
 var hit_flash: float = 0.0
 var dmg_flash: float = 0.0
 var kill_flash: float = 0.0   ## VS-037: red X + screen tint on a confirmed kill
-var _last_credits: float = 0.0
 var t: float = 0.0
 var surface_t: float = 0.0   ## VS-041: seconds on foot, for the save notice
 
@@ -35,15 +42,44 @@ func _ready() -> void:
 
 func bind(p_u: Universe) -> void:
 	u = p_u
-	_last_credits = u.credits
 	msgs.clear()
+	popups.clear()
 	u.message.connect(add_message)
+	u.credits_changed.connect(on_credits)
 
 
 func add_message(text: String, col: Color) -> void:
 	msgs.push_front({"text": text, "col": col, "t": 0.0})
 	if msgs.size() > MAX_MSGS:
 		msgs.resize(MAX_MSGS)
+
+
+## VS-053: top-left origin of the delta stack. Desktop: right under the top bar. Touch: the SHIELD/HULL panel
+## (TOUCH_PANEL) and the ATK/ESC/HOLD buttons own the left edge, so deltas sit in the clear band right of them.
+const TOUCH_PANEL := Rect2(12, 104, 330, 144)
+static func delta_origin(touch: bool) -> Vector2:
+	return Vector2(360.0, 140.0) if touch else Vector2(14.0, 116.0)
+
+
+static func delta_rect(touch: bool) -> Rect2:
+	var o := delta_origin(touch)
+	return Rect2(o.x, o.y - 20.0, 260.0, 24.0 * (MAX_DELTAS - 1) + 26.0)
+
+
+## VS-053: "+150 cr bounty" / "-420 cr repair"; empty when the change is too small to announce.
+static func delta_text(amount: float, cat: String) -> String:
+	if absf(amount) <= DELTA_MIN:
+		return ""
+	return "%s%s cr %s" % ["+" if amount > 0.0 else "-", _fmt(absf(amount)), DELTA_WORD.get(cat, cat)]
+
+
+func on_credits(amount: float, cat: String) -> void:
+	var txt := delta_text(amount, cat)
+	if txt == "":
+		return
+	popups.push_front({"text": txt, "neg": amount < 0.0, "t": 0.0})
+	if popups.size() > MAX_DELTAS:
+		popups.resize(MAX_DELTAS)
 
 
 func hit() -> void:
@@ -68,14 +104,9 @@ func _process(delta: float) -> void:
 	for m: Dictionary in msgs:
 		m["t"] = float(m["t"]) + delta
 	msgs = msgs.filter(func(m: Dictionary) -> bool: return float(m["t"]) < MSG_LIFE)
-	if u:
-		var dc := u.credits - _last_credits
-		if dc >= 50.0:
-			popups.append({"text": "+%d cr" % int(dc), "t": 0.0})
-		_last_credits = u.credits
 	for p: Dictionary in popups:
 		p["t"] = float(p["t"]) + delta
-	popups = popups.filter(func(p: Dictionary) -> bool: return float(p["t"]) < 1.4)
+	popups = popups.filter(func(p: Dictionary) -> bool: return float(p["t"]) < DELTA_LIFE)
 	queue_redraw()
 
 
@@ -125,7 +156,6 @@ func _draw_top(sz: Vector2) -> void:
 	var rate := rate_text(u)   # VS-035: hidden for the first MIN_RATE_SPAN seconds (same on touch and desktop)
 	if rate != "":
 		_txt(Vector2(rate_x, 32), rate, 16, Color(AMBER, 0.75))
-	var pop_x := rate_x + font.get_string_size(rate, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 10.0
 	_txt(Vector2(14, 58), loc, 20, CYAN)
 	var mins := int(u.time / 60.0)
 	_txt(Vector2(14, 82), "T+%02d:%02d   Nests %d   Colonies %d   Kills %d" % [mins, int(u.time) % 60, u.alive_nests().size(), u.colonies(), u.kills], 16, DIM)
@@ -136,9 +166,14 @@ func _draw_top(sz: Vector2) -> void:
 			_txt(Vector2(490, 32), "%d%%" % int(u.hq.hull_frac() * 100.0), 14, AMBER if u.hq.hull_frac() > 0.35 else HIVE)
 	var raid := u.director.raid_t
 	_txt(Vector2(340, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 and not u.director.next_raid_likely_deterred() else DIM)
+	# VS-053: signed deltas stack under the panel (never over the net rate), newest on top, fading out.
+	var tch := (space != null and space.touch != null and space.touch.active) or (surface != null and surface.touch != null and surface.touch.active)
+	var px := delta_origin(tch).x
+	var py := delta_origin(tch).y
 	for p: Dictionary in popups:
-		var k := float(p["t"]) / 1.4
-		_txt(Vector2(pop_x, 32 - k * 30.0), p["text"], 22, Color(AMBER, 1.0 - k))
+		var k := clampf(float(p["t"]) / DELTA_LIFE, 0.0, 1.0)
+		_txt(Vector2(px, py), p["text"], 20, Color(NEUTRAL if p["neg"] else AMBER, 1.0 - k * k))
+		py += 24.0
 
 
 func _draw_messages(sz: Vector2) -> void:

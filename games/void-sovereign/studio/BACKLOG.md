@@ -828,7 +828,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: S0046. Scout S0044 proposal 3. Unexercised without wounds: add a forced-wound control seed or run with VS-051.
 
 ## VS-053 · Say what money did: signed deltas and status-style full-hull rows
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -841,7 +841,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Dock rows for ship/station hull at 100% render as status labels, not buttons
   - [ ] 1280, 900 and touch layouts pass text-fit guard; selftest asserts delta text
   - [ ] check.sh PASS
-- notes: Scout S0044 proposal 5.
+- notes: Scout S0044 proposal 5. S0047 build
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
@@ -926,6 +926,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
 - S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
 - S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).
-- done: S0043 — paid station repair (STATION_REPAIR_COST 0.4/hull pt) + DAMAGED label, dock button, HUD %; QA PASS round 1
+- done: S0047 — signed credit deltas (touch-safe anchor) + full-hull dock status labels (QA PASS r2)
 - VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
 - Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing

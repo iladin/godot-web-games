@@ -9,6 +9,7 @@ const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before l
 
 var g: VoidMain
 var _ap_step: int = 0
+var _delta_shot: bool = false
 var _title_frames: int = 0
 var _save_checked: bool = false
 var _far_set := false
@@ -236,6 +237,10 @@ func _shot_script(t: float) -> void:
 		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (grid end %.0f, scroll end %.0f)" % [str(g.map.size), g.map._build_grid.get_global_rect().end.y, g.map._scroll.get_global_rect().end.y])
 		assert(g.map._defend_btn.visible and g.map._defend_btn.size.y >= 44.0, "Defend button is a >= 44 px target")
 		assert(g.map._defend_btn.get_global_rect().end.y <= g.map._scroll.get_global_rect().end.y, "Defend button is on screen")
+	if g.shot_mode == "touch_wing" and _ap_step == 1 and t > 2.4 and not _delta_shot:   # VS-053: deltas live at capture
+		_delta_shot = true
+		g.u.add_credits(150.0, "bounty")
+		g.u.add_credits(-420.0, "repair")
 	var wait := 6.0 if g.shot_mode == "surface" or g.shot_mode == "surface_far" else 3.0
 	if g.shot_mode == "sortie":
 		wait = 9.0

@@ -790,6 +790,27 @@ func _test_text_fit() -> void:
 	var wid := 14.0 + fnt.get_string_size("1,234,567 cr", HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x + 10.0 + fnt.get_string_size("net -123,450/min", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 	for w: float in [1280.0, 900.0, 640.0]:
 		assert(wid <= minf(500.0, w * 0.92), "VS-047: top-bar income fits %d px wide (%.0f)" % [int(w), wid])
+	# VS-053: signed, labelled deltas above DELTA_MIN; spending is neutral; cap 2 lines; fit under the panel.
+	assert(Hud.delta_text(150.0, "bounty") == "+150 cr bounty", "VS-053: positive delta (got '%s')" % Hud.delta_text(150.0, "bounty"))
+	assert(Hud.delta_text(-420.0, "repair") == "-420 cr repair", "VS-053: repair shows a negative delta")
+	assert(Hud.delta_text(100.0, "trade") == "" and Hud.delta_text(-99.0, "build") == "", "VS-053: 100 cr and below are not announced")
+	for c: String in CreditLedger.CATEGORIES:
+		assert(Hud.DELTA_WORD.has(c), "VS-053: delta word for '%s'" % c)
+	var hud := Hud.new()
+	hud.bind(u)
+	u.add_credits(150.0, "bounty")
+	u.add_credits(-420.0, "repair")
+	u.add_credits(-60.0, "build")
+	u.add_credits(2000.0, "trade")
+	assert(hud.popups.size() == Hud.MAX_DELTAS and hud.popups[0]["text"] == "+2,000 cr trade" and hud.popups[1]["neg"] == true, "VS-053: HUD keeps the newest 2 deltas (neg flagged)")
+	assert(Hud.rate_text(u) != "", "VS-053: the net rate stays alongside the deltas")
+	for w: float in [1280.0, 900.0, 640.0]:
+		var dw := fnt.get_string_size(Hud.delta_text(-1234567.0, "repair"), HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x + 14.0
+		assert(dw <= minf(500.0, w * 0.92), "VS-053: delta line fits %d px wide (%.0f)" % [int(w), dw])
+	assert(DockPanel.hull_status("Ship", 100) == "Ship hull 100% (full)", "VS-053: full-hull status label text")
+	assert(not Hud.delta_rect(true).intersects(Hud.TOUCH_PANEL), "VS-053: touch deltas clear of the SHIELD/HULL panel")
+	assert(not Hud.delta_rect(false).intersects(Rect2(0, 0, 500, 92)) and Hud.delta_rect(true).end.x < 640.0 and not Hud.delta_rect(true).intersects(Rect2(0, 0, 500, 92)), "VS-053: desktop deltas clear the top bar; touch ones stay on screen")
+	hud.free()
 	print("text fit: title wraps at 1280/900/640/480, net rate gated/labelled/fits OK")
 
 

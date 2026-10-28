@@ -14,6 +14,8 @@ var _info: Label
 var _ledger: Label
 var _repair: Button
 var _st_repair: Button
+var _hull_lbl: Label      # VS-053: status rows replace the repair buttons at 100% hull
+var _st_hull_lbl: Label
 var _ship_btns: Dictionary = {}
 
 
@@ -90,9 +92,14 @@ func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 	_repair.pressed.connect(_do_repair)
 	box.add_child(_repair)
 
+	_hull_lbl = _status_label()
+	box.add_child(_hull_lbl)
+
 	_st_repair = Button.new()
 	_st_repair.pressed.connect(func() -> void: u.repair_station(st))
 	_st_repair.visible = st.faction == Defs.Faction.PLAYER
+	_st_hull_lbl = _status_label()
+	box.add_child(_st_hull_lbl)
 	box.add_child(_st_repair)
 
 	if st.kind == "shipyard" or st.kind == "hq":
@@ -122,6 +129,17 @@ func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 	_refresh()
 
 
+func _status_label() -> Label:
+	var l := Label.new()
+	l.modulate = Color(0.55, 0.9, 0.7, 0.9)
+	return l
+
+
+## VS-053: full-hull rows are plain status text (no button chrome); repair buttons show only when needed.
+static func hull_status(label: String, pct: int) -> String:
+	return "%s hull %d%% (full)" % [label, pct]
+
+
 func _process(_delta: float) -> void:
 	if visible and st:
 		var parent_size := (get_parent() as Control).size
@@ -142,13 +160,19 @@ func _refresh() -> void:
 		(r["price"] as Label).text = "%d cr" % int(st.price(w))
 		(r["mine"] as Label).text = str(int(ps.cargo.get(w, 0)))
 	var missing := ps.hull_max - ps.hull
-	_repair.text = "Hull %d%% — Repair (%d cr)" % [int(ps.hull_frac() * 100.0), int(missing * REPAIR_COST)] if missing > 1.0 else "Hull 100%"
-	_repair.disabled = missing <= 1.0
+	_repair.text = "Hull %d%% — Repair (%d cr)" % [int(ps.hull_frac() * 100.0), int(missing * REPAIR_COST)]
+	_repair.visible = missing > 1.0
+	_hull_lbl.visible = missing <= 1.0
+	_hull_lbl.text = hull_status("Ship", 100)
 	var sc := u.station_repair_cost(st)
 	var pen := st.wound_penalty()
 	var pen_txt := "  [DAMAGED: -%d%% income & shield regen]" % int(round(pen * 100.0)) if pen > 0.0 else ""
-	_st_repair.text = "Station hull %d%%%s — Repair (%s cr)" % [int(st.hull_frac() * 100.0), pen_txt, Hud._fmt(sc)] if sc > 1.0 else "Station hull 100%"
-	_st_repair.disabled = sc <= 1.0 or u.credits < 1.0
+	var own := st.faction == Defs.Faction.PLAYER
+	_st_repair.text = "Station hull %d%%%s — Repair (%s cr)" % [int(st.hull_frac() * 100.0), pen_txt, Hud._fmt(sc)]
+	_st_repair.visible = own and sc > 1.0
+	_st_repair.disabled = u.credits < 1.0
+	_st_hull_lbl.visible = own and sc <= 1.0
+	_st_hull_lbl.text = hull_status("Station", 100)
 	for cls: String in _ship_btns:
 		var b := _ship_btns[cls] as Button
 		var cost := int(Defs.SHIP[cls]["cost"])

@@ -8,6 +8,7 @@ signal destroyed(ent: SimEntity, killer_id: int)
 signal player_died()
 signal planet_changed(sector_idx: int)
 signal finished(won: bool)
+signal credits_changed(amount: float, cat: String)   ## VS-053: every add_credits(), for the HUD's signed delta
 
 var sectors: Array[SectorData] = []
 var entities: Dictionary = {}          # id -> SimEntity
@@ -332,6 +333,7 @@ func repair_station(st: StationData) -> float:
 func add_credits(amount: float, cat: String) -> void:
 	credits += amount
 	ledger.record(time, amount, cat)
+	credits_changed.emit(amount, cat)
 
 
 func _trade_category(ship: ShipData, st_player: bool) -> String:
