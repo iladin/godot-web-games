@@ -261,3 +261,8 @@
 - Check: PASS · Git: committed (see git log)
 - Notes: builds_since_review now 6 -> PLANNING due next session. Data in studio/reviews/S0049-redirect-ab.txt.
 - S0049 follow-up: chip 0.015 + templates installed (Daniel request); check PASS
+
+## S0050 — 2026-10-28 19:50 — PLANNING+BUILD
+- Task(s): review round (Critic 6.8, QA sweep P3 only, balance 7/9 targets) -> VS-054..058; VS-054 raid forecast done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: stale .git/HEAD.lock moved to .git/stale-head-lock-S0050 (git can't unlink without delete permission).

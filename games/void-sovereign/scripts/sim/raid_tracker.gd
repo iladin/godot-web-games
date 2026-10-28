@@ -88,12 +88,36 @@ func _chip(r: Dictionary, survivors: int) -> float:
 	var t := u.get_ent(int(r.get("target_id", -1))) as StationData
 	if t == null or not t.alive or t.faction != Defs.Faction.PLAYER or float(r.get("hull_lost", 0.0)) > 0.0:
 		return 0.0
-	var frac := minf(float(survivors) * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX)
+	var frac := chip_frac(survivors)
 	var dmg := minf(frac * t.hull_max, maxf(t.hull - 1.0, 0.0))
 	t.hull -= dmg
 	var lost := dmg / t.hull_max
 	r["hull_lost"] = lost
 	return lost
+
+
+## VS-054: fraction of max hull `ships` surviving raiders remove on arrival (also what the forecast quotes).
+static func chip_frac(ships: int) -> float:
+	return minf(float(ships) * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX)
+
+
+## VS-054: whole-percent hull forecast for an active() row; 0 when silent (arrived, beyond the lead window,
+## Union/dead target, or no raiders left).
+func forecast_pct(rd: Dictionary) -> int:
+	if bool(rd["arrived"]) or int(rd["ships"]) <= 0 or float(rd["eta"]) > Defs.RAID_FORECAST_LEAD:
+		return 0
+	var t := u.get_ent(int(rd.get("target_id", -1))) as StationData
+	if t == null or not t.alive or t.faction != Defs.Faction.PLAYER:
+		return 0
+	return int(round(chip_frac(int(rd["ships"])) * 100.0))
+
+
+## VS-054: "RAID: 3 ships -> Ember, ~5% hull", or "" when the forecast is silent.
+func forecast_text(rd: Dictionary) -> String:
+	var pct := forecast_pct(rd)
+	if pct <= 0:
+		return ""
+	return "RAID: %d ship%s -> %s, ~%d%% hull" % [int(rd["ships"]), "" if int(rd["ships"]) == 1 else "s", u.sectors[int(rd["target_sector"])].name, pct]
 
 
 ## The single place a raid outcome is written: one message and one history line.
@@ -116,6 +140,9 @@ func recent() -> Array[Dictionary]:
 
 ## Short label for one active() row (inset marker and map panel): "RAID x3 > Ember ETA 42s".
 func label_for(rd: Dictionary) -> String:
+	var fc := forecast_text(rd)
+	if fc != "":
+		return fc
 	var tname: String = u.sectors[int(rd["target_sector"])].name
 	if bool(rd["arrived"]) or int(rd["sector"]) == int(rd["target_sector"]):
 		return "RAID x%d ON %s" % [int(rd["ships"]), tname]
@@ -144,5 +171,5 @@ func active() -> Array[Dictionary]:
 			var s := u.get_ent(id)
 			if s != null and s.alive:
 				n += 1
-		out.append({"sector": r["sector"], "target_sector": r["target_sector"], "eta": r["eta"], "ships": n, "arrived": r["arrived"]})
+		out.append({"sector": r["sector"], "target_sector": r["target_sector"], "target_id": r["target_id"], "eta": r["eta"], "ships": n, "arrived": r["arrived"]})
 	return out

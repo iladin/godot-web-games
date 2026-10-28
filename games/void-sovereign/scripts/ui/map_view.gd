@@ -65,7 +65,7 @@ func _map_rect() -> Rect2:
 ## VS-043: inset raid labels sit in a fixed strip along the top of the galaxy inset (clear of the sector names
 ## and hive counters, which cluster mid-inset), one line.
 static func raid_label_rect(r: Rect2) -> Rect2:
-	return Rect2(r.position.x + (r.size.x - 180.0) * 0.5, r.position.y + 2.0, 180.0, 12.0)
+	return Rect2(r.position.x + (r.size.x - minf(r.size.x, 230.0)) * 0.5, r.position.y + 2.0, minf(r.size.x, 230.0), 12.0)
 
 
 func _galaxy_rect() -> Rect2:
@@ -251,6 +251,8 @@ func defend_raid_target() -> int:
 func raid_lines(act: Array, rec: Array) -> Array[String]:
 	var tr := u.director.tracker
 	var lines: Array[String] = []
+	if not act.is_empty() and tr.forecast_text(act[0]) != "":   # VS-054: same line as the HUD, above the extras
+		lines.append(tr.forecast_text(act[0]))
 	for i: int in range(1, mini(act.size(), 1 + RAID_EXTRA_LINES)):
 		lines.append(tr.label_for(act[i]))
 	for o: Dictionary in rec.slice(0, RAID_OUTCOME_LINES):

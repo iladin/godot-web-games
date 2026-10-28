@@ -1,43 +1,43 @@
 # Void Sovereign — Handover
-_Last updated: S0049 · 2026-10-28 18:40 UTC · mode: BUILD_
+_Last updated: S0050 · 2026-10-28 19:50 UTC · mode: PLANNING+BUILD_
 
 ## TL;DR
-S0049 closed VS-044 and, at Daniel's request, softened raid chip damage to RAID_CHIP_PER_SHIP 0.015 (selftest updated to 'hull -5%', DESIGN.md updated, gate: nw30 median 123k, HQ 8/9, seed 135 now lost at 29.7 min). Web export templates 4.7.2 are installed on the machine. VS-044: the harness already built platforms, so I added a `--redirect` A/B flag and telemetry; raid redirect ON is clearly worse (nw30 median 93.6k vs 121.3k), lighter-raid and Union-strength mitigations still lose, so RAID_REDIRECT_ENABLED stays false (recorded in DESIGN.md). VS-042 is still blocked: Playwright chromium download is refused by the network allowlist (cdn.playwright.dev). Backlog has 0 ready tasks and builds_since_review = 6, so PLANNING is due.
+S0050 ran a review round (Critic 6.8/10, QA sweep found only P3s, Balance 7/9 targets met) and created VS-054..058, then shipped VS-054 (raid forecast 60 s before arrival on HUD, map inset and raid panel). Build is green; backlog has 4 ready todos. VS-042 (real-browser pass) still blocked on the network allowlist.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (repo `$HOME/mnt/godot-web-games`, next id S0050, `export GODOT=$PWD/.tools/godot`, check.sh with `timeout 175`).
-2. Run PLANNING (Critic + QA sweep + Balance Analyst in parallel, then Feature Scout). `backlog.py next` returns NONE. Chip is now 0.015 (done, measured); Critic should judge whether late economy / seed 135 still need a bigger bot repair reserve. Compare balance against S0048/S0049 rows (S0049 A/B in studio/reviews/S0049-redirect-ab.txt).
-3. Turn findings into 4-8 tasks; if a P0/P1 size-S task results, BUILD it.
-4. Optional P3: dock raid-outcome line; "DAMAGED 88%" label overlap; surface touch delta anchor; Defend button ~30 px at 900x720; HUD '2x PYLON' overlap; hive_ships_20 median 61 (> old 60 guard, pre-existing).
+1. Preflight per `ai-studio/studio-cycle.md` (next id S0051, `export GODOT=$PWD/.tools/godot`, check.sh with `timeout 175`). Note: if `.git/*.lock` exists, `mv` it to `.git/stale-...` (no delete permission).
+2. BUILD VS-055 (P2, S): HQ hull readout + hq_wounded/dock_wounded shots (hud.gd, test_driver.gd).
+3. Then VS-056 (Hive cap trim ~5% in scripts/sim/defs.gd + `--fleet-floor` harness flag in balance.gd; needs 9-seed runs, sequential), which must precede VS-057 (Fleet Reserve call-in, M — split if needed), then VS-058 (touch message lane, M; raid forecast = top priority).
+4. Optional P3s: raid block below fold in map panel at 1280x720; raid_warn_touch shot; Score/Best thousands separators (overlay.gd:124); 900x720 touch surface label overlap.
 
 ## Last session
-- Did: VS-042 -> blocked (reason below). VS-044 done: balance.gd `--redirect` + deterred/redirected/platforms_end telemetry; director.gd counters, union_ship_count(), RAID_REDIRECT_SIZE_MULT=1.0 / RAID_REDIRECT_MIN_UNION_SHIPS=0 (neutral); selftest asserts; DESIGN.md decision. QA PASS r1 (default gate reproduces S0048 exactly).
-- Check: PASS · Git: committed (see git log) · Roles collapsed: none
+- Did: review round (reviews/S0050-*.md, metrics.csv rows added); VS-054 done: RAID_FORECAST_LEAD=60 in defs.gd, RaidTracker.chip_frac/forecast_pct/forecast_text, hud.gd line, map_view.gd panel line, selftest asserts, shots raid_warn/raid_warn_map. QA PASS r1.
+- Check: PASS · Git: review round commit 0bcdb13; VS-054 commit follows (see git log) · Roles collapsed: none
 
 ## In-flight / uncommitted work
-none (gate output in gitignored .tools/balance_gate/)
+none after the final commit (stale lock file .git/stale-head-lock-S0050 is untracked inside .git, harmless).
 
 ## Build health
 - check.sh: PASS · known noise: ObjectDB leak at exit, ALSA, ERR_CANT_OPEN on --shot exit.
-- Latest metrics: unchanged from S0048 (economic 30: HQ 8/9, nw10 94k, nw20 104k, nw30 121k). No new metrics.csv row; A/B in reviews/S0049-redirect-ab.txt. perturb=1/2 not run for redirect (moot).
+- Latest metrics (S0050): economic HQ 8/9, nw10 94k, nw20 105k, nw30 123k (Q1 48k); passive HQ lost median 27.3 min; Hive ships @20 = 61 (guard 60 -> VS-056).
 
 ## Backlog snapshot
-todo 0 - in-progress 0 - done 48 - blocked 2 - split 3 - Top ready: none (PLANNING)
+todo 4 · in-progress 0 · done 49 · blocked 2 · split 3 · Top ready: VS-055, VS-056, VS-057
 
 ## Watch out for
-- Redirect stays off; to revisit see DESIGN.md (ideas: redirect only with >=12 Union ships + cooldown, or hit a Union outpost).
-- Chip damage applies at raid arrival to any Sovereign station. HQ income penalty is HQ-only, player faction only. Station hull never regenerates.
-- Do NOT `pkill -f godot`; use `pkill -x godot`. Foreground `timeout 175`; balance sequential. Subagent runs 7-37 min each.
-- DESIGN.md has a stale sentence "needs a platform-building balance policy" in VS-036 bullet (superseded by VS-044 paragraph).
+- Critic: bigger bot repair reserve is NOT the fix for late collapse (fleet loss is); don't retune chip again.
+- Redirect stays off. Do NOT `pkill -f godot`. Balance runs sequential, foreground `timeout 175`.
+- shots.sh title can time out (stale title.png).
+- Git writes leave tmp_obj/lock warnings (no delete permission); commits still succeed.
 
 ## Open questions for Daniel
-- VS-042 needs a headless browser: add cdn.playwright.dev (and playwright.download.prss.microsoft.com if asked) to the egress allowlist, or point me at an installed chromium. Templates are done.
-- Over-screen Score equals Net worth in a synthetic shot: confirm formula.
+- VS-042 needs a headless browser: allow cdn.playwright.dev in egress or point to an installed chromium.
 
 ## Answers to Daniel
-- Templates installed; chip softened to 0.015 (measured). Chromium blocked by allowlist.
+- none
 
 ## Session history (newest first, keep 10)
+- S0050 2026-10-28 PLANNING+BUILD - review round -> VS-054..058; VS-054 raid forecast done (QA PASS r1)
 - S0049 2026-10-28 BUILD - VS-044 redirect A/B done (stays off, QA PASS r1); VS-042 blocked (no export templates)
 - S0048 2026-10-28 BUILD - VS-051 raid chip damage done (QA PASS r1)
 - S0047 2026-10-28 BUILD - VS-053 signed credit deltas + full-hull status rows done (QA PASS r2)
@@ -47,4 +47,3 @@ todo 0 - in-progress 0 - done 48 - blocked 2 - split 3 - Top ready: none (PLANNI
 - S0043 2026-10-28 BUILD - VS-048 paid station repair + damage visibility done (QA PASS)
 - S0042 2026-10-28 BUILD - VS-043 raid panel fit done (QA PASS)
 - S0041 2026-10-28 BUILD - VS-041 surface landing checkpoint + save notice done (QA PASS)
-- S0040 2026-10-28 BUILD - VS-047 top-bar net income label done (QA PASS)

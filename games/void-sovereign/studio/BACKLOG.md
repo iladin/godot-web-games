@@ -846,7 +846,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Scout S0044 proposal 5. S0047 build
 
 ## VS-054 · Raid forecast: show the hit 60 s before it lands
-- status: in-progress
+- status: done
 - priority: P1
 - type: feature
 - size: S
@@ -860,6 +860,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Selftest asserts forecast percent equals hull actually lost on an uncontested arrival
   - [ ] Shot (combat or new raid_warn) shows the line at 1280x720 and 900x720 without overlap; check.sh PASS
 - notes: Scout S0050 #1. No sim change.
+- done: S0050 — raid forecast line at T-60 s on HUD, map inset and raid panel (QA PASS r1)
 
 ## VS-055 · HQ hull readout and hq_wounded/dock_wounded shots
 - status: todo
@@ -923,6 +924,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Scout S0050 #4. After VS-054. Bundle P3s: Score/Best thousands separators (overlay.gd:124), map side panel clip at 900x720.
 
 # Ideas parking lot
+- (S0050, QA VS-054, P3) Map side panel at 1280x720: raid forecast line sits below the fold under the build list — move raid block above buy/build lists; add raid_warn_touch shot; HUD forecast shows only soonest raid.
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
 - Show TRADER_RESERVE in the dock panel / make it player-adjustable (S0001 dev)

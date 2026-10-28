@@ -136,6 +136,20 @@ func _shot_script(t: float) -> void:
 				g.touch.active = g.shot_mode == "raid_map_touch"
 				g._set_mode("map")
 				g.map._order_button("all")
+			"raid_warn", "raid_warn_map":   # VS-054: 3 raiders about to reach the HQ sector; forecast on HUD (flight) or inset + panel (map)
+				var wsec: int = int(g.u.sectors[g.u.hq.sector].gates[0]["to"])   # one hop from the HQ, so the real ETA is well inside T-60
+				var wgate: Vector3 = g.u.sectors[wsec].gate_to(g.u.hq.sector)["pos"]
+				var wl: Array[ShipData] = []
+				for i in 3:
+					var w := g.u.spawn_ship("drone", Defs.Faction.HIVE, wsec, wgate + Vector3(200 + i * 40, 0, 0))
+					w.order = "raid"
+					w.order_target = g.u.hq.id
+					w.order_sector = g.u.hq.sector
+					wl.append(w)
+				g.u.director.tracker.raids.clear()
+				g.u.director.tracker.add(wl, g.u.hq)
+				if g.shot_mode == "raid_warn_map":
+					g._set_mode("map")
 			"hq_wounded", "hq_wounded_dock":   # VS-051: a Breach just chipped the HQ (-12%); outcome text and hull shown
 				g.u.hq.hull = g.u.hq.hull_max * 0.88
 				g.u.director.tracker.history.append({"t": g.u.time - 20.0, "kind": "intercepted", "text": "Raid intercepted in %s%s (4/6 destroyed)" % [g.u.sectors[g.u.hq.sector].name, ", hull -12%"]})

@@ -54,6 +54,8 @@ const WOUND_PENALTY_MAX := 0.3
 # The Breach (6 ships) costs ~12% hull. Raids that die before arriving cost nothing.
 const RAID_CHIP_PER_SHIP := 0.015
 const RAID_CHIP_MAX := 0.25
+# VS-054: from this many seconds before arrival (tracker ETA) a raid on a Sovereign station is forecast on the HUD, map inset and raid panel.
+const RAID_FORECAST_LEAD := 60.0
 
 ## Fractional penalty (0..WOUND_PENALTY_MAX) for a hull fraction.
 static func wound_penalty(hull_frac: float) -> float:

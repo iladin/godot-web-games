@@ -271,6 +271,33 @@ func _init() -> void:
 	assert(msgs.is_empty(), "no raid warning while the raid is still far from its target")
 	var act := dir.tracker.active()
 	assert(act.size() == 1 and int(act[0]["ships"]) == 3 and float(act[0]["eta"]) > 0.0, "active raid exposes ships and an ETA")
+	# VS-054: forecast inside the lead window quotes N ships, the target sector and the chip percent; silent otherwise.
+	var frow: Dictionary = act[0].duplicate()
+	frow["eta"] = Defs.RAID_FORECAST_LEAD - 1.0
+	var fpct := dir.tracker.forecast_pct(frow)
+	assert(fpct == int(round(minf(3.0 * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX) * 100.0)) and fpct > 0, "forecast percent follows the chip formula: %d" % fpct)
+	assert(dir.tracker.forecast_text(frow) == "RAID: 3 ships -> %s, ~%d%% hull" % [u.sectors[u.hq.sector].name, fpct], "forecast line text: %s" % dir.tracker.forecast_text(frow))
+	assert(dir.tracker.label_for(frow) == dir.tracker.forecast_text(frow), "inset marker carries the same forecast line")
+	var frow_far := frow.duplicate()
+	frow_far["eta"] = Defs.RAID_FORECAST_LEAD + 5.0
+	assert(dir.tracker.forecast_pct(frow_far) == 0 and dir.tracker.forecast_text(frow_far) == "", "no forecast before T-60 s")
+	var frow_thin := frow.duplicate()
+	frow_thin["ships"] = 2
+	assert(dir.tracker.forecast_pct(frow_thin) == int(round(2.0 * Defs.RAID_CHIP_PER_SHIP * 100.0)) and "2 ships" in dir.tracker.forecast_text(frow_thin), "forecast updates when the raid is thinned")
+	var frow_big := frow.duplicate()
+	frow_big["ships"] = 40
+	assert(dir.tracker.forecast_pct(frow_big) == int(round(Defs.RAID_CHIP_MAX * 100.0)), "forecast is capped at RAID_CHIP_MAX")
+	var frow_arr := frow.duplicate()
+	frow_arr["arrived"] = true
+	assert(dir.tracker.forecast_pct(frow_arr) == 0, "no forecast once the raid has arrived")
+	var union_st := u.spawn_station("solar", Defs.Faction.UNION, u.hq.sector, u.hq.pos + Vector3(-900, 0, 0))
+	var frow_union := frow.duplicate()
+	frow_union["target_id"] = union_st.id
+	assert(dir.tracker.forecast_pct(frow_union) == 0 and dir.tracker.forecast_text(frow_union) == "", "forecast is silent for Union targets")
+	var panel_mv := MapView.new()
+	panel_mv.u = u
+	assert(panel_mv.raid_lines([frow], []).size() == 1 and panel_mv.raid_lines([frow], [])[0] == dir.tracker.forecast_text(frow), "raid panel shows the forecast line")
+	panel_mv.free()
 	for rs: ShipData in raiders:
 		rs.sector = u.hq.sector
 	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
@@ -288,6 +315,7 @@ func _init() -> void:
 	# VS-051: survivors at arrival chip the HQ hull exactly once per raid; the outcome and arrival text quote it.
 	var chip_exp := minf(3.0 * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX) * u.hq.hull_max
 	assert(absf((hull_before - u.hq.hull) - chip_exp) < 0.5, "arrived raid chips the HQ once: lost %.1f expected %.1f" % [hull_before - u.hq.hull, chip_exp])
+	assert(int(round((hull_before - u.hq.hull) / u.hq.hull_max * 100.0)) == fpct, "forecast percent equals the hull actually lost on an uncontested arrival: %d vs %.2f" % [fpct, (hull_before - u.hq.hull) / u.hq.hull_max * 100.0])
 	assert("hull -5%" in msgs[0] and "hull -5%" in msgs[1] and "hull -5%" in String(dir.tracker.history[0]["text"]), "arrival and outcome name the hull lost: %s" % [msgs])
 	# A raid wiped out before arriving costs nothing; a huge raid is capped and never kills the station.
 	var hull_mid := u.hq.hull

@@ -164,6 +164,11 @@ func _draw_top(sz: Vector2) -> void:
 		_bar(Rect2(370, 20, 115, 10), u.hq.hull_frac(), AMBER if u.hq.hull_frac() > 0.35 else HIVE)
 		if u.hq.hull_frac() < 0.995:
 			_txt(Vector2(490, 32), "%d%%" % int(u.hq.hull_frac() * 100.0), 14, AMBER if u.hq.hull_frac() > 0.35 else HIVE)
+	var fc := forecast_line(u)   # VS-054
+	if fc != "":
+		var fw := font.get_string_size(fc, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		draw_rect(Rect2(500, 0, maxf(0.0, 340.0 + fw + 14.0 - 500.0), 92), PANEL)   # panel grows to hold the forecast line
+		_txt(Vector2(340, 82), fc, 14, HIVE)
 	var raid := u.director.raid_t
 	_txt(Vector2(340, 58), "Next raid %ds" % int(raid), 16, HIVE if raid < 20.0 and not u.director.next_raid_likely_deterred() else DIM)
 	# VS-053: signed deltas stack under the panel (never over the net rate), newest on top, fading out.
@@ -174,6 +179,18 @@ func _draw_top(sz: Vector2) -> void:
 		var k := clampf(float(p["t"]) / DELTA_LIFE, 0.0, 1.0)
 		_txt(Vector2(px, py), p["text"], 20, Color(NEUTRAL if p["neg"] else AMBER, 1.0 - k * k))
 		py += 24.0
+
+
+## VS-054: the soonest forecast raid line, or "".
+static func forecast_line(uni: Universe) -> String:
+	var best := ""
+	var best_eta := INF
+	for rd: Dictionary in uni.director.tracker.active():
+		var tx := uni.director.tracker.forecast_text(rd)
+		if tx != "" and float(rd["eta"]) < best_eta:
+			best = tx
+			best_eta = float(rd["eta"])
+	return best
 
 
 func _draw_messages(sz: Vector2) -> void:
