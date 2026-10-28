@@ -9,11 +9,11 @@ const MIX_RATE := 22050
 const POOL_SIZE := 10
 const MASTER_DB := -6.0
 const VOLUME_DB: Dictionary = {
-	"laser": -10.0, "rifle": -7.0, "hit": -9.0, "explosion": -2.0, "gate": -4.0, "click": -12.0, "alert": -6.0,
+	"laser": -10.0, "rifle": -7.0, "hit": -9.0, "explosion": -2.0, "gate": -4.0, "click": -12.0, "alert": -6.0, "kill": -5.0,
 }
 const PITCH_JITTER := 0.08          # +-8 % random pitch per play
 const MIN_INTERVAL := 0.045         # same sound re-triggered faster than this is skipped (twin guns)
-const NAMES: Array[String] = ["laser", "rifle", "hit", "explosion", "gate", "click", "alert"]
+const NAMES: Array[String] = ["laser", "rifle", "hit", "explosion", "gate", "click", "alert", "kill"]
 const MUTE_KEY := KEY_N
 
 signal mute_changed(is_muted: bool)
@@ -104,6 +104,7 @@ static func generate_all() -> Dictionary:
 	out["gate"] = _gate()
 	out["click"] = _click()
 	out["alert"] = _alert()
+	out["kill"] = _kill()
 	return out
 
 
@@ -149,6 +150,18 @@ static func _rifle(rng: RandomNumberGenerator) -> AudioStreamWAV:
 		lp = lerpf(lp, rng.randf_range(-1.0, 1.0), 0.55)
 		var thump := sin(TAU * lerpf(160.0, 60.0, t) * float(i) / MIX_RATE)
 		s[i] = (lp * 0.8 * exp(-t * 14.0) + thump * 0.6 * exp(-t * 7.0))
+	return _wav(s)
+
+
+## Kill confirm (VS-037): two rising blips, higher than the hit tick.
+static func _kill() -> AudioStreamWAV:
+	var s := _buf(0.2)
+	var n := s.size()
+	for i in n:
+		var t := float(i) / n
+		var f := 1100.0 if t < 0.45 else 1650.0
+		var lt := t if t < 0.45 else t - 0.45
+		s[i] = sin(TAU * f * float(i) / MIX_RATE) * 0.55 * exp(-lt * 7.0) * minf(1.0, lt * 80.0)
 	return _wav(s)
 
 

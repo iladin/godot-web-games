@@ -9,6 +9,7 @@ signal core_killed()
 signal hit_something()
 signal player_damaged(amount: float)
 signal sfx(sound: String)
+signal kill_confirmed(big: bool)
 
 const GRID := 72
 const SPACING := 7.0
@@ -20,10 +21,13 @@ const FOE_SHOT_SPEED := 45.0
 const BOARD_DIST := 9.0
 const SPIRE_HEIGHT := 260.0         ## VS-031: Core spire landmark height (m); unshaded, ignores fog
 const BEAM_HEIGHT := 200.0          ## VS-031: pylon beam height (m)
+const BOT_MOB_PRIORITY := 40.0   ## autoplay bot: flankers count this much closer when picking a target
+const BOT_STRAFE_TIME := 1.6
 const SPIRE_SHIELDED := Color("ff3b8d")
 const SPIRE_EXPOSED := Color("fff2a8")
 
 class Foe extends RefCounted:
+	var flank: bool = false
 	var kind: String = "crawler"   # crawler | drone | turret | pylon | core
 	var node: Node3D
 	var hp: float = 50.0
@@ -54,6 +58,9 @@ var autoplay: bool = false
 var half: float = GRID * SPACING * 0.5
 var spire_mat: StandardMaterial3D
 var spire_t: float = 0.0
+var flanked: bool = false   ## VS-037: the flank squad spawns once, at the first pylon kill
+var flank_spawned: int = 0
+var bot_t: float = 0.0
 
 
 func setup(p_u: Universe, p_touch: TouchControls, idx: int) -> void:
@@ -336,6 +343,14 @@ func pylons_left() -> int:
 	return n
 
 
+func mobiles_alive() -> int:
+	var n := 0
+	for f: Foe in foes:
+		if f.alive and (f.kind == "crawler" or f.kind == "drone"):
+			n += 1
+	return n
+
+
 func objective_text() -> String:
 	if core_dead:
 		return "CORE DESTROYED — return to your ship to take off"
@@ -365,9 +380,10 @@ func tick(delta: float) -> void:
 	if fps.global_position.y < -200.0:
 		fps.global_position = ship_pos + Vector3(0, 4, 0)
 	var shield_up := pylons_left() > 0
-	var sh := core.node.get_node_or_null("Shield") as Node3D
-	if sh:
-		sh.visible = shield_up and core.alive
+	if core.alive and is_instance_valid(core.node):
+		var sh := core.node.get_node_or_null("Shield") as Node3D
+		if sh:
+			sh.visible = shield_up
 	_pulse_spire(delta)
 	_update_foes(delta)
 	_update_shots(delta)
@@ -392,18 +408,29 @@ func tick(delta: float) -> void:
 func _bot() -> void:
 	var best: Foe = null
 	var best_d := INF
+	var pp := fps.global_position
 	for f: Foe in foes:
 		if not f.alive or (f.kind == "core" and pylons_left() > 0):
 			continue
-		var d := f.node.position.distance_to(fps.global_position)
+		var d := f.node.position.distance_to(pp)
+		if f.flank:
+			d -= BOT_MOB_PRIORITY   # VS-037: the bot answers flankers before shooting the base
 		if d < best_d:
 			best_d = d
 			best = f
 	fps.bot_target = best.node.position if best else null
 	var goal := core_pos if not core_dead else ship_pos
-	var to := goal - fps.global_position
+	var to := goal - pp
 	to.y = 0.0
-	fps.bot_move = to.normalized() if to.length() > 25.0 else Vector3.ZERO
+	# VS-037: the bot keeps moving: closes to 25 m, then strafes around the goal, flipping direction every BOT_STRAFE_TIME.
+	if core_dead:
+		fps.bot_move = to.normalized() if to.length() > BOARD_DIST * 0.5 else Vector3.ZERO   # keep walking until aboard
+	elif to.length() > 25.0:
+		fps.bot_move = to.normalized()
+	else:
+		var side := to.normalized().cross(Vector3.UP)
+		bot_t += get_process_delta_time()
+		fps.bot_move = side * (1.0 if int(bot_t / BOT_STRAFE_TIME) % 2 == 0 else -1.0)
 
 
 func _update_foes(delta: float) -> void:
@@ -418,7 +445,7 @@ func _update_foes(delta: float) -> void:
 		match f.kind:
 			"crawler":
 				var dir := Vector3(to.x, 0, to.z).normalized()
-				f.vel = f.vel.move_toward(dir * (9.0 + float(level)), 30.0 * delta)
+				f.vel = f.vel.move_toward(dir * (9.0 + float(level)) * (Defs.FLANK_SPEED_MULT if f.flank else 1.0), 30.0 * delta)
 				var np := n.position + f.vel * delta
 				np.y = height(np.x, np.z) + 0.6 + absf(sin(f.phase * 12.0)) * 0.25
 				n.position = np
@@ -427,7 +454,7 @@ func _update_foes(delta: float) -> void:
 				f.cd -= delta
 				if d < 2.2 and f.cd <= 0.0:
 					f.cd = 0.8
-					_hurt_player(10.0 + 2.0 * float(level))
+					_hurt_player((10.0 + 2.0 * float(level)) * (Defs.FLANK_DAMAGE_MULT if f.flank else 1.0))
 			"drone":
 				var want_h := height(n.position.x, n.position.z) + 7.0 + sin(f.phase * 1.7) * 2.0
 				var side := to.cross(Vector3.UP).normalized() * sin(f.phase * 0.8) * 6.0
@@ -520,12 +547,35 @@ func _on_fired(origin: Vector3, dir: Vector3) -> void:
 		_spark(impact, Color("c0a080"), 0.3)
 
 
+## VS-037: spawn the flank squad FLANK_ANGLE_MIN..MAX degrees off the player's heading (random side). Returns the count.
+func spawn_flank() -> int:
+	flanked = true
+	var heading := -fps.global_transform.basis.z
+	heading.y = 0.0
+	heading = heading.normalized() if heading.length() > 0.01 else Vector3.FORWARD
+	var n := randi_range(Defs.FLANK_MIN, Defs.FLANK_MAX)
+	var lim := half * 0.92
+	for i in n:
+		var ang := deg_to_rad(randf_range(Defs.FLANK_ANGLE_MIN, Defs.FLANK_ANGLE_MAX)) * (1.0 if randf() < 0.5 else -1.0)
+		var p := fps.global_position + heading.rotated(Vector3.UP, ang) * Defs.FLANK_DIST
+		p.x = clampf(p.x, -lim, lim)
+		p.z = clampf(p.z, -lim, lim)
+		_spawn_foe("drone" if i % Defs.FLANK_DRONE_EVERY == Defs.FLANK_DRONE_EVERY - 1 else "crawler", p)
+		foes[foes.size() - 1].flank = true
+		flank_spawned += 1
+	return n
+
+
 func _kill(f: Foe) -> void:
 	f.alive = false
 	sfx.emit("explosion")
+	sfx.emit("kill")
+	kill_confirmed.emit(f.kind == "core" or f.kind == "pylon")
 	var big := f.kind == "core"
 	_explode(f.node.position, 14.0 if big else (4.0 if f.kind == "pylon" else 2.0))
 	f.node.queue_free()
+	if f.kind == "pylon" and not flanked and not core_dead:
+		spawn_flank()
 	if f.kind == "crawler" or f.kind == "drone":
 		u.add_credits(60.0, "bounty")
 	if big:

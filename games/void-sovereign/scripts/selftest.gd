@@ -429,6 +429,7 @@ func _init() -> void:
 	_test_run_flow()
 	await _test_surface_over()
 	await _test_surface_landmarks()
+	await _test_surface_flank()
 	await _test_save_flow()
 	print("SELFTEST OK")
 	quit()
@@ -915,6 +916,54 @@ func _test_surface_landmarks() -> void:
 	g.queue_free()
 	await process_frame
 	print("surface landmarks OK")
+
+
+## VS-037: the first pylon kill spawns FLANK_MIN..MAX Hive units 60-120 degrees off the player's heading, once.
+func _test_surface_flank() -> void:
+	var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+	root.add_child(g)
+	await process_frame
+	await process_frame
+	g._start_game()
+	await process_frame
+	g._on_land(0)
+	for i in 300:
+		await process_frame
+		if g.surface != null:
+			break
+	for i in 3:
+		await process_frame
+	var sv: SurfaceView = g.surface
+	assert(sv != null and not sv.flanked, "no flank before a pylon dies")
+	sv.fps.global_position = Vector3(0, sv.height(0, 0) + 2.0, 0)
+	sv.fps.rotation = Vector3(0, deg_to_rad(40.0), 0)
+	var heading := -sv.fps.global_transform.basis.z
+	heading.y = 0.0
+	heading = heading.normalized()
+	var kills: Array[bool] = []
+	sv.kill_confirmed.connect(func(big: bool) -> void: kills.append(big))
+	var pylons: Array = sv.foes.filter(func(f: SurfaceView.Foe) -> bool: return f.kind == "pylon")
+	sv._kill(pylons[0])
+	assert(sv.flanked and sv.flank_spawned >= Defs.FLANK_MIN and sv.flank_spawned <= Defs.FLANK_MAX, "flank squad size %d" % sv.flank_spawned)
+	assert(kills.size() == 1 and kills[0], "pylon kill emits kill_confirmed(big)")
+	var seen := 0
+	for f: SurfaceView.Foe in sv.foes:
+		if f.alive and (f.kind == "crawler" or f.kind == "drone") and f.node.position.distance_to(sv.fps.global_position) < Defs.FLANK_DIST + 5.0 and f.node.position.distance_to(sv.fps.global_position) > Defs.FLANK_DIST - 5.0:
+			var off := f.node.position - sv.fps.global_position
+			off.y = 0.0
+			var ang := rad_to_deg(absf(heading.angle_to(off.normalized())))
+			assert(ang >= Defs.FLANK_ANGLE_MIN - 1.0 and ang <= Defs.FLANK_ANGLE_MAX + 1.0, "flanker %.0f deg off heading" % ang)
+			seen += 1
+	assert(seen == sv.flank_spawned, "all flankers spawned at FLANK_DIST (%d of %d)" % [seen, sv.flank_spawned])
+	var n1 := sv.flank_spawned
+	sv._kill(pylons[1])
+	assert(sv.flank_spawned == n1, "flank squad spawns once")
+	var mob: SurfaceView.Foe = sv.foes.filter(func(f: SurfaceView.Foe) -> bool: return f.alive and f.kind == "crawler")[0]
+	sv._kill(mob)
+	assert(kills.size() == 3 and not kills[2], "mob kill emits kill_confirmed(small)")
+	g.queue_free()
+	await process_frame
+	print("surface flank OK")
 
 
 ## VS-022: ending a run while on foot freezes the surface, and a later death does not evacuate.

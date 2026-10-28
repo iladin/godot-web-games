@@ -50,6 +50,7 @@ Title: Space, Enter, click or tap starts a New Game. When a valid autosave exist
 - Measured (S0003, `balance.sh`): economic 30 min × 6 seeds → net worth at 20 min median ≈ 139k, HQ survives 5/6; passive 40 min × 3 seeds → HQ lost at ≈ 25 min (median). A player who builds nothing still loses.
 - Nest drone spawn interval `max(12, 30 − t/40)` s, cap `6 + t/120`.
 - Surface level 1–3: pylons = level + 1, more enemies per wave, faster waves.
+- VS-037 flank: when the first pylon dies, `Defs.FLANK_MIN..FLANK_MAX` (2-3) Hive units (crawlers, every 3rd a drone) spawn `FLANK_DIST` (55 m) from the player, `FLANK_ANGLE_MIN..MAX` (60-120 deg) off the player's heading on a random side, and chase. Once per landing. Kill feedback: red X + faint screen flash on the crosshair (`HUD.kill`, longer for pylon/Core) and the synthesised `kill` blip (two rising tones) on top of the existing hit tick. The autoplay bot strafes around the Core (`BOT_STRAFE_TIME`) and answers flankers first; `surface_long` prints `foot=hp/shield`, `min_foot` (hp+shield scaled to ship-hull units, x600/160), `flank=`, `mobs=`.
 
 ## Juice
 Screen shake on hits, explosion flashes + debris, hit markers, damage vignette, shield shimmer, floating bounty text, travel-drive streaks.

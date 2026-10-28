@@ -182,3 +182,11 @@
 - Task(s): VS-036 raid intercept bounty — done (QA FAIL round 1 on perturbed gates due to redirect; fix round disabled redirect behind Defs.RAID_REDIRECT_ENABLED; QA PASS round 2). Created VS-044 (redirect re-enable via platform-building balance policy).
 - Check: PASS · Git: committed (see git log)
 - Notes: bounty 40 cr/raider, ledger 'Raid intercepts', no bounty for redirected raids. Roles collapsed: none.
+
+## (S0036 attempt) — 2026-10-28 03:56 — SKIPPED
+- Lock held by S0035 since 02:57Z (<4h, ~1h ago) with VS-037 in-progress and uncommitted game edits; per procedure, no work done, HANDOVER untouched.
+
+## S0035 — 2026-10-28 03:00 — BUILD
+- Task(s): VS-037 on-foot flank pressure + kill feedback — done (QA FAIL round 1: freed-Core SCRIPT ERROR, bot never boarded; fix round; QA PASS round 2). New VS-045 (flank costs hp).
+- Check: PASS · Git: committed (see git log)
+- Notes: acceptance "2-3 flankers" retuned to 5-6 at 30 m, 1.8x speed/dmg. Pylons 51 s, Core 65 s, boarded 113 s, min_foot 525 (shield only).

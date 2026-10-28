@@ -570,7 +570,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0034 — intercept bounty (40 cr, ledger 'Raid intercepts') shipped; redirect implemented but disabled (RAID_REDIRECT_ENABLED=false) after QA found it halved perturb=1 nw30; QA PASS on 2nd verify (round 2)
 
 ## VS-037 · On-foot pressure: flanking Hive and hit/kill feedback
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: M
@@ -583,6 +583,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Hit-marker and kill flash/sound via Sfx synthesis, no assets
   - [ ] Pylons down <= 90 s, Core dead <= 100 s; check.sh PASS
 - notes: Depends on VS-031 landing first. Keep dps low for touch aim.
+- done: S0035 — flank squad (5-6 crawlers/drones, 30 m, 60-120 deg, 1.8x speed/dmg; acceptance '2-3' retuned), kill X/flash + kill blip, bot strafes+boards, fixed freed-Core SCRIPT ERROR; QA PASS round 2 (Core dead 65 s, min_foot 525; on-foot hp+shield reading accepted)
 
 ## VS-038 · Hot opening: scouts close in within 25 s
 - status: done
@@ -695,6 +696,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] if it still regresses, redirect only when Union has fewer than X ships or send a lighter raid; otherwise leave flag off and record why in DESIGN.md
   - [ ] check.sh PASS
 - notes: S0034 QA: also bounty is skipped for redirected raids; no-Union-station fallback has a selftest. Watch perturb=1 seed 101 nw30 tail (23k).
+
+## VS-045 · Flank pressure should cost on-foot hp, not just shield
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: qa
+- created: S0035
+- why: S0035 QA: moving bot loses only shield (60->40); on-foot hp stays 100 and min_foot 525, so pressure is mild.
+- acceptance:
+  - [ ] surface_long (headless, --quit-after 9000) shows on-foot min_hp < 90 and min_foot >= 200 across 2 variants
+  - [ ] Core dead <= 100 s, pylons <= 90 s, 0 SCRIPT ERROR; touch aim stays forgiving
+  - [ ] check.sh PASS
+- notes: run is deterministic; vary FLANK_DAMAGE_MULT/FLANK_DIST in defs.gd. Needs --quit-after 9000 flag.
 
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)

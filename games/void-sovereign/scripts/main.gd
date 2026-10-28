@@ -254,6 +254,7 @@ func _on_land(sector_idx: int) -> void:
 		if RunFlow.surface_live(state):
 			_leave_surface.call_deferred(true))
 	surface.hit_something.connect(func() -> void: hud.hit(); sfx.play("hit"))
+	surface.kill_confirmed.connect(func(big: bool) -> void: hud.kill(big))
 	surface.sfx.connect(func(n: String) -> void: sfx.play(n))
 	surface.player_damaged.connect(func(a: float) -> void: hud.damaged(a))
 	hud.surface = surface

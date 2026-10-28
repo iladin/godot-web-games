@@ -13,6 +13,9 @@ var _title_frames: int = 0
 var _save_checked: bool = false
 var _far_set := false
 var _min_hull: float = 1e9
+var _min_hp: float = 1e9
+var _ms: Dictionary = {}   ## VS-037 milestones (surface_long): first pylon, pylons down, core dead, boarded
+var _min_foot: float = 1e9   ## VS-037: lowest on-foot (hp + shield) scaled to ship-hull units (x600/160); ship hull itself is untouched on foot
 
 
 func _init(p_g: VoidMain) -> void:
@@ -195,9 +198,22 @@ func _shot_script(t: float) -> void:
 				g.space.enter_sector(3)
 				g.space.player.position = Vector3(800, 0, 800)
 	if g.shot_mode.ends_with("_long") and int(t * 60.0) % 60 == 0:
-		print("t=%d credits=%d hull=%d sh=%d min_hull=%d %s" % [int(t), int(g.u.credits), int(g.u.player_ship.hull), int(g.u.player_ship.shield), int(_min_hull), g.surface.objective_text() if g.surface else "sector %d mode %s" % [g.space.sector_idx, g.mode]])
+		print("t=%d credits=%d hull=%d sh=%d min_hull=%d foot=%d/%d min_foot=%d min_hp=%d ms=%s ship=%d flank=%d mobs=%d %s" % [int(t), int(g.u.credits), int(g.u.player_ship.hull), int(g.u.player_ship.shield), int(_min_hull), int(g.surface.fps.hp) if g.surface else -1, int(g.surface.fps.shield) if g.surface else -1, int(_min_foot), int(_min_hp), str(_ms), int(g.surface.fps.global_position.distance_to(g.surface.ship_pos)) if g.surface else -1, g.surface.flank_spawned if g.surface else 0, g.surface.mobiles_alive() if g.surface else 0, g.surface.objective_text() if g.surface else "sector %d mode %s" % [g.space.sector_idx, g.mode]])
 	if g.shot_mode.ends_with("_long") and g.u.player_ship != null:
 		_min_hull = minf(_min_hull, g.u.player_ship.hull)
+		if g.surface != null:
+			var sv := g.surface
+			_min_hp = minf(_min_hp, sv.fps.hp)
+			if sv.pylons_left() < sv.level + 1 and not _ms.has("pylon1"):
+				_ms["pylon1"] = t
+			if sv.pylons_left() == 0 and not _ms.has("pylons"):
+				_ms["pylons"] = t
+			if sv.core_dead and not _ms.has("core"):
+				_ms["core"] = t
+		elif _ms.has("core") and not _ms.has("boarded"):
+			_ms["boarded"] = t
+		if g.surface != null:
+			_min_foot = minf(_min_foot, (g.surface.fps.hp + g.surface.fps.shield) * 600.0 / (FpsPlayer.MAX_HP + FpsPlayer.MAX_SHIELD))
 	if g.shot_mode == "surface_far" and g.surface != null and not _far_set:
 		_far_set = true   # VS-031: view the base from the far map corner
 		var sv := g.surface
@@ -213,7 +229,7 @@ func _shot_script(t: float) -> void:
 	if g.shot_mode == "sortie":
 		wait = 9.0
 	if g.shot_mode.ends_with("_long"):
-		wait = 90.0
+		wait = 120.0 if g.shot_mode == "surface_long" else 90.0   # surface_long: leave time to walk back and board
 	if _ap_step == 1 and t > wait:
 		_ap_step = 2
 		await RenderingServer.frame_post_draw

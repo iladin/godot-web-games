@@ -20,6 +20,7 @@ var msgs: Array[Dictionary] = []
 var popups: Array[Dictionary] = []
 var hit_flash: float = 0.0
 var dmg_flash: float = 0.0
+var kill_flash: float = 0.0   ## VS-037: red X + screen tint on a confirmed kill
 var _last_credits: float = 0.0
 var t: float = 0.0
 
@@ -46,6 +47,10 @@ func hit() -> void:
 	hit_flash = 0.15
 
 
+func kill(big: bool = false) -> void:
+	kill_flash = 0.6 if big else 0.4
+
+
 func damaged(_amount: float) -> void:
 	dmg_flash = minf(dmg_flash + 0.35, 0.8)
 
@@ -54,6 +59,7 @@ func _process(delta: float) -> void:
 	t += delta
 	hit_flash = maxf(hit_flash - delta, 0.0)
 	dmg_flash = maxf(dmg_flash - delta * 1.2, 0.0)
+	kill_flash = maxf(kill_flash - delta, 0.0)
 	for m: Dictionary in msgs:
 		m["t"] = float(m["t"]) + delta
 	msgs = msgs.filter(func(m: Dictionary) -> bool: return float(m["t"]) < MSG_LIFE)
@@ -265,6 +271,12 @@ func _draw_surface(sz: Vector2) -> void:
 		for a: float in [0.785, 2.356, 3.927, 5.498]:
 			var dd := Vector2(cos(a), sin(a))
 			draw_line(c + dd * 12, c + dd * 24, Color.WHITE, 2.5)
+	if kill_flash > 0.0:
+		var k := kill_flash / 0.6
+		draw_rect(Rect2(Vector2.ZERO, sz), Color(1, 0.85, 0.5, k * 0.12))
+		for a2: float in [0.785, 2.356, 3.927, 5.498]:
+			var d2 := Vector2(cos(a2), sin(a2))
+			draw_line(c + d2 * (14 + (1.0 - k) * 14), c + d2 * (30 + (1.0 - k) * 18), Color(HIVE, minf(1.0, k * 2.0)), 4.0)
 	var base := Vector2(20, sz.y - 90) if not surface.touch.active else Vector2(20, 130)
 	draw_rect(Rect2(base - Vector2(8, 26), Vector2(330, 96)), PANEL)
 	var fp := surface.fps
