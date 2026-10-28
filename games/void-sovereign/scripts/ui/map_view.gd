@@ -502,6 +502,10 @@ func _draw_ent(e: SimEntity) -> void:
 		if not e.can_be_damaged():
 			draw_arc(p, 18, 0, TAU, 24, Color(HIVE, 0.6 + 0.3 * sin(t * 4.0)), 2.0)
 		draw_rect(Rect2(p + Vector2(-14, 13), Vector2(28 * e.hull_frac(), 3)), col)
+		if e.faction == Defs.Faction.PLAYER and e.hull_frac() < 0.995:
+			# VS-048: wounds stay visible until repaired at a dock.
+			var wc := HIVE if e.hull_frac() < 0.5 else AMBER
+			_text(p + Vector2(-40, 28), "DAMAGED %d%%" % int(e.hull_frac() * 100.0), 12, wc, 80)
 		return
 	var sh := e as ShipData
 	var dir := Vector2(e.vel.x, e.vel.z)

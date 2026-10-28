@@ -13,6 +13,7 @@ var _rows: Dictionary = {}   # ware -> {stock: Label, price: Label, mine: Label}
 var _info: Label
 var _ledger: Label
 var _repair: Button
+var _st_repair: Button
 var _ship_btns: Dictionary = {}
 
 
@@ -89,6 +90,11 @@ func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 	_repair.pressed.connect(_do_repair)
 	box.add_child(_repair)
 
+	_st_repair = Button.new()
+	_st_repair.pressed.connect(func() -> void: u.repair_station(st))
+	_st_repair.visible = st.faction == Defs.Faction.PLAYER
+	box.add_child(_st_repair)
+
 	if st.kind == "shipyard" or st.kind == "hq":
 		var yl := Label.new()
 		yl.text = "SHIPYARD — new ships launch here and join your fleet"
@@ -138,6 +144,9 @@ func _refresh() -> void:
 	var missing := ps.hull_max - ps.hull
 	_repair.text = "Hull %d%% — Repair (%d cr)" % [int(ps.hull_frac() * 100.0), int(missing * REPAIR_COST)] if missing > 1.0 else "Hull 100%"
 	_repair.disabled = missing <= 1.0
+	var sc := u.station_repair_cost(st)
+	_st_repair.text = "Station hull %d%% — Repair (%d cr)" % [int(st.hull_frac() * 100.0), int(sc)] if sc > 1.0 else "Station hull 100%"
+	_st_repair.disabled = sc <= 1.0 or u.credits < 1.0
 	for cls: String in _ship_btns:
 		var b := _ship_btns[cls] as Button
 		var cost := int(Defs.SHIP[cls]["cost"])

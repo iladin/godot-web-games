@@ -42,6 +42,9 @@ const START_CREDITS := 30000.0
 const TRADER_RESERVE := 2000.0  # player-owned auto ships/stations never spend credits below this
 const COLONY_INCOME := 450.0     # credits per minute per colony
 const BOUNTY: Dictionary = {"drone": 150.0, "ravager": 600.0, "dreadnought": 4000.0}
+# VS-048: station hull damage persists (stations never regenerate hull); a docked player pays this
+# many credits per hull point to patch a Sovereign-owned station (HQ full rebuild = 30000 x this).
+const STATION_REPAIR_COST := 0.4
 const RESPAWN_PENALTY := 0.25    # fraction of credits lost when your ship dies
 
 # --- Combat --------------------------------------------------------------------

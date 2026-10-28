@@ -748,7 +748,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0040 — top-bar shows labelled net cr/min from ledger (QA PASS round 1)
 
 ## VS-048 · Station wounds that stay wounded (step 1: persistent HQ hull damage and paid repair)
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -756,10 +756,10 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0037
 - why: S0037 Critic problem 1 and bold idea: active play is never dangerous (hull 600, on-foot hp 100, HQ survives 9/9), so raids and fights have no lasting cost.
 - acceptance:
-  - [ ] Damage to the HQ/station hull from raids persists until repaired at a dock for credits (visible on map/dock UI)
-  - [ ] Balance gates stay met (economic HQ survives >= 7/9 seeds; passive HQ loss median still 20-35 min); metrics row appended
-  - [ ] Damage state is saved and restored (round-trip selftest)
-  - [ ] check.sh PASS, 0 SCRIPT ERROR
+  - [x] Damage to the HQ/station hull from raids persists until repaired at a dock for credits (visible on map/dock UI)
+  - [x] Balance gates stay met (economic HQ survives >= 7/9 seeds; passive HQ loss median still 20-35 min); metrics row appended
+  - [x] Damage state is saved and restored (round-trip selftest)
+  - [x] check.sh PASS, 0 SCRIPT ERROR
 - notes: Scout proposal 1 (S0037-scout.md). Split further if Developer finds it L. Do VS-045 first or together to avoid conflicting tuning; run balance.sh sequentially (split seed offsets, timeout).
 
 # Ideas parking lot
@@ -845,3 +845,6 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
 - S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
 - S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).
+- done: S0043 — paid station repair (STATION_REPAIR_COST 0.4/hull pt) + DAMAGED label, dock button, HUD %; QA PASS round 1
+- VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
+- Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing

@@ -312,6 +312,23 @@ func transact(ship: ShipData, st: StationData, ware: String, qty: int, buy: bool
 
 
 ## VS-024: the single writer of the player's credits. Every change carries a CreditLedger category.
+## VS-048: cost to restore a station to full hull.
+func station_repair_cost(st: StationData) -> float:
+	return maxf(0.0, st.hull_max - st.hull) * Defs.STATION_REPAIR_COST if st.alive else 0.0
+
+
+## VS-048: pay (up to available credits) to restore station hull; returns hull points restored.
+func repair_station(st: StationData) -> float:
+	if not st.alive or st.faction != Defs.Faction.PLAYER or credits <= 0.0:
+		return 0.0
+	var pts := minf(st.hull_max - st.hull, credits / Defs.STATION_REPAIR_COST)
+	if pts <= 0.5:
+		return 0.0
+	add_credits(-pts * Defs.STATION_REPAIR_COST, "repair")
+	st.hull += pts
+	return pts
+
+
 func add_credits(amount: float, cat: String) -> void:
 	credits += amount
 	ledger.record(time, amount, cat)

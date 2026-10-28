@@ -432,6 +432,7 @@ func _init() -> void:
 	_test_run_save_file()
 	_test_marker_layout()
 	_test_raid_panel_fit()
+	_test_station_wounds()
 	_test_run_flow()
 	await _test_surface_over()
 	await _test_surface_landmarks()
@@ -1199,3 +1200,27 @@ func _test_raid_panel_fit() -> void:
 			assert(not lr.intersects(Rect2(p + Vector2(-60, -24), Vector2(120, 12))), "inset raid label overlaps the name of %s" % sec.name)
 			assert(not lr.intersects(Rect2(p + Vector2(-14, -14), Vector2(28, 28))), "inset raid label overlaps the dot of %s" % sec.name)
 			assert(not lr.intersects(Rect2(p + Vector2(-14, 4), Vector2(36, 22))), "inset raid label overlaps the hive counter of %s" % sec.name)
+
+
+## VS-048: HQ damage persists (no regen), survives save/restore, and is repaired only for credits.
+func _test_station_wounds() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	var hq := u.hq
+	hq.take_damage(hq.shield + 10000.0)
+	var h0 := hq.hull
+	assert(h0 < hq.hull_max - 5000.0)
+	for i in 600:
+		u.step(JOURNEY_DT)
+	assert(hq.hull <= h0 + 0.001, "station hull does not regenerate")
+	var r := SaveGame.restore(JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary)
+	assert(r != null and is_equal_approx(r.hq.hull, hq.hull) and r.hq.hull < r.hq.hull_max - 5000.0, "station damage round-trips")
+	var cost := u.station_repair_cost(hq)
+	assert(is_equal_approx(cost, (hq.hull_max - hq.hull) * Defs.STATION_REPAIR_COST))
+	u.credits = cost * 0.5
+	var before := u.credits
+	u.repair_station(hq)
+	assert(u.credits < 1.0 and hq.hull > h0 and hq.hull < hq.hull_max, "partial repair spends all credits")
+	u.credits = 1.0e9
+	u.repair_station(hq)
+	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e9 and before > 0.0, "full repair costs credits")

@@ -225,3 +225,8 @@
 - Task(s): VS-043 raid panel fit - done (QA PASS round 1)
 - Check: PASS · Git: committed
 - Notes: Defend 46 px (logical; ~30 px physical at 900 wide, QA P3). No balance change.
+
+## S0043 — 2026-10-28 12:30 — BUILD
+- Task(s): VS-048 station wounds (paid HQ/station repair, DAMAGED label, dock button, HUD %) — done, QA PASS round 1
+- Check: PASS · Git: committed (see git log)
+- Notes: builds_since_review now 6 -> PLANNING forced next session. Balance verified on 6/6 economic + 3 passive seeds only (sim unchanged).
