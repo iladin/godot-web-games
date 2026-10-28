@@ -49,6 +49,9 @@ const STATION_REPAIR_COST := 0.4
 # grows linearly to WOUND_PENALTY_MAX (at 0% hull); it scales colony income and HQ shield regen.
 const WOUND_PENALTY_START := 0.5
 const WOUND_PENALTY_MAX := 0.3
+# VS-055: HQ hull readout colour steps: >= HQ_HULL_OK_FRAC cyan, >= WOUND_PENALTY_START amber, below that red.
+# HQ_HULL_OK_FRAC is also the economic policy's repair trigger (balance.gd REPAIR_BELOW).
+const HQ_HULL_OK_FRAC := 0.8
 # VS-051: raids leave marks. When a raid reaches a Sovereign station, each surviving raider chips
 # RAID_CHIP_PER_SHIP of that station's max hull, once per raid, capped at RAID_CHIP_MAX (fraction of max hull).
 # The Breach (6 ships) costs ~12% hull. Raids that die before arriving cost nothing.

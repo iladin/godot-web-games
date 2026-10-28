@@ -148,6 +148,9 @@ func _bar(r: Rect2, frac: float, c: Color) -> void:
 
 func _draw_top(sz: Vector2) -> void:
 	draw_rect(Rect2(0, 0, 500, 92), PANEL)
+	var wtag := wound_tag(u)   # VS-055
+	if wtag != "":
+		draw_rect(Rect2(500, 0, 110, 92), PANEL)   # panel grows to hold the wound tag
 	var loc := u.sectors[space.sector_idx].name if space and mode == "flight" else ("Surface of " + u.sectors[surface.sector_idx].planet_name if surface else "")
 	var cr := "%s cr" % _fmt(u.credits)
 	_txt(Vector2(14, 32), cr, 28, AMBER)
@@ -161,9 +164,12 @@ func _draw_top(sz: Vector2) -> void:
 	_txt(Vector2(14, 82), "T+%02d:%02d   Nests %d   Colonies %d   Kills %d" % [mins, int(u.time) % 60, u.alive_nests().size(), u.colonies(), u.kills], 16, DIM)
 	_txt(Vector2(340, 32), "HQ", 16, DIM)
 	if u.hq:
-		_bar(Rect2(370, 20, 115, 10), u.hq.hull_frac(), AMBER if u.hq.hull_frac() > 0.35 else HIVE)
-		if u.hq.hull_frac() < 0.995:
-			_txt(Vector2(490, 32), "%d%%" % int(u.hq.hull_frac() * 100.0), 14, AMBER if u.hq.hull_frac() > 0.35 else HIVE)
+		# VS-055: hull percent always shown inside the bar; colour steps at HQ_HULL_OK_FRAC / WOUND_PENALTY_START.
+		var hc := hq_color(u.hq.hull_frac())
+		_bar(Rect2(370, 17, 80, 16), u.hq.hull_frac(), Color(hc, 0.55))
+		_txt(Vector2(370, 31), "%d%%" % int(u.hq.hull_frac() * 100.0), 14, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 80.0)
+		if wtag != "":
+			_txt(Vector2(458, 31), wtag, 13, HIVE)
 	var fc := forecast_line(u)   # VS-054
 	if fc != "":
 		var fw := font.get_string_size(fc, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
@@ -179,6 +185,21 @@ func _draw_top(sz: Vector2) -> void:
 		var k := clampf(float(p["t"]) / DELTA_LIFE, 0.0, 1.0)
 		_txt(Vector2(px, py), p["text"], 20, Color(NEUTRAL if p["neg"] else AMBER, 1.0 - k * k))
 		py += 24.0
+
+
+## VS-055: HQ hull readout colour: cyan at/above HQ_HULL_OK_FRAC, amber at/above WOUND_PENALTY_START, else red.
+static func hq_color(frac: float) -> Color:
+	if frac >= Defs.HQ_HULL_OK_FRAC:
+		return CYAN
+	return AMBER if frac >= Defs.WOUND_PENALTY_START else HIVE
+
+
+## VS-055: 'WOUNDED -x% income' while the HQ wound penalty bites, else "".
+static func wound_tag(uni: Universe) -> String:
+	if uni.hq == null or not uni.hq.alive:
+		return ""
+	var pen := uni.hq.wound_penalty()
+	return "WOUNDED -%d%% income" % int(round(pen * 100.0)) if pen > 0.0 else ""
 
 
 ## VS-054: the soonest forecast raid line, or "".

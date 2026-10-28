@@ -863,7 +863,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0050 — raid forecast line at T-60 s on HUD, map inset and raid panel (QA PASS r1)
 
 ## VS-055 · HQ hull readout and hq_wounded/dock_wounded shots
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -875,7 +875,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Colour steps at 80% and 50% match REPAIR_BELOW and WOUND_PENALTY_START; 'WOUNDED -x% income' tag when penalty bites
   - [ ] shots.sh hq_wounded and dock_wounded exist and write PNGs; DAMAGED label not clipped (shows %)
   - [ ] check.sh PASS
-- notes: Scout S0050 #2.
+- notes: Scout S0050 #2. S0051 started (rollback c244660).
+- done: S0051 — HQ bar in-bar hull %, hq_color steps at Defs.HQ_HULL_OK_FRAC/WOUND_PENALTY_START, WOUNDED tag, hq_wounded_hud+dock_wounded shots (QA PASS r1)
 
 ## VS-056 · Trim Hive ship cap ~5% and add --fleet-floor harness policy
 - status: todo

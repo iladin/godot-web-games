@@ -157,6 +157,10 @@ func _shot_script(t: float) -> void:
 					g._on_dock(g.u.hq)
 				else:
 					g._set_mode("map")
+			"hq_wounded_hud", "dock_wounded":   # VS-055: wounded HQ (30% hull) in the flight HUD / at the dock
+				g.u.hq.hull = g.u.hq.hull_max * 0.3
+				if g.shot_mode == "dock_wounded":
+					g._on_dock(g.u.hq)
 			"wound_map", "wound_dock":   # VS-050: wounded HQ quotes penalty + repair price
 				g.u.hq.hull = g.u.hq.hull_max * 0.2
 				if g.shot_mode == "wound_dock":

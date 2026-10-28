@@ -1346,9 +1346,14 @@ func _test_bot_repair() -> void:
 func _test_wound_penalty() -> void:
 	assert(Defs.wound_penalty(0.5) == 0.0 and Defs.wound_penalty(1.0) == 0.0, "no penalty at or above 50% hull")
 	assert(is_equal_approx(Defs.wound_penalty(0.25), Defs.WOUND_PENALTY_MAX * 0.5) and is_equal_approx(Defs.wound_penalty(0.0), Defs.WOUND_PENALTY_MAX), "linear to cap")
+	assert(Hud.hq_color(0.8) == Hud.CYAN and Hud.hq_color(0.79) == Hud.AMBER and Hud.hq_color(0.5) == Hud.AMBER and Hud.hq_color(0.49) == Hud.HIVE, "VS-055 HQ colour steps at 80%/50%")
 	var u := Universe.new()
 	u.setup(JOURNEY_SEED)
 	var hq := u.hq
+	assert(Hud.wound_tag(u) == "", "VS-055 no wound tag at full hull")
+	hq.hull = hq.hull_max * 0.2
+	assert(Hud.wound_tag(u) == "WOUNDED -%d%% income" % int(round(hq.wound_penalty() * 100.0)), "VS-055 wound tag quotes the penalty")
+	hq.hull = hq.hull_max
 	u.sectors[0].planet_state = "colony"
 	var full := float(u.colonies()) * Defs.COLONY_INCOME / 60.0
 	hq.hull = hq.hull_max * 0.2

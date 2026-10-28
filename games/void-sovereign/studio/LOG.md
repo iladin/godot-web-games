@@ -266,3 +266,8 @@
 - Task(s): review round (Critic 6.8, QA sweep P3 only, balance 7/9 targets) -> VS-054..058; VS-054 raid forecast done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: stale .git/HEAD.lock moved to .git/stale-head-lock-S0050 (git can't unlink without delete permission).
+
+## S0051 — 2026-10-28 20:10 — BUILD
+- Task(s): VS-055 HQ hull readout + hq_wounded_hud/dock_wounded shots — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: Defs.HQ_HULL_OK_FRAC added (balance.gd REPAIR_BELOW uses it). Wounded tag + raid forecast not shot together.
