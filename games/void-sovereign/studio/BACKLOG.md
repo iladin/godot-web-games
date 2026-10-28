@@ -712,6 +712,51 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS
 - notes: run is deterministic; vary FLANK_DAMAGE_MULT/FLANK_DIST in defs.gd. Needs --quit-after 9000 flag.
 
+## VS-046 · Tips follow the threat: no tutorial tip over the opening fight
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0037
+- why: S0037 Critic problem 2: tip 1/6 ("capture the mouse") is on screen while the shield drains from t=12, so the first fight competes with reading.
+- acceptance:
+  - [ ] While a hostile is within engagement range or shield is dropping, the current tip is deferred (not skipped) and resumes after the fight
+  - [ ] Opening sortie shot (combat) shows no tip text overlapping the HUD alerts at t=12..30
+  - [ ] Touch and desktop both behave; selftest covers the deferral
+  - [ ] check.sh PASS
+- notes: see tutorial tip code (VS-017 made tips follow the world). Scout proposal 2.
+
+## VS-047 · Honest top-bar income: net, labelled, smoothed
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0037
+- why: S0037 Critic problem 3: top-bar "+150 cr" is a one-off sale shown like a rate, gross and unlabelled; ledger (VS-040) already has net_per_min.
+- acceptance:
+  - [ ] Top-bar rate shows labelled net cr/min from the ledger (e.g. "net +420/min"), not a last-sale amount
+  - [ ] Empty/zero state reads sensibly and does not flicker under 60 s of lapsed income
+  - [ ] Fits at 1280, 900 and 640 widths (fit guard); selftest asserts the text
+  - [ ] check.sh PASS
+- notes: Scout proposal 3; also closes HANDOVER carry-over "top-bar HUD rate gross/unlabelled".
+
+## VS-048 · Station wounds that stay wounded (step 1: persistent HQ hull damage and paid repair)
+- status: todo
+- priority: P1
+- type: feature
+- size: M
+- source: scout
+- created: S0037
+- why: S0037 Critic problem 1 and bold idea: active play is never dangerous (hull 600, on-foot hp 100, HQ survives 9/9), so raids and fights have no lasting cost.
+- acceptance:
+  - [ ] Damage to the HQ/station hull from raids persists until repaired at a dock for credits (visible on map/dock UI)
+  - [ ] Balance gates stay met (economic HQ survives >= 7/9 seeds; passive HQ loss median still 20-35 min); metrics row appended
+  - [ ] Damage state is saved and restored (round-trip selftest)
+  - [ ] check.sh PASS, 0 SCRIPT ERROR
+- notes: Scout proposal 1 (S0037-scout.md). Split further if Developer finds it L. Do VS-045 first or together to avoid conflicting tuning; run balance.sh sequentially (split seed offsets, timeout).
+
 # Ideas parking lot
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
 - selftest: full trader buy -> sell -> idle state-machine cycle (S0001 dev)
@@ -790,3 +835,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0031, QA VS-038, P3) Balance harness hides the pilot so the First Sortie never spawns there (hive_ships_20 median now 60 vs 49-51 with wave); add a pilot-present/--wave harness mode so gates cover real play.
 - (S0031, QA sweep, P3) Command map side panel at 900x720 scrolls: Close and last orders at bottom edge; sortie tip box also a mouse-capture tip on touch.
 - (S0036, QA VS-040, P3) Ledger empty state ("No income yet") reappears after income lapses >60 s because it keys on gross<=0; key on ledger.total()/ever-earned or say "No income in the last minute". Also dock inline empty state has dangling "Ways to earn:  ·" separator; Universe.income_sources calls private Hud._fmt (sim->UI dependency); top-bar HUD rate is still gross and unlabelled.
+- S0037 scout: Clean prompts bundle (capture-mouse prompt placement, wing column over planet limb, title controls widow "travel · M", HQ marker icon stacking, THR+ on station) — S, polish.
+- S0037 scout: Second beat, Union convoy under fire at t=45..75 to fill the opening lull — S, feature.
+- S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
+- S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
+- S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).

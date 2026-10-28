@@ -195,3 +195,8 @@
 - Task(s): VS-040 income empty state + net/gross labelling — done (QA PASS round 1).
 - Check: PASS · Git: committed (see git log)
 - Notes: 3 QA P3s to parking lot. builds_since_review=6 -> PLANNING next.
+
+## S0037 — 2026-10-28 06:10 — PLANNING
+- Task(s): review round (Critic 6.7/10, QA sweep no P0-P2, Balance 8/9 targets met); created VS-046, VS-047, VS-048; no BUILD (top task VS-048 is size M, wrap-up kept short)
+- Check: PASS · Git: committed (see git log)
+- Notes: 8 open todos. Parking lot gained prompt-clutter bundle, convoy beat, on-foot autosave, balance watch items.
