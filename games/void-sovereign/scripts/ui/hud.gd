@@ -111,8 +111,9 @@ func _draw_top(sz: Vector2) -> void:
 	_txt(Vector2(14, 32), cr, 28, AMBER)
 	# VS-024: rolling income rate (CreditLedger.RATE_WINDOW) right of the balance.
 	var rate_x := 14.0 + font.get_string_size(cr, HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x + 10.0
-	var rate := "+%s cr/min" % _fmt(u.ledger.income_per_min(u.time))
-	_txt(Vector2(rate_x, 32), rate, 16, Color(AMBER, 0.75))
+	var rate := rate_text(u)   # VS-035: hidden for the first MIN_RATE_SPAN seconds (same on touch and desktop)
+	if rate != "":
+		_txt(Vector2(rate_x, 32), rate, 16, Color(AMBER, 0.75))
 	var pop_x := rate_x + font.get_string_size(rate, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 10.0
 	_txt(Vector2(14, 58), loc, 20, CYAN)
 	var mins := int(u.time / 60.0)
@@ -366,6 +367,13 @@ static func objective_for(u: Universe, touch: bool) -> String:
 	if not shielded.is_empty():
 		return "Kill the Hive Cores on %s to drop the Nest shields" % ", ".join(PackedStringArray(shielded))
 	return "Hold the line"
+
+
+## VS-035: top-bar income rate; empty until the ledger has a meaningful window.
+static func rate_text(p_u: Universe) -> String:
+	if p_u.time < CreditLedger.MIN_RATE_SPAN:
+		return ""
+	return "+%s cr/min" % _fmt(p_u.ledger.income_per_min(p_u.time))
 
 
 ## VS-024: "last 5 min" credit breakdown for the map (one category per line) and dock (inline).

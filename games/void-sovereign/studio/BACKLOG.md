@@ -538,7 +538,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0025 — BREACH_SIZE 4->6; passive-40 HQ-lost median 36.0->28.3 min, econ nw20 113.6k, HQ 9/9, Hive@20 51 (QA PASS, numbers reproduced)
 
 ## VS-035 · Fit-to-screen text guard and map/title label fixes
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -550,7 +550,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Map Sovereign HQ label drawn above player/escort icons at default zoom
   - [ ] Touch HUD cr/min matches desktop in same state; rate hidden for first 15 s
   - [ ] check.sh PASS
-- notes: Layout only; re-shot at both sizes.
+- notes: Layout only; re-shot at both sizes. S0033 in progress.
+- done: S0033 — title help text wraps to 92% width, map station names drawn above ships, Hud.rate_text hides cr/min for 15 s (QA PASS)
 
 ## VS-036 · Raids you can fight: intercept bounty and honest outcome reports
 - status: todo

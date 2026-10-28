@@ -169,3 +169,8 @@
 - Task(s): VS-039 raid tracks on inset + map panel (labels, outcome history, Defend patrol button) — done (QA PASS round 1); VS-043 created from QA P3s
 - Check: PASS · Git: committed (see git log)
 - Notes: sim bit-identical to HEAD (A/B 9 seeds); HEAD metrics drifted vs S0031 line (nw20 120.8k, nw30 167.5k, hive@20 53).
+
+## S0033 — 2026-10-28 00:10 — BUILD
+- Task(s): VS-035 Fit-to-screen text guard and map/title label fixes — done (QA PASS round 1)
+- Check: PASS · Git: committed (see git log)
+- Notes: overlay.gd fit_lines word-wrap, map_view.gd station names second pass, Hud.rate_text 15 s gate, selftest _test_text_fit. QA P3: touch@900 hint shows "Union.Trade Hub" stray dot (unverified, may predate).

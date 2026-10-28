@@ -447,6 +447,14 @@ func _draw() -> void:
 			draw_dashed_line(w2s(sh.pos), w2s(tp), Color(AMBER, 0.6), 1.5, 6.0)
 	for e: SimEntity in u.ents_in(view_sector):
 		_draw_ent(e)
+	# VS-035: station names last and above the icon so ships clustered at the HQ never cover them.
+	for e: SimEntity in u.ents_in(view_sector):
+		if e.is_station:
+			var sp := w2s(e.pos)
+			var nm := e.display_name
+			for o: Vector2 in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
+				draw_string(font, sp + Vector2(-90, -22) + o, nm, HORIZONTAL_ALIGNMENT_CENTER, 180, 13, Color(0, 0, 0, 0.85))
+			_text(sp + Vector2(-90, -22), nm, 13, Color(Defs.faction_color(e.faction), 1.0), 180)
 	if _dragging and _drag_start.distance_to(_drag_now) > DRAG_PX and build_kind == "":
 		var r := Rect2(_drag_start, _drag_now - _drag_start).abs()
 		draw_rect(r, Color(AMBER, 0.1))
@@ -472,7 +480,6 @@ func _draw_ent(e: SimEntity) -> void:
 		draw_rect(Rect2(p - Vector2(r, r), Vector2(r, r) * 2), col, false, 2.0)
 		if not e.can_be_damaged():
 			draw_arc(p, 18, 0, TAU, 24, Color(HIVE, 0.6 + 0.3 * sin(t * 4.0)), 2.0)
-		_text(p + Vector2(-90, 26), e.display_name, 13, Color(col, 0.9), 180)
 		draw_rect(Rect2(p + Vector2(-14, 13), Vector2(28 * e.hull_frac(), 3)), col)
 		return
 	var sh := e as ShipData

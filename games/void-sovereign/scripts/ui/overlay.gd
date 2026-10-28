@@ -36,6 +36,48 @@ func _line(y: float, s: String, fs: int, c: Color) -> void:
 	draw_string(font, Vector2(0, y), s, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, c)
 
 
+## VS-035: word-wrap `src` so no line is wider than `max_w` at font size `fs`.
+static func fit_lines(src: Array[String], fs: int, max_w: float, f: Font = null) -> Array[String]:
+	var fnt: Font = f if f != null else ThemeDB.fallback_font
+	var out: Array[String] = []
+	for l: String in src:
+		if l == "" or fnt.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= max_w:
+			out.append(l)
+			continue
+		var cur := ""
+		for w: String in l.split(" "):
+			var cand := w if cur == "" else cur + " " + w
+			if cur != "" and fnt.get_string_size(cand, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > max_w:
+				out.append(cur)
+				cur = w
+			else:
+				cur = cand
+		if cur != "":
+			out.append(cur)
+	return out
+
+
+const TITLE_BODY_FS := 19
+const TITLE_MARGIN := 0.92   # title text may use at most this fraction of the viewport width
+
+
+## The title's help lines after wrapping to the viewport (also asserted by selftest).
+static func title_body(width: float, touch: bool = false) -> Array[String]:
+	var lines: Array[String] = [
+		"Two Hive Nests are shielded by Cores on their planets.",
+		"Land, fight through on foot, kill the Cores — then send your fleet to burn the Nests.",
+		"Earn credits trading, mining and with stations. Keep your HQ alive.",
+		"",
+		"FLIGHT  mouse/arrows steer · W/S throttle · LMB/Space fire · R target · G wing attack · C wing escort · V wing hold · F dock/land · T travel · M map",
+		"FOOT  WASD · mouse look · LMB fire · R reload · Space jump · F board ship · N sound on/off",
+		"MAP  LMB select · drag box · RMB order · buy ships & build stations",
+		"P pause · H skip tips",
+	]
+	if touch:
+		lines.append("Touch: left stick steers/moves · on-screen buttons")
+	return fit_lines(lines, TITLE_BODY_FS, width * TITLE_MARGIN)
+
+
 ## Screen-space rectangle of the title's Continue button (also used for click/tap hit-testing).
 func continue_rect() -> Rect2:
 	var w := 380.0
@@ -49,22 +91,13 @@ func _draw() -> void:
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.45))
 			_line(h * 0.25, "VOID SOVEREIGN", 76, AMBER)
 			_line(h * 0.25 + 44, "Trade · Command · Land · Fight", 26, CYAN)
-			var lines: Array[String] = [
-				"Two Hive Nests are shielded by Cores on their planets.",
-				"Land, fight through on foot, kill the Cores — then send your fleet to burn the Nests.",
-				"Earn credits trading, mining and with stations. Keep your HQ alive.",
-				"",
-				"FLIGHT  mouse/arrows steer · W/S throttle · LMB/Space fire · R target · G wing attack · C wing escort · V wing hold · F dock/land · T travel · M map",
-				"FOOT  WASD · mouse look · LMB fire · R reload · Space jump · F board ship · N sound on/off",
-				"MAP  LMB select · drag box · RMB order · buy ships & build stations",
-				"P pause · H skip tips",
-			]
 			var y := h * 0.25 + 100
-			for l: String in lines:
-				_line(y, l, 19, Color(1, 1, 1, 0.85))
-				y += 28
-			if touch_hint:
-				_line(y + 6, "Touch: left stick steers/moves · on-screen buttons", 19, CYAN)
+			var body := title_body(size.x, touch_hint)
+			var tstep := 28.0 if body.size() <= 10 else 24.0
+			for i in body.size():
+				var l: String = body[i]
+				_line(y, l, TITLE_BODY_FS, CYAN if l.begins_with("Touch:") else Color(1, 1, 1, 0.85))
+				y += tstep
 			var pulse := AMBER.lerp(Color.WHITE, 0.5 + 0.5 * sin(t * 4.0))
 			if continue_time >= 0.0:
 				var r := Rect2(Vector2((size.x - 380.0) * 0.5, h * 0.765), Vector2(380, 44))

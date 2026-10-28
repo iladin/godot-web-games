@@ -335,6 +335,7 @@ func _init() -> void:
 	_test_hints()
 	_test_touch_ux()
 	_test_ledger()
+	_test_text_fit()
 	_test_save_game()
 	_test_run_save_file()
 	_test_marker_layout()
@@ -639,6 +640,24 @@ func _test_run_save_file() -> void:
 	assert(not FileAccess.file_exists(path), "delete removes the file")
 	for x: Universe in [u, r]:
 		x.director = null
+
+
+## VS-035: title help text never leaves the viewport; HUD cr/min hidden for the first 15 s.
+func _test_text_fit() -> void:
+	for w: float in [1280.0, 900.0, 640.0, 480.0]:
+		for touch: bool in [false, true]:
+			var worst := 0.0
+			for l: String in Overlay.title_body(w, touch):
+				worst = maxf(worst, ThemeDB.fallback_font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, Overlay.TITLE_BODY_FS).x)
+			assert(worst <= w * Overlay.TITLE_MARGIN + 0.5, "title help text fits %d px wide (widest %.0f)" % [int(w), worst])
+	assert(Overlay.title_body(1280.0).size() >= 8 and Overlay.title_body(900.0).size() > Overlay.title_body(1280.0).size() - 1, "title keeps all help lines")
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	u.time = 5.0
+	assert(Hud.rate_text(u) == "", "cr/min hidden before %d s" % int(CreditLedger.MIN_RATE_SPAN))
+	u.time = CreditLedger.MIN_RATE_SPAN + 1.0
+	assert(Hud.rate_text(u).ends_with("cr/min"), "cr/min shown after the first window")
+	print("text fit: title wraps at 1280/900/640/480, cr/min gated OK")
 
 
 func _test_ledger() -> void:
