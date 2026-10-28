@@ -190,3 +190,8 @@
 - Task(s): VS-037 on-foot flank pressure + kill feedback — done (QA FAIL round 1: freed-Core SCRIPT ERROR, bot never boarded; fix round; QA PASS round 2). New VS-045 (flank costs hp).
 - Check: PASS · Git: committed (see git log)
 - Notes: acceptance "2-3 flankers" retuned to 5-6 at 30 m, 1.8x speed/dmg. Pylons 51 s, Core 65 s, boarded 113 s, min_foot 525 (shield only).
+
+## S0036 — 2026-10-28 05:10 — BUILD
+- Task(s): VS-040 income empty state + net/gross labelling — done (QA PASS round 1).
+- Check: PASS · Git: committed (see git log)
+- Notes: 3 QA P3s to parking lot. builds_since_review=6 -> PLANNING next.

@@ -225,6 +225,22 @@ func sectors_within(from: int, hops: int, avoid_hive: bool) -> Array[int]:
 	return out
 
 
+## VS-040: the three income sources shown before the first income, with estimates computed from the
+## same Defs numbers that pay out (full-hold sale at base price, per-minute colony income).
+func income_sources() -> Array[String]:
+	var hold: int = int(Defs.SHIP["interceptor"]["cargo"])
+	var haul: int = int(Defs.SHIP["miner"]["cargo"])
+	var miners := 0
+	for e: Variant in entities.values():
+		if e is ShipData and (e as ShipData).faction == Defs.Faction.PLAYER and (e as ShipData).cls == "miner":
+			miners += 1
+	return [
+		"Trading: sell a full hold of munitions ~%s cr" % Hud._fmt(float(hold) * float(Defs.BASE_PRICE["munitions"])),
+		"Miners (%s owned): ~%s cr per ore haul each" % [miners, Hud._fmt(float(haul) * float(Defs.BASE_PRICE["ore"]))],
+		"Colonies (%d owned): +%d cr/min each" % [colonies(), int(Defs.COLONY_INCOME)],
+	]
+
+
 func colonies() -> int:
 	var n := 0
 	for s: SectorData in sectors:

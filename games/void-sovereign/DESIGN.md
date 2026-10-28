@@ -67,3 +67,5 @@ Screen shake on hits, explosion flashes + debris, hit markers, damage vignette, 
 
 ## Out of scope
 Ship interiors, boarding, research tree, diplomacy, save-anywhere (only the best score and a single autosave persist; no manual slots, no on-foot saves), multiplayer, audio assets.
+
+- VS-040 income panel (map/dock `Hud.ledger_text`): before any income it lists 3 sources (`Universe.income_sources()`: full-hold munitions sale, miner ore haul, colony cr/min, computed from Defs); afterwards `Income: net X (gross Y) cr/min` via `CreditLedger.net_per_min` / `income_per_min`. The top-bar HUD rate stays gross.

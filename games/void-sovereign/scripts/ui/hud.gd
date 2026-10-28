@@ -390,7 +390,13 @@ static func rate_text(p_u: Universe) -> String:
 
 ## VS-024: "last 5 min" credit breakdown for the map (one category per line) and dock (inline).
 static func ledger_text(p_u: Universe, max_lines: int = 10, inline: bool = false) -> String:
-	var head := "Income +%s cr/min%sLast 5 min:" % [_fmt(p_u.ledger.income_per_min(p_u.time)), "  ·  " if inline else "\n"]
+	var gross := p_u.ledger.income_per_min(p_u.time)
+	var sep := "  ·  " if inline else "\n"
+	if gross <= 0.0:   # VS-040: nothing earned yet; say where income comes from instead of "+0"
+		var src := p_u.income_sources()
+		return "No income yet. Ways to earn:" + sep + sep.join(PackedStringArray(src)) if inline else "No income yet. Ways to earn:\n  " + "\n  ".join(PackedStringArray(src))
+	var net := p_u.ledger.net_per_min(p_u.time)
+	var head := "Income: net %s%s cr/min (gross +%s)%sLast 5 min:" % ["+" if net >= 0.0 else "-", _fmt(absf(net)), _fmt(gross), sep]
 	var parts: Array[String] = []
 	var rows := p_u.ledger.breakdown(p_u.time)
 	for r: Array in rows.slice(0, max_lines):

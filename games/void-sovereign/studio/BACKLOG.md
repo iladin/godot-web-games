@@ -621,7 +621,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0032 — raid tracks on inset + map panel, outcomes list, Defend patrol button; QA PASS
 
 ## VS-040 · Income empty state and net/gross labelling
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -633,7 +633,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] After income starts the panel shows "net X (gross Y)"; ledger test asserts gross >= net
   - [ ] Universe.add_credits remains the only credit writer (selftest still asserts)
   - [ ] check.sh PASS
-- notes: The HUD hide-rate-for-15s item is in VS-035; do not duplicate.
+- notes: S0036. The HUD hide-rate-for-15s item is in VS-035; do not duplicate.
+- done: S0036 — empty-state income sources + net/gross label (QA PASS)
 
 ## VS-041 · Honest save on the surface: landing checkpoint and HUD notice
 - status: todo
@@ -788,3 +789,4 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - Touch layout polish: earn-hint line nearly touches TGT at 900x720; wing column (ATK/ESC/HOLD) sits over the planet at 1280x720 and HOLD is ~13 px from the MOVE pad; flight layout cramped (ACT/MAP overlap) below ~650 px height; `dock_touch`/`touch_wing` not in standard shot sweep; shots.sh writes a PNG for unknown scenario names (S0029 QA, P3)
 - (S0031, QA VS-038, P3) Balance harness hides the pilot so the First Sortie never spawns there (hive_ships_20 median now 60 vs 49-51 with wave); add a pilot-present/--wave harness mode so gates cover real play.
 - (S0031, QA sweep, P3) Command map side panel at 900x720 scrolls: Close and last orders at bottom edge; sortie tip box also a mouse-capture tip on touch.
+- (S0036, QA VS-040, P3) Ledger empty state ("No income yet") reappears after income lapses >60 s because it keys on gross<=0; key on ledger.total()/ever-earned or say "No income in the last minute". Also dock inline empty state has dangling "Ways to earn:  ·" separator; Universe.income_sources calls private Hud._fmt (sim->UI dependency); top-bar HUD rate is still gross and unlabelled.

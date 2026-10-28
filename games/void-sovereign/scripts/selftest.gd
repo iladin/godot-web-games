@@ -784,6 +784,12 @@ func _test_ledger() -> void:
 	assert(float(u.ledger.totals["ships"]) < 0.0 and float(u.ledger.totals["bounty"]) == Defs.BOUNTY["drone"])
 	var rate := u.ledger.income_per_min(u.time)
 	assert(rate > 0.0, "cr/min counts recent income")
+	# VS-040: gross >= net; panel shows net (gross) once income starts and sources before.
+	assert(u.ledger.income_per_min(u.time) >= u.ledger.net_per_min(u.time) - 0.001, "gross >= net")
+	assert(Hud.ledger_text(u).contains("net ") and Hud.ledger_text(u).contains("gross "), "panel labels net and gross")
+	var fresh := Universe.new()
+	fresh.setup(JOURNEY_SEED)
+	assert(fresh.income_sources().size() == 3 and Hud.ledger_text(fresh).contains("No income yet") and Hud.ledger_text(fresh).contains("0 owned"), "empty state lists 3 sources")
 	assert(not u.ledger.breakdown(u.time).is_empty())
 	# Rolling windows: after 6 quiet minutes the breakdown is empty and only new income counts.
 	u.time += 360.0

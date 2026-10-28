@@ -56,6 +56,18 @@ func income_per_min(now: float) -> float:
 	return gain / span * 60.0
 
 
+## Net income (earnings minus spending) per minute over the same window; gross >= net always.
+func net_per_min(now: float) -> float:
+	var first := int(floor((now - RATE_WINDOW) / BUCKET)) + 1
+	var net := 0.0
+	for b: Dictionary in _buckets:
+		if int(b["i"]) >= first:
+			for c: String in b["net"]:
+				net += float(b["net"][c])
+	var span := clampf(now - maxf(float(first) * BUCKET, 0.0), MIN_RATE_SPAN, RATE_WINDOW)
+	return net / span * 60.0
+
+
 ## Net credits per category over the last `window` seconds, largest magnitude first.
 ## Returns [[category, amount], ...]; categories that rounded to zero are left out.
 func breakdown(now: float, window: float = BREAKDOWN_WINDOW) -> Array:
