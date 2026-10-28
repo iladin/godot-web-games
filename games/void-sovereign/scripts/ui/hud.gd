@@ -181,7 +181,7 @@ func _draw_flight(sz: Vector2) -> void:
 	if space.prompt != "" and TutorialHints.on_screen not in ["steer", "throttle"]:
 		_txt(Vector2(0, sz.y * 0.72), space.prompt, 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not space.touch.active and not space.docked \
-			and TutorialHints.on_screen == "":
+			and TutorialHints.on_screen == "" and not TutorialHints.deferred:
 		_txt(Vector2(0, sz.y * 0.78), "Click to capture mouse for steering", 18, DIM, HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 
 

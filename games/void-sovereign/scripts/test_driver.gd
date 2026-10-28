@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -187,7 +187,7 @@ func _shot_script(t: float) -> void:
 				g._on_dock(g.u.hq)
 				g.u.player_ship.take_damage(1e9)
 				g.u._on_killed(g.u.player_ship, 0)
-			"sortie":   # VS-030: idle player at home when the scouts arrive; escorts hold fire at first
+			"sortie", "sortie_fight":   # VS-030 (VS-046: _fight shoots at t=16, mid-fight): idle player at home when the scouts arrive; escorts hold fire at first
 				g.space.autoplay = false
 				g.space.player.autopilot = false
 				g.u.director.opening.t = 0.2
@@ -228,10 +228,14 @@ func _shot_script(t: float) -> void:
 	var wait := 6.0 if g.shot_mode == "surface" or g.shot_mode == "surface_far" else 3.0
 	if g.shot_mode == "sortie":
 		wait = 9.0
+	if g.shot_mode == "sortie_fight":
+		wait = 16.0
 	if g.shot_mode.ends_with("_long"):
 		wait = 120.0 if g.shot_mode == "surface_long" else 90.0   # surface_long: leave time to walk back and board
 	if _ap_step == 1 and t > wait:
 		_ap_step = 2
+		if g.shot_mode == "sortie_fight":
+			assert(g.hints.threatened and g.hints.current() == "", "VS-046: no tip while the opening fight is on")
 		await RenderingServer.frame_post_draw
 		var img := g.get_viewport().get_texture().get_image()
 		img.save_png(g.shot_file if g.shot_file != "" else "user://shot.png")

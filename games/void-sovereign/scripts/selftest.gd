@@ -125,6 +125,11 @@ func _init() -> void:
 			wave_hostile_seen = true
 			assert(ow.ids.size() == Defs.OPENING_WAVE_SIZE, "wave has OPENING_WAVE_SIZE ships")
 			assert(TutorialHints.hostile_in(u, u.hq.sector), "the wave makes the target tip reachable at home")
+			for he: SimEntity in u.ents_in(u.hq.sector):
+				if he.faction == Defs.Faction.HIVE and he.alive:
+					assert(TutorialHints.hostile_near(u, u.hq.sector, he.pos), "VS-046: a hostile is near its own position")
+					assert(not TutorialHints.hostile_near(u, u.hq.sector, he.pos + Vector3(0, 0, 1.0e6)), "VS-046: engagement range is distance based")
+					break
 			assert(absf(u.director.raid_t - (Defs.FIRST_RAID - u.time)) < 0.2, "the wave does not reset or delay the raid timer")
 		assert(ow.spawn_count <= 1, "the opening wave spawns only once")
 		if ow.state == OpeningWave.State.ACTIVE:
@@ -581,6 +586,17 @@ func _test_hints() -> void:
 	h3.update({"dock": true, "map": true, "land": true, "ready": {"target": false}})
 	assert(h3.current() == "" and not h3.done.has("target"), "a waiting tip is hidden, not completed")
 	h3.free()
+	var h4 := TutorialHints.new()   # VS-046: a fight defers the tip, it does not skip or complete it
+	h4.update({"threat": true})
+	assert(h4.current() == "" and not h4.done.has("steer"), "threat hides the tip without completing it")
+	h4.update({"threat": false})
+	assert(h4.current() == "steer", "the same tip resumes after the fight")
+	h4.update({"steer": true, "threat": true})
+	assert(h4.current() == "" and h4.done.has("steer"), "steps still latch during a fight")
+	h4.update({"threat": false})
+	assert(h4.current() == "throttle", "next tip follows once the fight is over")
+	h4.free()
+	assert(TutorialHints.ENGAGE_RANGE > 1150.0, "engagement range covers Hive gun range")
 	assert(TutorialHints.hint_text("throttle", true, "Ember").contains("THR+"), "touch wording")
 	assert(TutorialHints.hint_text("throttle", false, "Ember").contains("W / S"), "keyboard wording")
 	assert(TutorialHints.hint_text("land", false, "Ember").contains("Ember"))

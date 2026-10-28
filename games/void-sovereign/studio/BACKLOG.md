@@ -714,7 +714,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0038 — flank shots carry FLANK_DAMAGE_MULT 3.8, squad 6-7; surface_long min_hp 84 min_foot 315 (QA PASS)
 
 ## VS-046 · Tips follow the threat: no tutorial tip over the opening fight
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -727,6 +727,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Touch and desktop both behave; selftest covers the deferral
   - [ ] check.sh PASS
 - notes: see tutorial tip code (VS-017 made tips follow the world). Scout proposal 2.
+- done: S0039 — tips defer while hostile within 1500 m or damage in last 4 s (QA PASS round 1)
 
 ## VS-047 · Honest top-bar income: net, labelled, smoothed
 - status: todo

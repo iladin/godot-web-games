@@ -205,3 +205,8 @@
 - Task(s): VS-045 flank pressure costs on-foot hp — done (QA PASS round 1)
 - Check: PASS · Git: committed (see git log)
 - Notes: foe shots carry a mult key; FLANK_DAMAGE_MULT 1.8->3.8, FLANK_MIN/MAX 6/7. surface_long min_hp 84, min_foot 315, core dead 67.1s, pylons 55.4s.
+
+## S0039 — 2026-10-28 08:35 — BUILD
+- Task(s): VS-046 tips follow the threat — done (QA PASS round 1)
+- Check: PASS · Git: committed
+- Notes: Developer 23 min, QA 2 min. VS-047 left for next session.

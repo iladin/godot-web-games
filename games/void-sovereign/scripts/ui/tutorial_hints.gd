@@ -16,13 +16,19 @@ const BOX_Y_FRAC := 0.65          # top of the box, as a fraction of screen heig
 const FADE_IN := 0.4
 const SKIP_W := 140.0             # touch: dedicated skip chip, right of the steer zone
 const SKIP_H := 44.0
+const ENGAGE_RANGE := 1500.0      # VS-046: a living Hive ship this close (just beyond the Ravager's 1150 gun range) defers the tip
+const SHIELD_HOLD := 4.0          # VS-046: seconds after the last shield/hull loss that still count as "in a fight"
 
 static var on_screen: String = ""  # step drawn now; HUD hides its duplicate capture/prompt lines
+static var deferred: bool = false  # VS-046: a tip is waiting out a fight; HUD keeps its own hint lines quiet too
 
 var main: VoidMain                # null in selftest: no gathering, no drawing
 var done: Dictionary = {}         # step -> true once completed
 var can_do: Dictionary = {}        # step -> false while it cannot be completed (default ready)
 var skipped: bool = false
+var threatened: bool = false       # VS-046: fight in progress; current() defers (never skips) the tip
+var _last_hp: float = -1.0
+var _hurt_t: float = 99.0
 var font: Font = ThemeDB.fallback_font
 var _shown: String = ""
 var _age: float = 0.0
@@ -41,11 +47,13 @@ func update(ctx: Dictionary) -> void:
 			done[s] = true
 	if ctx.has("ready"):
 		can_do = ctx["ready"]
+	if ctx.has("threat"):
+		threatened = bool(ctx["threat"])
 
 
 ## First unfinished step that can be completed now, or "" when none (or tips were skipped).
 func current() -> String:
-	if skipped:
+	if skipped or threatened:
 		return ""
 	for s: String in STEPS:
 		if not done.has(s) and bool(can_do.get(s, true)):
@@ -83,6 +91,14 @@ static func skip_text(touch: bool) -> String:
 	return "SKIP TIPS" if touch else "H: skip tips"
 
 
+## VS-046: true while a living Hive ship is within ENGAGE_RANGE of pos in the sector.
+static func hostile_near(u: Universe, sector_idx: int, pos: Vector3) -> bool:
+	for e: SimEntity in u.ents_in(sector_idx):
+		if e.faction == Defs.Faction.HIVE and e.alive and e.pos.distance_to(pos) - e.radius <= ENGAGE_RANGE:
+			return true
+	return false
+
+
 ## True when R / TGT has something to lock: a live Hive entity in the sector.
 static func hostile_in(u: Universe, sector_idx: int) -> bool:
 	for e: SimEntity in u.ents_in(sector_idx):
@@ -97,7 +113,18 @@ func skip_rect() -> Rect2:
 	return Rect2(_box.end.x - SKIP_W - 30.0, _box.position.y + 11.0, SKIP_W, SKIP_H)
 
 
-func _gather() -> Dictionary:
+## Tracks recent shield/hull loss; returns true while a fight is on (hostile near or hurt lately).
+func _threat(delta: float) -> bool:
+	var ps := main.u.player_ship
+	var hp := ps.hull + ps.shield
+	if _last_hp >= 0.0 and hp < _last_hp - 0.01:
+		_hurt_t = 0.0
+	_last_hp = hp
+	_hurt_t += delta
+	return _hurt_t < SHIELD_HOLD or hostile_near(main.u, main.space.sector_idx, ps.pos)
+
+
+func _gather(delta: float = 0.0) -> Dictionary:
 	var sp := main.space
 	var t := main.touch
 	var kb_steer := Input.get_axis("yaw_l", "yaw_r") != 0.0 or Input.get_axis("pitch_up", "pitch_dn") != 0.0
@@ -108,6 +135,7 @@ func _gather() -> Dictionary:
 		"dock": main.mode == "dock",
 		"map": main.mode == "map",
 		"land": main.mode == "surface",
+		"threat": _threat(delta),
 		"ready": {"target": sp != null and hostile_in(main.u, sp.sector_idx)},
 	}
 
@@ -121,9 +149,10 @@ func _process(delta: float) -> void:
 	if main == null:
 		return
 	if main.state == VoidMain.State.PLAYING and main.space and is_instance_valid(main.space.player):
-		update(_gather())
+		update(_gather(delta))
 	var cur := current() if _showing() else ""
 	on_screen = cur
+	deferred = threatened and not skipped and main.mode == "flight"
 	if cur != _shown:
 		_shown = cur
 		_age = 0.0
