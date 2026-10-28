@@ -14,7 +14,7 @@ const TOP_ROW_Y := 190.0
 ## centre-right); RUN is spaced so its hit zone clears JUMP's.
 const WING_R := 32.0
 const WING_X := 52.0
-const BTN_GAP := 8.0    # min clear gap between any two buttons' hit zones (selftest)
+const BTN_GAP := 12.0    # min clear gap between any two buttons' hit zones (selftest)
 
 var active: bool = false          # a touch has ever been seen
 var layout: String = "none"       # none | flight | surface
@@ -31,14 +31,14 @@ var _pressed: Dictionary = {}     # name -> true until consumed
 var font: Font = ThemeDB.fallback_font
 
 const LAYOUTS: Dictionary = {
-	"flight": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["boost", "BOOST", Vector2(-250, -90), 0.0],
+	"flight": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["boost", "BOOST", Vector2(-256, -90), 0.0],
 		["thr_up", "THR+", Vector2(-110, -290), 0.0], ["thr_dn", "THR-", Vector2(-230, -230), 0.0],
-		["target", "TGT", Vector2(-372, -80), 0.0], ["act", "ACT", Vector2(-120, -420), 0.0],
+		["target", "TGT", Vector2(-384, -90), 0.0], ["act", "ACT", Vector2(-120, -408), 0.0],
 		["map", "MAP", Vector2(-80, TOP_ROW_Y), 0.0], ["travel", "TRVL", Vector2(-200, TOP_ROW_Y), 0.0],
 		["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0],
-		["wing_atk", "ATK", Vector2(WING_X, 290.0), WING_R], ["wing_esc", "ESC", Vector2(WING_X, 374.0), WING_R],
-		["wing_hold", "HOLD", Vector2(WING_X, 458.0), WING_R]],
-	"surface": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["jump", "JUMP", Vector2(-250, -90), 0.0],
+		["wing_atk", "ATK", Vector2(WING_X, 290.0), WING_R], ["wing_esc", "ESC", Vector2(WING_X, 378.0), WING_R],
+		["wing_hold", "HOLD", Vector2(WING_X, 466.0), WING_R]],
+	"surface": [["fire", "FIRE", Vector2(-120, -130), 62.0], ["jump", "JUMP", Vector2(-265, -90), 0.0],
 		["reload", "RLD", Vector2(-120, -290), 0.0], ["act", "ACT", Vector2(-260, -230), 0.0],
 		["sprint", "RUN", Vector2(-400, -60), 0.0], ["mute", "SND", Vector2(-320, TOP_ROW_Y), 0.0]],
 }

@@ -20,6 +20,7 @@ const ENGAGE_RANGE := 1500.0      # VS-046: a living Hive ship this close (just 
 const SHIELD_HOLD := 4.0          # VS-046: seconds after the last shield/hull loss that still count as "in a fight"
 
 static var on_screen: String = ""  # step drawn now; HUD hides its duplicate capture/prompt lines
+static var pending: bool = false   # VS-058: a tip wants the touch message lane (HudLane picks the occupant)
 static var deferred: bool = false  # VS-046: a tip is waiting out a fight; HUD keeps its own hint lines quiet too
 
 var main: VoidMain                # null in selftest: no gathering, no drawing
@@ -110,7 +111,12 @@ static func hostile_in(u: Universe, sector_idx: int) -> bool:
 ## Touch skip target: inside the right end of the tip box, outside the steer zone (x < 40%)
 ## and left of the THR-/THR+ buttons; the rest of the box no longer eats taps or drags.
 func skip_rect() -> Rect2:
-	return Rect2(_box.end.x - SKIP_W - 30.0, _box.position.y + 11.0, SKIP_W, SKIP_H)
+	return lane_skip_rect(_box)
+
+
+## VS-058: the chip sits inside the one-line lane box, right end.
+static func lane_skip_rect(box: Rect2) -> Rect2:
+	return Rect2(box.end.x - SKIP_W - 4.0, box.position.y + 2.0, SKIP_W, box.size.y - 4.0)
 
 
 ## Tracks recent shield/hull loss; returns true while a fight is on (hostile near or hurt lately).
@@ -140,9 +146,14 @@ func _gather(delta: float = 0.0) -> Dictionary:
 	}
 
 
-func _showing() -> bool:
+func _wanted() -> bool:
 	return main != null and main.state == VoidMain.State.PLAYING and not main.paused \
 		and main.mode == "flight" and current() != ""
+
+
+func _showing() -> bool:
+	# VS-058: on touch the tip only shows when the message lane gives it the slot.
+	return _wanted() and (not main.touch.active or HudLane.kind == "tip")
 
 
 func _process(delta: float) -> void:
@@ -150,6 +161,7 @@ func _process(delta: float) -> void:
 		return
 	if main.state == VoidMain.State.PLAYING and main.space and is_instance_valid(main.space.player):
 		update(_gather(delta))
+	pending = _wanted()
 	var cur := current() if _showing() else ""
 	on_screen = cur
 	deferred = threatened and not skipped and main.mode == "flight"
@@ -180,20 +192,32 @@ func _draw() -> void:
 	var touch := main.touch.active
 	var planet := main.u.sectors[main.u.hq.sector].planet_name
 	var a := clampf(_age / FADE_IN, 0.0, 1.0)
+	var idx := STEPS.find(_shown) + 1
+	var head := "TIP %d/%d  " % [idx, STEPS.size()]
+	if touch:   # VS-058: one-line tip in the bottom message lane, skip chip inline
+		_box = HudLane.rect(size)
+		draw_rect(_box, Color(BOX_BG, BOX_BG.a * a))
+		draw_rect(_box, Color(AMBER, 0.7 * a), false, 1.5)
+		var tx := _box.position.x + 10.0
+		var avail := _box.size.x - SKIP_W - 24.0
+		var fs := 17
+		var full := head + hint_text(_shown, true, planet)
+		while font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > avail and fs > 12:
+			fs -= 1
+		draw_string(font, Vector2(tx, _box.position.y + 20), head, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(AMBER, a))
+		var hw2 := font.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2(tx + hw2, _box.position.y + 20), hint_text(_shown, true, planet), HORIZONTAL_ALIGNMENT_LEFT, avail - hw2, fs, Color(1, 1, 1, a))
+		var sr2 := skip_rect()
+		draw_rect(sr2, Color(BOX_BG, BOX_BG.a * a))
+		draw_rect(sr2, Color(CYAN, 0.75 * a), false, 1.5)
+		draw_string(font, sr2.position + Vector2(0, 19), skip_text(true), HORIZONTAL_ALIGNMENT_CENTER, SKIP_W, 15, Color(CYAN, a))
+		return
 	var w := minf(BOX_W, size.x - 32.0)
 	_box = Rect2((size.x - w) * 0.5, size.y * BOX_Y_FRAC, w, BOX_H)
 	draw_rect(_box, Color(BOX_BG, BOX_BG.a * a))
 	draw_rect(_box, Color(AMBER, 0.7 * a), false, 1.5)
-	var idx := STEPS.find(_shown) + 1
-	var head := "TIP %d/%d  " % [idx, STEPS.size()]
 	var x := _box.position.x + 14.0
 	draw_string(font, Vector2(x, _box.position.y + 28), head, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(AMBER, a))
 	var hw := font.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	draw_string(font, Vector2(x + hw, _box.position.y + 28), hint_text(_shown, touch, planet), HORIZONTAL_ALIGNMENT_LEFT, w - 28.0 - hw - (SKIP_W + 20.0 if touch else 0.0), 19, Color(1, 1, 1, a))
-	if touch:
-		var sr := skip_rect()
-		draw_rect(sr, Color(BOX_BG, BOX_BG.a * a))
-		draw_rect(sr, Color(CYAN, 0.75 * a), false, 1.5)
-		draw_string(font, sr.position + Vector2(0, 28), skip_text(true), HORIZONTAL_ALIGNMENT_CENTER, SKIP_W, 16, Color(CYAN, a))
-	else:
-		draw_string(font, Vector2(x, _box.position.y + 54), skip_text(false), HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 15, Color(CYAN, 0.75 * a))
+	draw_string(font, Vector2(x + hw, _box.position.y + 28), hint_text(_shown, false, planet), HORIZONTAL_ALIGNMENT_LEFT, w - 28.0 - hw, 19, Color(1, 1, 1, a))
+	draw_string(font, Vector2(x, _box.position.y + 54), skip_text(false), HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 15, Color(CYAN, 0.75 * a))

@@ -111,7 +111,7 @@ func _draw() -> void:
 			else:
 				_line(h * 0.86, "Click, tap or press Space to launch" if continue_time < 0.0 else "Or click, tap or press Space for a New Game", 32 if continue_time < 0.0 else 26, pulse)
 			if best > 0 and not confirm_new:
-				_line(h * 0.92, "Best score %d" % best, 20, Color(1, 1, 1, 0.6))
+				_line(h * 0.92, "Best score %s" % Hud._fmt(float(best)), 20, Color(1, 1, 1, 0.6))
 		"pause":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.6))
 			_line(h * 0.5, "PAUSED — click or press a key to resume", 36, Color.WHITE)
@@ -121,7 +121,7 @@ func _draw() -> void:
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.65))
 			_line(h * 0.3, "THE HIVE IS BROKEN" if won else "HQ LOST", 72, AMBER if won else HIVE)
 			_line(h * 0.3 + 60, stats, 22, Color(1, 1, 1, 0.85))
-			_line(h * 0.5, "Score %d" % score, 48, Color.WHITE)
-			_line(h * 0.5 + 46, "NEW BEST!" if new_best else "Best %d" % best, 30, CYAN)
+			_line(h * 0.5, "Score %s" % Hud._fmt(float(score)), 48, Color.WHITE)
+			_line(h * 0.5 + 46, "NEW BEST!" if new_best else "Best %s" % Hud._fmt(float(best)), 30, CYAN)
 			if t > 0.8:
 				_line(h * 0.75, "Click, tap or press Space to play again", 30, AMBER.lerp(Color.WHITE, 0.5 + 0.5 * sin(t * 4.0)))

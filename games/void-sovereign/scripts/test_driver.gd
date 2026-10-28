@@ -200,6 +200,8 @@ func _shot_script(t: float) -> void:
 				g.touch.set_layout("none")
 				g.touch.set_layout("flight")
 				g.hints.update({"steer": true, "throttle": true, "target": true})
+				g.hud._obj_text = Hud.objective_for(g.u, true)   # VS-058: objective already stale, so the tip gets the lane
+				g.hud._obj_t = -100.0
 			"touch_surface":
 				g.touch.active = true
 				g._on_land(0)

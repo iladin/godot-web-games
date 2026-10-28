@@ -895,7 +895,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0052 — Hive cap growth 120->126 (cap@20 16->15), --fleet-floor harness flag; QA PASS r1
 
 ## VS-057 · Fleet Reserve call-in: paid Union relief squadron (comeback button)
-- status: todo
+- status: split
 - priority: P2
 - type: feature
 - size: M
@@ -911,7 +911,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Scout S0050 #3. Do after VS-056 (needs fleet-floor baseline).
 
 ## VS-058 · One message lane for touch HUD
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: M
@@ -924,6 +924,46 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Surface touch: duplicate pylon labels deduped/staggered; ACT/JUMP/FIRE/RUN spacing >= 12 px at 900x720
   - [ ] Desktop HUD unchanged; check.sh PASS
 - notes: Scout S0050 #4. After VS-054. Bundle P3s: Score/Best thousands separators (overlay.gd:124), map side panel clip at 900x720.
+
+## VS-059 · Fleet Reserve call-in: sim logic, tunables, harness flag
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: critic
+- created: S0053
+- why: Split from VS-057 (Critic S0050 problem 1: late collapse is a cliff). Logic first so UI can follow.
+- acceptance:
+  - [ ] defs.gd tunables RESERVE_COST, RESERVE_COUNT, RESERVE_LINGER, RESERVE_COOLDOWN (10 min); a sim function call_reserve() spawns a Union squadron at the HQ sector gate defending HQ, returns reason string when on cooldown or credits short
+  - [ ] Ledger entry 'Reserve call -X cr'; selftest covers cost, cooldown, spawn, save/load
+  - [ ] Harness --reserve flag (default off): bot calls when warships under threshold after min 18; check.sh PASS
+- notes: Split from VS-057 (S0053). A/B results go in VS-061.
+
+## VS-060 · Fleet Reserve call-in: map and dock button
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: critic
+- created: S0053
+- why: Split from VS-057; player-facing half of the comeback button.
+- acceptance:
+  - [ ] Map and dock button 'Call Reserve (N cr)' calling call_reserve(); disabled with the reason text on cooldown or short credits
+  - [ ] Works with touch and mouse; screenshot reviewed by QA; check.sh PASS
+- notes: Depends on VS-059.
+
+## VS-061 · Fleet Reserve 9-seed A/B
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: critic
+- created: S0053
+- why: Split from VS-057; verify the reserve helps without trivialising.
+- acceptance:
+  - [ ] 9-seed A/B economic 30 with --reserve: HQ survives >= 8/9, nw30 Q1 > 48,075, median >= 115k; passive unchanged; check.sh PASS
+- notes: Depends on VS-059. Run seeds as single-seed parallel calls.
+
 
 # Ideas parking lot
 - (S0050, QA VS-054, P3) Map side panel at 1280x720: raid forecast line sits below the fold under the build list — move raid block above buy/build lists; add raid_warn_touch shot; HUD forecast shows only soonest raid.
@@ -1009,8 +1049,9 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
 - S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
 - S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).
-- done: S0047 — signed credit deltas (touch-safe anchor) + full-hull dock status labels (QA PASS r2)
+- done: S0053 — single bottom HUD lane on touch (forecast>sortie>objective>trade>tip), touch button spacing, pylon label merge, thousands separators; map Close pin dropped (QA PASS r2)
 - VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
 - Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing
 
 - (S0050, critic) Pre-raid info/reserve ideas now VS-054/057; real-browser pass VS-042 still blocked on allowlist (cdn.playwright.dev).
+- (S0053, VS-058 dev, P3) Map side panel clip at 900x720: pin "Close map (M)" below the scroll area only when the viewport is tall (pinning at 1280x720 broke the VS-043 fold assert); add a sortie-on-touch shot scenario; add raid_map_touch fold check to selftest.

@@ -276,3 +276,8 @@
 - Task(s): VS-056 Hive cap trim + --fleet-floor harness flag — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: NEST_CAP_GROWTH 120->126 (cap@20 16->15). Passive hive@20 median 60 = exactly the guard (no margin). Fleet floor 10 delays passive collapse ~10 min (median 35.7, 1/9 survives) = VS-057 baseline.
+
+## S0053 — 2026-10-28 22:30 — BUILD
+- Task(s): VS-057 split into VS-059/060/061; VS-058 One touch HUD message lane — done (QA FAIL r1 on pinned map Close button breaking VS-043 fold assert; fixed by reverting it; QA PASS r2)
+- Check: PASS · Git: committed (see git log)
+- Notes: New scripts/ui/hud_lane.gd; touch buttons respaced (BTN_GAP 12); pylon labels merge on touch. Map Close pin dropped -> parking lot P3.

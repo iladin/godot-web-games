@@ -492,6 +492,7 @@ func _init() -> void:
 	_test_sfx()
 	_test_hints()
 	_test_touch_ux()
+	_test_touch_lane()
 	_test_ledger()
 	_test_text_fit()
 	_test_save_game()
@@ -1237,6 +1238,46 @@ func _test_touch_ux() -> void:
 	assert(dh.contains("MAP") and dh.contains("ACT") and dh.contains("Earn") and not dh.contains("(M)"), "touch HQ dock text")
 	assert(DockPanel.hq_hint(false).contains("(M)") and DockPanel.hq_hint(false).contains("press F"), "keyboard HQ dock text")
 	print("touch ux: no overlapping buttons, ACT wording OK")
+
+
+## VS-058: one touch message lane. The lane strip clears every touch button and the MOVE ring at
+## 1280x720 / 900x720, only one occupant is picked (forecast > sortie > objective > trade > tip),
+## surface action buttons are >= 12 px apart, and surface labels merge on touch.
+func _test_touch_lane() -> void:
+	for sz: Vector2 in [Vector2(1280, 720), Vector2(900, 720), Vector2(1280, 800)]:
+		var lane := HudLane.rect(sz)
+		assert(lane.position.x >= 0.0 and lane.end.x <= sz.x and lane.end.y <= sz.y, "lane on screen at %s" % str(sz))
+		for c: Dictionary in TouchControls.layout_circles("flight", sz):
+			assert(HudLane.clear_of(sz, c["c"], float(c["r"]) * 1.15), "lane clears %s at %s" % [c["name"], str(sz)])
+		assert(HudLane.clear_of(sz, Vector2(150, sz.y - 160), TouchControls.STICK_RADIUS), "lane clears the MOVE ring at %s" % str(sz))
+		var chip := TutorialHints.lane_skip_rect(lane)
+		assert(lane.encloses(chip), "tip skip chip sits inside the lane at %s" % str(sz))
+		var fs := TouchControls.layout_circles("surface", sz)
+		var named: Dictionary = {}
+		for c: Dictionary in fs:
+			named[c["name"]] = c
+		var four: Array[String] = ["act", "jump", "fire", "sprint"]
+		for i in four.size():
+			for j in range(i + 1, four.size()):
+				var a: Dictionary = named[four[i]]
+				var b: Dictionary = named[four[j]]
+				var gap := (a["c"] as Vector2).distance_to(b["c"]) - float(a["r"]) * 1.15 - float(b["r"]) * 1.15
+				assert(gap >= 12.0, "%s/%s spacing %.1f >= 12 at %s" % [four[i], four[j], gap, str(sz)])
+	var all := {"forecast": "r", "sortie": "s", "objective": "o", "trade": "t", "tip": "p", "objective_idle": "i"}
+	var order: Array[String] = ["forecast", "sortie", "objective", "trade", "tip", "objective_idle"]
+	for k: String in order:
+		assert(HudLane.pick(all) == k, "lane priority: %s wins" % k)
+		all.erase(k)
+	assert(HudLane.pick(all) == "", "empty lane")
+	assert(HudLane.pick({"tip": "p", "objective_idle": "i"}) == "tip", "tip beats the idle objective")
+	var items: Array[Dictionary] = [
+		{"sp": Vector2(300, 300), "col": Color.WHITE, "label": "PYLON", "dist": 200.0},
+		{"sp": Vector2(440, 310), "col": Color.WHITE, "label": "PYLON", "dist": 300.0}]
+	assert(Hud.layout_markers(items).size() == 2, "desktop keeps 140 px apart pylons separate")
+	var merged := Hud.layout_markers(items, Hud.MARKER_MERGE_PX_TOUCH, Hud.MARKER_LABEL_W_TOUCH)
+	assert(merged.size() == 1 and str(merged[0]["text"]).begins_with("2"), "touch merges duplicate pylon labels")
+	assert(Hud._fmt(1234567.0) == "1,234,567", "thousands separators")
+	print("touch lane: clear of buttons, one occupant, spacing >= 12 OK")
 
 
 func _test_marker_layout() -> void:

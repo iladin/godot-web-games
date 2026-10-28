@@ -32,6 +32,8 @@ var hit_flash: float = 0.0
 var dmg_flash: float = 0.0
 var kill_flash: float = 0.0   ## VS-037: red X + screen tint on a confirmed kill
 var t: float = 0.0
+var _obj_text: String = ""   ## VS-058: last objective text, for the lane's "fresh" window
+var _obj_t: float = -100.0
 var surface_t: float = 0.0   ## VS-041: seconds on foot, for the save notice
 
 
@@ -123,9 +125,13 @@ func _draw() -> void:
 	_draw_messages(sz)
 	if mode == "flight":
 		var tch := space != null and space.touch != null and space.touch.active
-		_txt(Vector2(0, sz.y - 14), "OBJECTIVE  " + objective_for(u, tch), 17, Color(AMBER, 0.85), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
-		if u.ledger.income_per_min(u.time) <= 0.0:   # VS-032: nudge new players toward income
-			_txt(Vector2(0, sz.y - 38), earn_hint(tch), 15, Color(CYAN_HINT, 0.8), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
+		if tch:
+			_draw_lane(sz)   # VS-058: one message lane on touch
+		else:
+			HudLane.kind = ""
+			_txt(Vector2(0, sz.y - 14), "OBJECTIVE  " + objective_for(u, tch), 17, Color(AMBER, 0.85), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
+			if u.ledger.income_per_min(u.time) <= 0.0:   # VS-032: nudge new players toward income
+				_txt(Vector2(0, sz.y - 38), earn_hint(tch), 15, Color(CYAN_HINT, 0.8), HORIZONTAL_ALIGNMENT_CENTER, sz.x)
 	if dmg_flash > 0.0:
 		var c := Color(1, 0.1, 0.2, dmg_flash * 0.35)
 		draw_rect(Rect2(0, 0, sz.x, 18), c)
@@ -171,7 +177,7 @@ func _draw_top(sz: Vector2) -> void:
 		if wtag != "":
 			_txt(Vector2(458, 31), wtag, 13, HIVE)
 	var fc := forecast_line(u)   # VS-054
-	if fc != "":
+	if fc != "" and not (space != null and space.touch != null and space.touch.active):   # touch: forecast lives in the HudLane
 		var fw := font.get_string_size(fc, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 		draw_rect(Rect2(500, 0, maxf(0.0, 340.0 + fw + 14.0 - 500.0), 92), PANEL)   # panel grows to hold the forecast line
 		_txt(Vector2(340, 82), fc, 14, HIVE)
@@ -185,6 +191,49 @@ func _draw_top(sz: Vector2) -> void:
 		var k := clampf(float(p["t"]) / DELTA_LIFE, 0.0, 1.0)
 		_txt(Vector2(px, py), p["text"], 20, Color(NEUTRAL if p["neg"] else AMBER, 1.0 - k * k))
 		py += 24.0
+
+
+## VS-058: touch message lane: pick the single occupant and draw it (tips are drawn by TutorialHints).
+func _draw_lane(sz: Vector2) -> void:
+	var obj := objective_for(u, true)
+	if obj != _obj_text:
+		_obj_text = obj
+		_obj_t = t
+	var cands: Dictionary = {}
+	cands["forecast"] = forecast_line(u)
+	var ow := u.director.opening
+	if ow != null and ow.state == OpeningWave.State.ACTIVE and ow.alive() > 0:
+		cands["sortie"] = SORTIE_LANE
+	if t - _obj_t < HudLane.OBJ_FRESH:
+		cands["objective"] = obj
+	if u.ledger.income_per_min(u.time) <= 0.0 and u.time >= TRADE_LANE_DELAY:
+		cands["trade"] = earn_hint(true)
+	if TutorialHints.pending:
+		cands["tip"] = "tip"
+	cands["objective_idle"] = obj
+	var k := HudLane.pick(cands)
+	HudLane.kind = k
+	if k == "" or k == "tip":
+		return
+	var col := HIVE if k == "forecast" or k == "sortie" else (CYAN_HINT if k == "trade" else AMBER)
+	var r := HudLane.rect(sz)
+	draw_rect(r, Color(0.02, 0.03, 0.08, 0.7))
+	draw_rect(r, Color(col, 0.6), false, 1.0)
+	var txt: String = str(cands[k])
+	if k == "objective" or k == "objective_idle":
+		txt = "OBJECTIVE  " + txt
+	var fs := 17
+	var tw := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	while tw > r.size.x - 16.0 and fs > 12:
+		fs -= 1
+		tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	while tw > r.size.x - 16.0 and txt.length() > 4:   # still too long at the minimum size: ellipsis
+		txt = txt.substr(0, txt.length() - 2)
+		tw = font.get_string_size(txt + "\u2026", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		if tw <= r.size.x - 16.0:
+			txt += "\u2026"
+			break
+	_txt(Vector2(r.position.x, r.position.y + 20.0), txt, fs, Color(col, 0.95), HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
 
 
 ## VS-055: HQ hull readout colour: cyan at/above HQ_HULL_OK_FRAC, amber at/above WOUND_PENALTY_START, else red.
@@ -383,7 +432,7 @@ func _draw_surface(sz: Vector2) -> void:
 			continue
 		items.append({"sp": cam.unproject_position(wp), "col": m["col"], "label": m["label"],
 			"dist": wp.distance_to(cam.global_position)})
-	for m: Dictionary in layout_markers(items):
+	for m: Dictionary in layout_markers(items, MARKER_MERGE_PX_TOUCH if surface.touch.active else MARKER_MERGE_PX, MARKER_LABEL_W_TOUCH if surface.touch.active else MARKER_LABEL_W):
 		var sp: Vector2 = m["sp"]
 		var col: Color = m["col"]
 		for q: Vector2 in m["pts"]:
@@ -394,7 +443,11 @@ func _draw_surface(sz: Vector2) -> void:
 		_txt(tp, m["text"], 14, col)
 
 
+const TRADE_LANE_DELAY := 90.0   ## VS-058: touch trade hint waits so first-run tips (which outrank nothing earlier) get the lane first
+const SORTIE_LANE := "SORTIE  Hive scouts attacking: fight them off with FIRE"
 const MARKER_MERGE_PX := 70.0   ## same-label markers closer than this on screen merge into one
+const MARKER_MERGE_PX_TOUCH := 190.0   ## VS-058: touch screens are narrower; duplicate labels merge from further apart
+const MARKER_LABEL_W_TOUCH := 190.0
 const MARKER_LINE_H := 17.0     ## vertical step between stacked marker labels
 const MARKER_EPS := 0.01        ## tolerance so a label pushed exactly one line down counts as clear
 const MARKER_LABEL_W := 150.0   ## approximate label width, for overlap tests
@@ -403,12 +456,12 @@ const MARKER_LABEL_W := 150.0   ## approximate label width, for overlap tests
 ## Pure layout: items {sp: Vector2, col, label, dist} -> {sp, col, pts, text, text_pos}.
 ## Same-label items within MARKER_MERGE_PX merge ("2x PYLON 380m", nearest distance); labels
 ## that still overlap are pushed down so each stays readable.
-static func layout_markers(items: Array[Dictionary]) -> Array[Dictionary]:
+static func layout_markers(items: Array[Dictionary], merge_px: float = MARKER_MERGE_PX, label_w: float = MARKER_LABEL_W) -> Array[Dictionary]:
 	var groups: Array[Dictionary] = []
 	for it: Dictionary in items:
 		var g: Dictionary = {}
 		for c: Dictionary in groups:
-			if c["label"] == it["label"] and (c["sp"] as Vector2).distance_to(it["sp"]) < MARKER_MERGE_PX:
+			if c["label"] == it["label"] and (c["sp"] as Vector2).distance_to(it["sp"]) < merge_px:
 				g = c
 				break
 		if g.is_empty():
@@ -433,7 +486,7 @@ static func layout_markers(items: Array[Dictionary]) -> Array[Dictionary]:
 			guard += 1
 			for o: Dictionary in out:
 				var op: Vector2 = o["text_pos"]
-				if absf(op.x - tp.x) < MARKER_LABEL_W and absf(op.y - tp.y) < MARKER_LINE_H - MARKER_EPS:
+				if absf(op.x - tp.x) < label_w and absf(op.y - tp.y) < MARKER_LINE_H - MARKER_EPS:
 					tp.y = op.y + MARKER_LINE_H
 					moved = true
 		out.append({"sp": g["sp"], "col": g["col"], "pts": g["pts"], "text": txt, "text_pos": tp})
