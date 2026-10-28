@@ -780,7 +780,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 
 
 ## VS-050 · Low hull bites: wounded HQ earns and defends less
-- status: todo
+- status: done
 - priority: P1
 - type: feature
 - size: M
@@ -793,7 +793,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Repair removes the penalty immediately; save/load round-trip selftest covers a wounded HQ
   - [ ] 9-seed gate: economic HQ survives >= 7/9, passive HQ loss median still 20-35 min
   - [ ] check.sh PASS, 0 SCRIPT ERROR
-- notes: Scout S0044 proposal 1. Risk: death spiral; keep cap low. Passive loss median 28.9 near edge. Do after or with VS-052.
+- notes: Scout S0044 proposal 1. Risk: death spiral; keep cap low. S0045 in progress.
+- done: S0045 — wounded HQ (<50% hull) loses up to 30% colony income + shield regen; dock/map quote penalty+price (QA PASS round 2)
 
 ## VS-051 · Raids leave marks: chip damage when not intercepted
 - status: todo

@@ -47,7 +47,11 @@ func can_be_damaged() -> bool:
 func regen(delta: float) -> void:
 	since_hit += delta
 	if since_hit > Defs.SHIELD_DELAY and shield < shield_max:
-		shield = minf(shield_max, shield + shield_max * Defs.SHIELD_REGEN * delta)
+		shield = minf(shield_max, shield + shield_max * Defs.SHIELD_REGEN * regen_mult() * delta)
+
+
+func regen_mult() -> float:
+	return 1.0
 
 
 func armed() -> bool:

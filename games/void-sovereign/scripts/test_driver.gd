@@ -135,6 +135,12 @@ func _shot_script(t: float) -> void:
 				g.touch.active = g.shot_mode == "raid_map_touch"
 				g._set_mode("map")
 				g.map._order_button("all")
+			"wound_map", "wound_dock":   # VS-050: wounded HQ quotes penalty + repair price
+				g.u.hq.hull = g.u.hq.hull_max * 0.2
+				if g.shot_mode == "wound_dock":
+					g._on_dock(g.u.hq)
+				else:
+					g._set_mode("map")
 			"dock", "dock_touch":
 				g.touch.active = g.shot_mode == "dock_touch"
 				g._on_dock(g.u.hq)

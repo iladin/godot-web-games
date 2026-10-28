@@ -235,3 +235,8 @@
 - Task(s): review round (critic 6.7, QA sweep, balance 8/9 targets) -> VS-050..053 + VS-049; BUILD VS-049 surface freeze (float32 loop in Hud.layout_markers) done, QA PASS
 - Check: PASS · Git: committed (see git log)
 - Notes: Critic: VS-048 price too soft, wounds never occur organically -> VS-050/051/052. Real-browser pass (VS-042) still outstanding.
+
+## S0045 — 2026-10-28 14:55 — BUILD
+- Task(s): VS-050 wounded-HQ penalty (<50% hull: linear, cap -30% on colony income + shield regen) — done, QA FAIL r1 (map label clipped price) → fix → PASS r2
+- Check: PASS · Git: committed (see git log)
+- Notes: econ HQ 9/9, passive loss median 28.9 min. New --shot wound_map / wound_dock. P3: map label backdrop faint, ship glyph can cross it.

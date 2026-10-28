@@ -145,7 +145,9 @@ func _refresh() -> void:
 	_repair.text = "Hull %d%% — Repair (%d cr)" % [int(ps.hull_frac() * 100.0), int(missing * REPAIR_COST)] if missing > 1.0 else "Hull 100%"
 	_repair.disabled = missing <= 1.0
 	var sc := u.station_repair_cost(st)
-	_st_repair.text = "Station hull %d%% — Repair (%d cr)" % [int(st.hull_frac() * 100.0), int(sc)] if sc > 1.0 else "Station hull 100%"
+	var pen := st.wound_penalty()
+	var pen_txt := "  [DAMAGED: -%d%% income & shield regen]" % int(round(pen * 100.0)) if pen > 0.0 else ""
+	_st_repair.text = "Station hull %d%%%s — Repair (%s cr)" % [int(st.hull_frac() * 100.0), pen_txt, Hud._fmt(sc)] if sc > 1.0 else "Station hull 100%"
 	_st_repair.disabled = sc <= 1.0 or u.credits < 1.0
 	for cls: String in _ship_btns:
 		var b := _ship_btns[cls] as Button

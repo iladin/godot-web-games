@@ -38,6 +38,15 @@ func setup(p_kind: String, p_faction: int) -> void:
 	cycle_t = randf() * Defs.CYCLE_TIME
 
 
+## VS-050: penalty fraction (0..Defs.WOUND_PENALTY_MAX) for a wounded Sovereign HQ; 0 for anything else.
+func wound_penalty() -> float:
+	return Defs.wound_penalty(hull_frac()) if kind == "hq" and faction == Defs.Faction.PLAYER else 0.0
+
+
+func regen_mult() -> float:
+	return 1.0 - wound_penalty()
+
+
 func can_be_damaged() -> bool:
 	return not shield_locked
 

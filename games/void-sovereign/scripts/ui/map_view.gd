@@ -505,7 +505,16 @@ func _draw_ent(e: SimEntity) -> void:
 		if e.faction == Defs.Faction.PLAYER and e.hull_frac() < 0.995:
 			# VS-048: wounds stay visible until repaired at a dock.
 			var wc := HIVE if e.hull_frac() < 0.5 else AMBER
-			_text(p + Vector2(-40, 28), "DAMAGED %d%%" % int(e.hull_frac() * 100.0), 12, wc, 80)
+			var wp := (e as StationData).wound_penalty()
+			var lbl := "DAMAGED %d%%" % int(e.hull_frac() * 100.0)
+			if wp > 0.0:
+				# VS-050: two lines on a dark backdrop above the HQ, wide enough that the price never clips.
+				var l2 := "-%d%% income & shield regen · repair %s cr" % [int(round(wp * 100.0)), Hud._fmt(u.station_repair_cost(e as StationData))]
+				draw_rect(Rect2(p + Vector2(-165, -66), Vector2(330, 32)), Color(0.02, 0.02, 0.05, 0.85))
+				_text(p + Vector2(-165, -52), lbl, 12, wc, 330)
+				_text(p + Vector2(-165, -38), l2, 12, wc, 330)
+			else:
+				_text(p + Vector2(-40, 28), lbl, 12, wc, 80)
 		return
 	var sh := e as ShipData
 	var dir := Vector2(e.vel.x, e.vel.z)

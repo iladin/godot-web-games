@@ -45,6 +45,17 @@ const BOUNTY: Dictionary = {"drone": 150.0, "ravager": 600.0, "dreadnought": 400
 # VS-048: station hull damage persists (stations never regenerate hull); a docked player pays this
 # many credits per hull point to patch a Sovereign-owned station (HQ full rebuild = 30000 x this).
 const STATION_REPAIR_COST := 0.4
+# VS-050: a wounded HQ earns and defends less. Below WOUND_PENALTY_START hull fraction the penalty
+# grows linearly to WOUND_PENALTY_MAX (at 0% hull); it scales colony income and HQ shield regen.
+const WOUND_PENALTY_START := 0.5
+const WOUND_PENALTY_MAX := 0.3
+
+## Fractional penalty (0..WOUND_PENALTY_MAX) for a hull fraction.
+static func wound_penalty(hull_frac: float) -> float:
+	if hull_frac >= WOUND_PENALTY_START:
+		return 0.0
+	return clampf((WOUND_PENALTY_START - maxf(hull_frac, 0.0)) / WOUND_PENALTY_START, 0.0, 1.0) * WOUND_PENALTY_MAX
+
 const RESPAWN_PENALTY := 0.25    # fraction of credits lost when your ship dies
 
 # --- Combat --------------------------------------------------------------------

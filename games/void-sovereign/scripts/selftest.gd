@@ -1230,3 +1230,30 @@ func _test_station_wounds() -> void:
 	u.credits = 1.0e9
 	u.repair_station(hq)
 	assert(is_equal_approx(hq.hull, hq.hull_max) and u.credits < 1.0e9 and before > 0.0, "full repair costs credits")
+	_test_wound_penalty()
+
+
+## VS-050: wounded HQ (<50% hull) loses up to 30% colony income and shield regen; repair clears it; saves keep it.
+func _test_wound_penalty() -> void:
+	assert(Defs.wound_penalty(0.5) == 0.0 and Defs.wound_penalty(1.0) == 0.0, "no penalty at or above 50% hull")
+	assert(is_equal_approx(Defs.wound_penalty(0.25), Defs.WOUND_PENALTY_MAX * 0.5) and is_equal_approx(Defs.wound_penalty(0.0), Defs.WOUND_PENALTY_MAX), "linear to cap")
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	var hq := u.hq
+	u.sectors[0].planet_state = "colony"
+	var full := float(u.colonies()) * Defs.COLONY_INCOME / 60.0
+	hq.hull = hq.hull_max * 0.2
+	hq.shield = 0.0
+	hq.since_hit = 99.0
+	var pen := hq.wound_penalty()
+	assert(is_equal_approx(pen, Defs.WOUND_PENALTY_MAX * 0.6), "HQ at 20%% hull: penalty %.3f" % pen)
+	hq.regen(1.0)
+	assert(is_equal_approx(hq.shield, hq.shield_max * Defs.SHIELD_REGEN * (1.0 - pen)), "wounded HQ regen is reduced")
+	u.credits = 0.0
+	u.step(1.0)
+	assert(u.credits > 0.0 and u.credits < full * (1.0 - pen) * 1.01 + 0.01, "wounded HQ colony income is reduced (%.2f vs %.2f)" % [u.credits, full])
+	var r := SaveGame.restore(JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary)
+	assert(r != null and is_equal_approx(r.hq.wound_penalty(), pen), "wounded HQ penalty round-trips")
+	u.credits = 1.0e9
+	u.repair_station(hq)
+	assert(hq.wound_penalty() == 0.0, "repair removes the penalty immediately")

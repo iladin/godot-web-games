@@ -396,7 +396,8 @@ func step(delta: float) -> void:
 		return
 	time += delta
 	_rebuild_cache()
-	add_credits(float(colonies()) * Defs.COLONY_INCOME / 60.0 * delta, "colonies")
+	var hq_mult := 1.0 - (hq.wound_penalty() if hq != null and hq.alive else 0.0)
+	add_credits(float(colonies()) * Defs.COLONY_INCOME / 60.0 * hq_mult * delta, "colonies")
 	for e: SimEntity in entities.values():
 		if not e.alive:
 			continue
