@@ -797,7 +797,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0045 — wounded HQ (<50% hull) loses up to 30% colony income + shield regen; dock/map quote penalty+price (QA PASS round 2)
 
 ## VS-051 · Raids leave marks: chip damage when not intercepted
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: M
@@ -809,7 +809,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Raid outcome text includes hull lost; a new hq_wounded shot shows it on map and dock
   - [ ] 9-seed economic: HQ survives >= 7/9; passive loss median 20-35 min; perturb=1 not worse
   - [ ] Selftest asserts damage applies once and is zero when intercepted
-- notes: S0046 QA: wounds DO occur organically on most economic seeds (hull ends 0.67-0.82, repair_spent nonzero on 6/9), so re-baseline before tuning chip damage. Scout S0044 proposal 2. Tune together with VS-050/VS-052.
+- notes: S0046 QA: wounds DO occur organically on most economic seeds (hull ends 0.67-0.82, repair_spent nonzero on 6/9), so re-baseline before tuning chip damage. Scout S0044 proposal 2. Tune together with VS-050/VS-052. S0048 started (producer chose VS-051 over VS-042 per HANDOVER; VS-042 needs export templates).
+- done: S0048 — raid arrival chips 2%/surviving ship (cap 25%) of station hull once per raid; text + hq_wounded shots; QA PASS r1
 
 ## VS-052 · Economic bot repairs the HQ in the balance harness
 - status: done

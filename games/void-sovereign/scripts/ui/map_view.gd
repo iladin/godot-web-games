@@ -514,7 +514,7 @@ func _draw_ent(e: SimEntity) -> void:
 				_text(p + Vector2(-165, -52), lbl, 12, wc, 330)
 				_text(p + Vector2(-165, -38), l2, 12, wc, 330)
 			else:
-				_text(p + Vector2(-40, 28), lbl, 12, wc, 80)
+				_text(p + Vector2(-55, 28), lbl, 12, wc, 110)
 		return
 	var sh := e as ShipData
 	var dir := Vector2(e.vel.x, e.vel.z)

@@ -20,7 +20,7 @@ func add(ships: Array[ShipData], target: StationData, redirected_from: String = 
 	for s: ShipData in ships:
 		ids.append(s.id)
 	raids.append({"ids": ids, "n": ids.size(), "target_id": target.id, "target_sector": target.sector, "target_name": target.display_name,
-			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0, "redirected_from": redirected_from})
+			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0, "redirected_from": redirected_from, "hull_lost": 0.0})
 	_refresh(raids[-1])
 
 
@@ -52,18 +52,20 @@ func _refresh(r: Dictionary) -> bool:
 		var where: String = u.sectors[int(r["last_sector"])].name
 		var target := u.get_ent(int(r.get("target_id", -1)))
 		var green := Defs.faction_color(Defs.Faction.PLAYER)
+		var hl := float(r.get("hull_lost", 0.0))
+		var wound := ", hull -%d%%" % int(round(hl * 100.0)) if hl > 0.0 else ""   # VS-051
 		var detour := ""   # VS-036: a deterred raid that was redirected to a Union station says so in its single outcome
 		if String(r.get("redirected_from", "")) != "":
 			detour = "redirected to %s: " % r["target_name"]
 		if int(r.get("target_id", -1)) >= 0 and (target == null or not target.alive):
-			_finish("redirected" if detour != "" else "succeeded", "Raid %sSUCCEEDED: %s destroyed in %s" % [detour, r["target_name"], u.sectors[int(r["target_sector"])].name], hive)
+			_finish("redirected" if detour != "" else "succeeded", "Raid %sSUCCEEDED: %s destroyed in %s%s" % [detour, r["target_name"], u.sectors[int(r["target_sector"])].name, wound], hive)
 		elif dead > 0:
-			_finish("redirected" if detour != "" else "intercepted", "Raid %sintercepted in %s (%d/%d destroyed)" % [detour, where, dead, int(r["n"])], green)
+			_finish("redirected" if detour != "" else "intercepted", "Raid %sintercepted in %s%s (%d/%d destroyed)" % [detour, where, wound, dead, int(r["n"])], green)
 			# VS-036: forward defence pays; fights in the HQ sector are the base's job and pay nothing extra.
 			if detour == "" and u.hq != null and int(r["last_sector"]) != u.hq.sector:
 				u.add_credits(float(dead) * Defs.RAID_INTERCEPT_BOUNTY, "intercept")
 		else:
-			_finish("redirected" if detour != "" else "withdrew", "Raid %swithdrew from %s" % [detour, where], green)
+			_finish("redirected" if detour != "" else "withdrew", "Raid %swithdrew from %s%s" % [detour, where, wound], green)
 		return true
 	var lead := live[0]
 	r["last_sector"] = lead.sector
@@ -74,9 +76,24 @@ func _refresh(r: Dictionary) -> bool:
 			if s.sector == int(r["target_sector"]):
 				r["arrived"] = true
 				r["sector"] = s.sector
-				u.message.emit("RAID ARRIVING in %s: %d ships on %s" % [u.sectors[s.sector].name, live.size(), r["target_name"]], hive)
+				var chip := _chip(r, live.size())
+				u.message.emit("RAID ARRIVING in %s: %d ships on %s%s" % [u.sectors[s.sector].name, live.size(), r["target_name"], " (hull -%d%%)" % int(round(chip * 100.0)) if chip > 0.0 else ""], hive)
 				break
 	return false
+
+
+## VS-051: once per raid, at arrival, the surviving raiders chip the target's hull (never kills it).
+## Returns the fraction of max hull removed (0 for non-Sovereign targets).
+func _chip(r: Dictionary, survivors: int) -> float:
+	var t := u.get_ent(int(r.get("target_id", -1))) as StationData
+	if t == null or not t.alive or t.faction != Defs.Faction.PLAYER or float(r.get("hull_lost", 0.0)) > 0.0:
+		return 0.0
+	var frac := minf(float(survivors) * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX)
+	var dmg := minf(frac * t.hull_max, maxf(t.hull - 1.0, 0.0))
+	t.hull -= dmg
+	var lost := dmg / t.hull_max
+	r["hull_lost"] = lost
+	return lost
 
 
 ## The single place a raid outcome is written: one message and one history line.

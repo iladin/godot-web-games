@@ -256,6 +256,7 @@ func _init() -> void:
 	u.message.connect(on_msg)
 	var nest0: StationData = u.alive_nests()[0]
 	var raiders: Array[ShipData] = []
+	var hull_before := u.hq.hull
 	for i in 3:
 		var rs := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
 		rs.order = "raid"
@@ -284,6 +285,39 @@ func _init() -> void:
 	# VS-039: exactly one outcome per raid, in the message log and in the last-5-min history.
 	assert(dir.tracker.history.size() == 1 and dir.tracker.history[0]["kind"] == "intercepted", "interception written to history once")
 	assert(dir.tracker.recent().size() == 1 and "2/3 destroyed" in String(dir.tracker.recent()[0]["text"]), "recent() lists the outcome")
+	# VS-051: survivors at arrival chip the HQ hull exactly once per raid; the outcome and arrival text quote it.
+	var chip_exp := minf(3.0 * Defs.RAID_CHIP_PER_SHIP, Defs.RAID_CHIP_MAX) * u.hq.hull_max
+	assert(absf((hull_before - u.hq.hull) - chip_exp) < 0.5, "arrived raid chips the HQ once: lost %.1f expected %.1f" % [hull_before - u.hq.hull, chip_exp])
+	assert("hull -6%" in msgs[0] and "hull -6%" in msgs[1] and "hull -6%" in String(dir.tracker.history[0]["text"]), "arrival and outcome name the hull lost: %s" % [msgs])
+	# A raid wiped out before arriving costs nothing; a huge raid is capped and never kills the station.
+	var hull_mid := u.hq.hull
+	var ex: Array[ShipData] = []
+	for i in 2:
+		var xs := u.spawn_ship("drone", Defs.Faction.HIVE, u.hq.sector, u.hq.pos + Vector3(900, 0, 0))
+		xs.order = "raid"
+		ex.append(xs)
+	ex[0].alive = false   # wiped out before it ever reaches the HQ
+	ex[1].alive = false
+	dir.tracker.add(ex, u.hq)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(u.hq.hull == hull_mid and dir.tracker.history[-1]["kind"] == "intercepted" and not ("hull" in String(dir.tracker.history[-1]["text"])), "intercepted raid deals zero hull damage: %s %s %s" % [u.hq.hull - hull_mid, dir.tracker.history[-1], dir.tracker.raids.size()])
+	var big: Array[ShipData] = []
+	for i in 40:
+		var bg := u.spawn_ship("drone", Defs.Faction.HIVE, u.hq.sector, u.hq.pos + Vector3(900, 0, 0))
+		bg.order = "raid"
+		big.append(bg)
+	dir.tracker.add(big, u.hq)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	assert(absf((hull_mid - u.hq.hull) - minf(hull_mid, Defs.RAID_CHIP_MAX * u.hq.hull_max)) < 0.5 and u.hq.alive, "big raid chip is capped: %.1f" % (hull_mid - u.hq.hull))
+	for bg: ShipData in big:
+		bg.alive = false
+	dir.tracker.step(Defs.RAID_TRACK_INTERVAL)
+	u.hq.hull = u.hq.hull_max   # keep later assertions independent of the chip
+	dir.tracker.history.clear()
+	dir.tracker.history.append({"t": u.time, "kind": "intercepted", "text": "placeholder"})
+	msgs.clear()
+	msgs.append_array(["x", "x"])   # later checks index msgs by position
 	# A raid that is called off with no losses reports "withdrew"; a raid wiped out en route never warns.
 	var w := u.spawn_ship("drone", Defs.Faction.HIVE, nest0.sector, nest0.pos + Vector3(300, 0, 0))
 	w.order = "raid"

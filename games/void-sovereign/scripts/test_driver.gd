@@ -136,6 +136,13 @@ func _shot_script(t: float) -> void:
 				g.touch.active = g.shot_mode == "raid_map_touch"
 				g._set_mode("map")
 				g.map._order_button("all")
+			"hq_wounded", "hq_wounded_dock":   # VS-051: a Breach just chipped the HQ (-12%); outcome text and hull shown
+				g.u.hq.hull = g.u.hq.hull_max * 0.88
+				g.u.director.tracker.history.append({"t": g.u.time - 20.0, "kind": "intercepted", "text": "Raid intercepted in %s%s (4/6 destroyed)" % [g.u.sectors[g.u.hq.sector].name, ", hull -12%"]})
+				if g.shot_mode == "hq_wounded_dock":
+					g._on_dock(g.u.hq)
+				else:
+					g._set_mode("map")
 			"wound_map", "wound_dock":   # VS-050: wounded HQ quotes penalty + repair price
 				g.u.hq.hull = g.u.hq.hull_max * 0.2
 				if g.shot_mode == "wound_dock":

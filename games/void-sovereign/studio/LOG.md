@@ -250,3 +250,8 @@
 - Task(s): VS-053 signed credit deltas + full-hull status rows — done (QA FAIL r1: touch panel overlap; fixed; PASS r2)
 - Check: PASS · Git: committed (see git log)
 - Notes: deltas anchor (14,116) desktop / (360,140) touch; touch_wing shot now emits deltas. builds_since_review=4.
+
+## S0048 — 2026-10-28 17:45 — BUILD
+- Task(s): VS-051 Raids leave marks (chip damage 2%/surviving ship, cap 25%, once per raid at arrival) — done, QA PASS r1
+- Check: PASS · Git: committed (see git log)
+- Notes: nw30 median fell 158k -> 121k; economic HQ 8/9 (seed 135 lost 23.7 min); passive loss median 27.3 min; perturb=1 9/9. P3 follow-ups: dock has no raid-outcome line; DAMAGED label overlaps ships.
