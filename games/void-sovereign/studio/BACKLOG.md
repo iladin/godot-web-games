@@ -955,7 +955,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0055 - Call Reserve button on dock + map (QA PASS r1)
 
 ## VS-061 · Fleet Reserve 9-seed A/B
-- status: todo
+- status: in-progress
 - priority: P2
 - type: balance
 - size: S
@@ -964,7 +964,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - why: Split from VS-057; verify the reserve helps without trivialising.
 - acceptance:
   - [ ] 9-seed A/B economic 30 with --reserve: HQ survives >= 8/9, nw30 Q1 > 48,075, median >= 115k; passive unchanged; check.sh PASS
-- notes: Depends on VS-059. Run seeds as single-seed parallel calls.
+- notes: Depends on VS-059. Run seeds as single-seed parallel calls. S0056 building.
 
 ## VS-062 · Reserve button reachable during raids + disabled-state shots
 - status: todo
@@ -980,7 +980,64 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Files: scripts/ui/map_view.gd (make_reserve_button call ~line 159), dock_panel.gd, scripts/tools/test_driver or shots scenarios.
 
 
+## VS-063 · Raid-hit proof run: scripted "first raid lands" scenario
+- status: todo
+- priority: P2
+- type: tech
+- size: S
+- source: critic
+- created: S0056
+- why: Critic S0056 #2: hull 600 / HQ 100% in every scripted run, third review in a row; raids, chip damage and Reserve are never seen working.
+- acceptance:
+  - [ ] `shots.sh void-sovereign raid_hit` renders >= 3 frames (forecast, impact with HQ < 100%, Reserve arrived) at 1280x720 with no script errors
+  - [ ] Headless `raid_hit_long` log prints HQ hull %, reserve ships alive and credits at 30 s steps; HQ hull < 100% at some step; no softlock
+  - [ ] Scenario does not touch gameplay RNG or balance harness; shot list noted in HANDOVER; check.sh PASS
+- notes: Scout S0056 proposal 2. Single call < 175 s.
+
+## VS-064 · Passive Hive cap trim
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: balance
+- created: S0056
+- why: Balance S0056 WARN: passive hive_ships_20 median 60 (q3 65) at the guard; earliest passive HQ loss 21.1 min vs 20 floor.
+- acceptance:
+  - [ ] defs.gd Hive t/126 cap lowered ~5-8% (or slower spawn while player fleet < 3), commented with S0056 reference
+  - [ ] 9-seed passive: hive_ships_20 median <= 58, q3 <= 62; HQ lost median stays 20-35 min, earliest >= 22 min
+  - [ ] 9-seed economic: HQ survives >= 8/9, nw20 median >= 90,000, hive_ships_20 median <= 60; metrics.csv row appended; DESIGN Ramp bullet updated; check.sh PASS
+- notes: Run seeds as single-seed calls under timeout 175 (about 35 s/seed). Do not strengthen raid damage. Run after VS-061.
+
+## VS-065 · 900x720 touch and panel polish bundle
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0056
+- why: QA S0056 sweep P3 x3: touch_surface ACT/JUMP/RUN/FIRE overlap at 900x720, map side panel clipped without cue, game-over "Best" line collides with ship model.
+- acceptance:
+  - [ ] touch_surface at 900x720: ACT/JUMP/RUN/FIRE rects have min gap >= 12 px (selftest assert) and the gun model is clear of the cluster
+  - [ ] over.png "Best" line does not overlap the ship model at 1280x720 and 900x720
+  - [ ] Map side panel at 900x720 shows a scroll cue when content is clipped; VS-043 fold assert still passes; shots re-rendered; check.sh PASS
+- notes: Do map-panel part after VS-062 / VS-066.
+
+## VS-066 · Command strip: pinned raid actions, Buy/Build/Orders tabs
+- status: todo
+- priority: P2
+- type: polish
+- size: M
+- source: critic
+- created: S0056
+- why: Critic S0056 #3/#1: command map action column is clipped and Reserve is buried; Scout proposal 1. Absorbs VS-062 scope.
+- acceptance:
+  - [ ] map_view side panel has a fixed top strip (forecast, Call Reserve, Repair HQ) that never scrolls; Buy/Build/Orders are tabs, keyboard + touch selectable
+  - [ ] Call Reserve >= 44 px and fully on-screen at 1280x720 and 900x720 in map, raid_map, raid_map_touch shots; VS-043 fold assert extended
+  - [ ] Reserve text states ship count and linger; disabled state shows refusal reason; no sim change; check.sh PASS
+- notes: If built, mark VS-062 as done/superseded. Split tab helper out of map_view.gd. Likely split into S tasks before building (size M).
+
 # Ideas parking lot
+- (S0056, Scout, P3) Sovereign's Decree: once-per-run credit sink, fortify a sector 2 min (cost ~25k, reuses Reserve spawn/expiry, `--decree` harness flag). Wait for VS-061 results and VS-066 UI.
 - (S0054, QA VS-059, P3) Reserve fighters (expires>=0) count toward Director UNION_QUOTA (director.gd ~246) and delay Union fighter respawns for 180 s; skip ships with expires>=0 in that count. Also reserve spawns at sec.gates[0]; unverified whether it leads toward Hive. Untuned: RESERVE_COST 4000 / COUNT 6 / LINGER 180 (VS-061).
 - (S0050, QA VS-054, P3) Map side panel at 1280x720: raid forecast line sits below the fold under the build list — move raid block above buy/build lists; add raid_warn_touch shot; HUD forecast shows only soonest raid.
 - selftest.gd: track a failure flag so "SELFTEST OK" never prints after a failed assert (today only check.sh's SCRIPT ERROR grep catches failures) (S0001 QA)
