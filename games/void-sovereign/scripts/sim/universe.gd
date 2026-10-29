@@ -364,13 +364,8 @@ func buy_ship(cls: String, at: StationData) -> ShipData:
 
 
 ## VS-059: seconds until the Fleet Reserve can be called again (0 = ready).
-func reserve_cooldown_left() -> float:
-	return maxf(0.0, reserve_ready_at - time)
-
-
-## VS-059: call in the Fleet Reserve: RESERVE_COUNT Union fighters appear at the HQ sector's first gate and patrol the
-## HQ sector for RESERVE_LINGER s. Returns "" on success, otherwise the reason it was refused.
-func call_reserve() -> String:
+## VS-060: why call_reserve() would refuse right now ("" when it would succeed); no side effects, for UI labels.
+func reserve_refusal() -> String:
 	if hq == null or not hq.alive:
 		return "No HQ to defend"
 	var left := reserve_cooldown_left()
@@ -378,6 +373,19 @@ func call_reserve() -> String:
 		return "Reserve on cooldown (%d:%02d)" % [int(left) / 60, int(left) % 60]
 	if credits < Defs.RESERVE_COST:
 		return "Reserve needs %d cr" % int(Defs.RESERVE_COST)
+	return ""
+
+
+func reserve_cooldown_left() -> float:
+	return maxf(0.0, reserve_ready_at - time)
+
+
+## VS-059: call in the Fleet Reserve: RESERVE_COUNT Union fighters appear at the HQ sector's first gate and patrol the
+## HQ sector for RESERVE_LINGER s. Returns "" on success, otherwise the reason it was refused.
+func call_reserve() -> String:
+	var why := reserve_refusal()
+	if why != "":
+		return why
 	var sec := sectors[hq.sector]
 	var gate_pos: Vector3 = (sec.gates[0]["pos"] as Vector3) if not sec.gates.is_empty() else hq.pos + Vector3(Defs.SECTOR_RADIUS * 0.5, 0, 0)
 	add_credits(-Defs.RESERVE_COST, "reserve")

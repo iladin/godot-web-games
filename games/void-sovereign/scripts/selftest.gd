@@ -1407,7 +1407,9 @@ func _test_reserve() -> void:
 	u.setup(JOURNEY_SEED)
 	u.credits = Defs.RESERVE_COST - 1.0
 	assert(u.call_reserve() != "" and u.credits == Defs.RESERVE_COST - 1.0, "reserve refused when credits are short")
+	assert(u.reserve_refusal().contains("needs") and DockPanel.reserve_text(u).contains(u.reserve_refusal()), "VS-060: button label carries the short-credits reason")
 	u.credits = Defs.RESERVE_COST + 500.0
+	assert(u.reserve_refusal() == "" and DockPanel.reserve_text(u).begins_with("Call Reserve (") and DockPanel.reserve_text(u).ends_with(" cr)"), "VS-060: ready label 'Call Reserve (N cr)'")
 	var n0 := u.entities.size()
 	assert(u.call_reserve() == "", "reserve call succeeds")
 	assert(is_equal_approx(u.credits, 500.0), "reserve costs RESERVE_COST")
@@ -1422,6 +1424,7 @@ func _test_reserve() -> void:
 		assert(s.faction == Defs.Faction.UNION and s.sector == u.hq.sector and s.order == "patrol" and s.order_sector == u.hq.sector, "reserve ship defends the HQ sector")
 	u.credits = 1.0e6
 	var why := u.call_reserve()
+	assert(u.reserve_refusal() == why and DockPanel.reserve_text(u).contains("cooldown"), "VS-060: label shows the cooldown reason")
 	assert(why != "" and why.contains("cooldown") and u.entities.size() == n0 + Defs.RESERVE_COUNT, "second call on cooldown: " + why)
 	var r := SaveGame.restore(JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary)
 	assert(r != null and is_equal_approx(r.reserve_ready_at, u.reserve_ready_at), "cooldown round-trips")

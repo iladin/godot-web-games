@@ -286,3 +286,8 @@
 - Task(s): VS-059 Fleet Reserve sim logic — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: Tunables RESERVE_COST 4000/COUNT 6/LINGER 180/COOLDOWN 600 are dev picks, untuned. P3 QA bug parked (Director UNION_QUOTA counts reserve ships).
+
+## S0055 — 2026-10-29 00:10 — BUILD
+- Task(s): VS-060 Fleet Reserve map+dock button - done (QA PASS r1); VS-062 created from QA notes
+- Check: PASS · Git: committed (see git log)
+- Notes: builds_since_review now 6, so S0056 must start with PLANNING. Map reserve button is below the fold in raids (VS-062).

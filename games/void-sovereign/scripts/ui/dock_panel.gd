@@ -17,6 +17,7 @@ var _st_repair: Button
 var _hull_lbl: Label      # VS-053: status rows replace the repair buttons at 100% hull
 var _st_hull_lbl: Label
 var _ship_btns: Dictionary = {}
+var _reserve_btn: Button
 
 
 ## VS-032: HQ footer; touch wording uses MAP/ACT and points at income.
@@ -32,6 +33,7 @@ func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 		c.queue_free()
 	_rows.clear()
 	_ship_btns.clear()
+	_reserve_btn = null
 	custom_minimum_size = Vector2(760, 0)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -120,6 +122,9 @@ func open(p_u: Universe, p_st: StationData, touch_active: bool = false) -> void:
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.modulate = Color(1, 1, 1, 0.6)
 		box.add_child(hint)
+	if st.kind == "hq":
+		_reserve_btn = make_reserve_button(u, 48.0)
+		box.add_child(_reserve_btn)
 	var undock := Button.new()
 	undock.text = "Undock"
 	undock.custom_minimum_size = Vector2(0, 52)
@@ -133,6 +138,21 @@ func _status_label() -> Label:
 	var l := Label.new()
 	l.modulate = Color(0.55, 0.9, 0.7, 0.9)
 	return l
+
+
+## VS-060: Fleet Reserve button text: 'Call Reserve (N cr)' when ready, else the refusal reason. Shared with the map.
+static func reserve_text(p_u: Universe) -> String:
+	var why := p_u.reserve_refusal()
+	return "Call Reserve (%s cr)" % Hud._fmt(Defs.RESERVE_COST) if why == "" else "Call Reserve - %s" % why
+
+
+static func make_reserve_button(p_u: Universe, h: float) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(0, h)
+	b.clip_text = true
+	b.tooltip_text = "Pay credits to bring a Union squadron to defend your HQ sector for a few minutes."
+	b.pressed.connect(func() -> void: p_u.call_reserve())
+	return b
 
 
 ## VS-053: full-hull rows are plain status text (no button chrome); repair buttons show only when needed.
@@ -173,6 +193,9 @@ func _refresh() -> void:
 	_st_repair.disabled = u.credits < 1.0
 	_st_hull_lbl.visible = own and sc <= 1.0
 	_st_hull_lbl.text = hull_status("Station", 100)
+	if _reserve_btn:
+		_reserve_btn.text = reserve_text(u)
+		_reserve_btn.disabled = u.reserve_refusal() != ""
 	for cls: String in _ship_btns:
 		var b := _ship_btns[cls] as Button
 		var cost := int(Defs.SHIP[cls]["cost"])

@@ -1,18 +1,18 @@
 # Void Sovereign — Handover
-_Last updated: S0054 · 2026-10-28 23:05 UTC · mode: BUILD_
+_Last updated: S0055 · 2026-10-29 00:15 UTC · mode: BUILD_
 
 ## TL;DR
-S0054 shipped VS-059 (Fleet Reserve sim logic: Universe.call_reserve(), RESERVE_* tunables, ledger 'reserve', save fields, selftest, harness --reserve flag). Build green; 2 ready todos (VS-060 UI, VS-061 A/B). VS-042 still blocked on network allowlist.
+S0055 shipped VS-060 (Call Reserve button on dock + map; QA PASS r1). Build green; todo: VS-061 (A/B), VS-062 (button placement/disabled shots). VS-042 still blocked on network allowlist.
 
 ## Next session should
-1. Preflight per `ai-studio/studio-cycle.md` (next id S0055, `export GODOT=$PWD/.tools/godot`, check.sh with `timeout 175`). If `.git/*.lock` exists, `mv` it to `.git/stale-...`.
-2. BUILD VS-060: map and dock 'Call Reserve (N cr)' button calling `Universe.call_reserve()` (returns "" on success, else reason string; `reserve_cooldown_left()` for the label). Touch + mouse; run `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_touch map dock` and have QA look (VS-043 fold assert).
-3. Then VS-061 (9-seed A/B economic 30 with --reserve; single-seed parallel calls). Tunables in defs.gd are untuned dev picks (cost 4000, count 6, linger 180 s) - retune there if A/B misses.
-4. builds_since_review is 5; planning round due after 6 (so after VS-060/061 or at S0056 start). Parking lot P3: Director UNION_QUOTA counts reserve ships (director.gd ~246), map Close pin at tall viewports, sortie-on-touch shot.
-5. Balance: watch economic nw30 (168k after S0052) for an economy that is too easy.
+1. Preflight per `ai-studio/studio-cycle.md` (next id S0056, `export GODOT=$PWD/.tools/godot`, check.sh with `timeout 175`). If `.git/*.lock` exists, `mv` it to `.git/stale-...`.
+2. builds_since_review is 6, so run PLANNING first (Critic + QA sweep + Balance in parallel, then Scout); dedupe against VS-061/VS-062 and the parking lot.
+3. BUILD VS-061 (9-seed A/B economic 30 with --reserve; single-seed parallel calls, `timeout 175`). Reserve tunables in defs.gd (cost 4000, count 6, linger 180 s) are untuned; retune there if the A/B misses.
+4. BUILD VS-062: Reserve button >= 44 px and above the fold on the map during raids (map_view.gd ~line 159), plus disabled-state shots. Run `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_touch map dock`.
+5. Parking lot P3: Director UNION_QUOTA counts reserve ships (director.gd ~246); sortie-on-touch shot. Balance: watch economic nw30 (168k after S0052) for an economy that is too easy.
 
 ## Last session
-- Did: VS-059 done (defs.gd, universe.gd, ship_data.gd expires, ledger.gd, save_game.gd, hud.gd delta word, tools/balance.gd --reserve, selftest _test_reserve). QA PASS r1. Passive seed 101 with --reserve: HQ alive at 30 min vs lost 24.4 (single seed, not a gate).
+- Did: VS-060 done (universe.gd reserve_refusal(), dock_panel.gd shared make_reserve_button, map_view.gd button, selftest labels). QA PASS r1; QA notes became VS-062.
 - Check: PASS · Git: committed (see git log) · Roles collapsed: none
 
 ## In-flight / uncommitted work
@@ -23,7 +23,7 @@ none after the final commit.
 - Latest metrics: unchanged from S0052 (no balance run this session; HUD-only change).
 
 ## Backlog snapshot
-todo 2 · in-progress 0 · done 53 · blocked 2 · split 4 · Top ready: VS-060, VS-061
+todo 2 · in-progress 0 · done 54 · blocked 2 · split 4 · Top ready: VS-061, VS-062
 
 ## Watch out for
 - check.sh does NOT run the raid_map/raid_map_touch shots; run `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_touch map` after any map UI change (VS-043 fold assert).
@@ -40,6 +40,7 @@ todo 2 · in-progress 0 · done 53 · blocked 2 · split 4 · Top ready: VS-060,
 - none
 
 ## Session history (newest first, keep 10)
+- S0055 2026-10-29 BUILD - VS-060 Reserve button done (QA PASS r1); VS-062 added
 - S0054 2026-10-28 BUILD - VS-059 Fleet Reserve sim logic done (QA PASS r1)
 - S0053 2026-10-28 BUILD - VS-057 split (059/060/061); VS-058 touch HUD lane done (QA PASS r2)
 - S0052 2026-10-28 BUILD - VS-056 Hive cap trim + --fleet-floor done (QA PASS r1)
@@ -49,4 +50,3 @@ todo 2 · in-progress 0 · done 53 · blocked 2 · split 4 · Top ready: VS-060,
 - S0048 2026-10-28 BUILD - VS-051 raid chip damage done (QA PASS r1)
 - S0047 2026-10-28 BUILD - VS-053 signed credit deltas + full-hull status rows done (QA PASS r2)
 - S0046 2026-10-28 BUILD - VS-052 bot repairs HQ in harness done (QA PASS r1)
-- S0045 2026-10-28 BUILD - VS-050 wounded HQ penalty done (QA PASS r2)

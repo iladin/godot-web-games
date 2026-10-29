@@ -941,7 +941,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0054 — call_reserve() + tunables + ledger + save + selftest + --reserve harness flag (QA PASS r1)
 
 ## VS-060 · Fleet Reserve call-in: map and dock button
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -952,6 +952,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Map and dock button 'Call Reserve (N cr)' calling call_reserve(); disabled with the reason text on cooldown or short credits
   - [ ] Works with touch and mouse; screenshot reviewed by QA; check.sh PASS
 - notes: Depends on VS-059.
+- done: S0055 - Call Reserve button on dock + map (QA PASS r1)
 
 ## VS-061 · Fleet Reserve 9-seed A/B
 - status: todo
@@ -964,6 +965,19 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - acceptance:
   - [ ] 9-seed A/B economic 30 with --reserve: HQ survives >= 8/9, nw30 Q1 > 48,075, median >= 115k; passive unchanged; check.sh PASS
 - notes: Depends on VS-059. Run seeds as single-seed parallel calls.
+
+## VS-062 · Reserve button reachable during raids + disabled-state shots
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0055
+- why: QA VS-060 - the map Reserve button sits below the fold at 1280x720 (and in raid_map_touch) exactly when a raid makes it most useful; it is 40 px (<44 px touch convention); disabled labels (e.g. 'Call Reserve - Reserve on cooldown (3:00)') are unscreenshotted and may clip in the ~290 px map panel.
+- acceptance:
+  - [ ] Map Reserve button is >= 44 px and visible without scrolling in raid_map and raid_map_touch shots at 1280x720 (move above BUY/BUILD or into the raid block), VS-043 fold assert still passes
+  - [ ] New shot scenarios show the disabled state (cooldown and short credits) on map and dock; label not clipped (shorten text or wrap if needed); check.sh PASS
+- notes: Files: scripts/ui/map_view.gd (make_reserve_button call ~line 159), dock_panel.gd, scripts/tools/test_driver or shots scenarios.
 
 
 # Ideas parking lot

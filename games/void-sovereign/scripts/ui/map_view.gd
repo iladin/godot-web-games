@@ -41,6 +41,7 @@ var _order_btns: Dictionary = {}
 var _buy_btns: Dictionary = {}
 var _build_btns: Dictionary = {}
 var _order_toggle: Button
+var _reserve_btn: Button            # VS-060: Fleet Reserve call-in
 var t: float = 0.0
 
 
@@ -155,6 +156,9 @@ func _build_side() -> void:
 		b3.pressed.connect(func() -> void: build_kind = kind if build_kind != kind else "")
 		builds.add_child(b3)
 		_build_btns[kind] = b3
+	_reserve_btn = DockPanel.make_reserve_button(u, 40.0)   # VS-060: after the build grid so fold_ok() is unaffected
+	_reserve_btn.add_theme_font_size_override("font_size", 14)
+	_side.add_child(_reserve_btn)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_side.add_child(_info)
@@ -298,6 +302,8 @@ func _process(delta: float) -> void:
 			var sh := u.get_ent(id) as ShipData
 			lines.append("%s — %s%s" % [sh.display_name, sh.order, "" if sh.sector == view_sector else " (%s)" % u.sectors[sh.sector].name])
 		_sel_label.text = "\n".join(lines)
+	_reserve_btn.text = DockPanel.reserve_text(u)
+	_reserve_btn.disabled = u.reserve_refusal() != ""
 	for cls: String in _buy_btns:
 		var cost := int(Defs.SHIP[cls]["cost"])
 		(_buy_btns[cls] as Button).text = "%s\n%s" % [Defs.SHIP[cls]["name"], Hud._fmt(cost)]
