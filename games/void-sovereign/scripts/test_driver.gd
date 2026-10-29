@@ -269,6 +269,9 @@ func _shot_script(t: float) -> void:
 		sv.fps.look_at(Vector3(sv.core_pos.x, sv.fps.position.y, sv.core_pos.z), Vector3.UP)
 		sv.fps.rotation.x = 0.0
 		sv.fps.rotation.z = 0.0
+	if g.shot_mode.begins_with("raid_map") or g.shot_mode == "map":   # VS-065: cue tracks clipping
+		if g.map._scroll_cue != null and t > 2.5:
+			assert(g.map._scroll_cue.visible == g.map.scroll_clipped(), "map side panel: scroll cue matches clipped state")
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
 		assert(g.map.fold_ok(), "map side panel: Buy/Build tab below the fold at %s (%s)" % [str(g.map.size), g.map.fold_report()])
 	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5:   # VS-067

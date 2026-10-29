@@ -33,6 +33,7 @@ var _side: VBoxContainer
 var _info: Label
 var _head_text: String = ""          # VS-067: credits/selection line, drawn under the map title (frees side-panel height)
 var _scroll: ScrollContainer
+var _scroll_cue: Label
 var _build_grid: GridContainer
 var _orders_grid: GridContainer
 var _sel_label: Label
@@ -209,6 +210,15 @@ func _build_side() -> void:
 	close.custom_minimum_size = Vector2(0, 44)
 	close.pressed.connect(func() -> void: close_requested.emit())
 	panel.add_child(close)
+	_scroll_cue = Label.new()   # VS-065: shown while the side list is clipped below the viewport
+	_scroll_cue.text = "▼ more — scroll"
+	_scroll_cue.add_theme_font_size_override("font_size", 14)
+	_scroll_cue.add_theme_color_override("font_color", AMBER)
+	_scroll_cue.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	_scroll_cue.add_theme_constant_override("outline_size", 5)
+	_scroll_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scroll_cue.visible = false
+	add_child(_scroll_cue)
 
 
 ## VS-032/068: true when the Buy and Build tabs (plus the Defend/raid lines above them) fit in the side scroll
@@ -223,6 +233,22 @@ func fold_ok() -> bool:
 	ok = ok and _above_pages_h() + _orders_grid.get_combined_minimum_size().y <= room
 	_tabs.select(keep)
 	return ok
+
+
+## VS-065: content below the scroll viewport that the player has not scrolled to yet.
+func scroll_clipped() -> bool:
+	var bar := _scroll.get_v_scroll_bar()
+	return bar.max_value - _scroll.scroll_vertical - _scroll.size.y > 2.0
+
+
+func _update_scroll_cue() -> void:
+	var clipped := scroll_clipped()
+	_scroll_cue.visible = clipped
+	if clipped:
+		var r := _scroll.get_global_rect()
+		_scroll_cue.size = Vector2(r.size.x, 22)
+		_scroll_cue.position = Vector2(r.position.x, r.end.y - 22) - global_position
+		_scroll_cue.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
 func fold_report() -> String:
@@ -339,6 +365,7 @@ func _process(delta: float) -> void:
 		return
 	t += delta
 	_raid_panel()
+	_update_scroll_cue()
 	selected = selected.filter(func(id: int) -> bool: return u.get_ent(id) != null)
 	var s := u.sectors[view_sector]
 	var counts: Dictionary = {}

@@ -120,8 +120,8 @@ func _draw() -> void:
 		"over":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.65))
 			_line(h * 0.3, "THE HIVE IS BROKEN" if won else "HQ LOST", 72, AMBER if won else HIVE)
-			_line(h * 0.3 + 60, stats, 22, Color(1, 1, 1, 0.85))
-			_line(h * 0.5, "Score %s" % Hud._fmt(float(score)), 48, Color.WHITE)
-			_line(h * 0.5 + 46, "NEW BEST!" if new_best else "Best %s" % Hud._fmt(float(best)), 30, CYAN)
+			_line(h * 0.3 + 52, stats, 22, Color(1, 1, 1, 0.85))
+			_line(h * 0.46, "Score %s" % Hud._fmt(float(score)), 48, Color.WHITE)
+			_line(h * 0.46 + 40, "NEW BEST!" if new_best else "Best %s" % Hud._fmt(float(best)), 30, CYAN)
 			if t > 0.8:
 				_line(h * 0.75, "Click, tap or press Space to play again", 30, AMBER.lerp(Color.WHITE, 0.5 + 0.5 * sin(t * 4.0)))

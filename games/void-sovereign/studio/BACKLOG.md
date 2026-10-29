@@ -1013,7 +1013,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0061 — Nest cap growth 126->145 (cap@20min 15->14); passive hive_ships_20 median 56, econ HQ 8/9; QA PASS r1
 
 ## VS-065 · 900x720 touch and panel polish bundle
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -1025,6 +1025,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] over.png "Best" line does not overlap the ship model at 1280x720 and 900x720
   - [ ] Map side panel at 900x720 shows a scroll cue when content is clipped; VS-043 fold assert still passes; shots re-rendered; check.sh PASS
 - notes: Do map-panel part after VS-062 / VS-066.
+- done: S0064 — gun moved clear of touch cluster, over.png Best clear of ship, map scroll cue + assert (QA PASS r1)
 
 ## VS-066 · Command strip: pinned raid actions, Buy/Build/Orders tabs
 - status: split
@@ -1275,3 +1276,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - (S0053, VS-058 dev, P3) Map side panel clip at 900x720: pin "Close map (M)" below the scroll area only when the viewport is tall (pinning at 1280x720 broke the VS-043 fold assert); add a sortie-on-touch shot scenario; add raid_map_touch fold check to selftest.
 - Sovereign's Decree: credit-sink fortify ability deepening Reserve spawn/expiry (critic bold idea; scout proposal 4; needs VS-068 first).
 - Director UNION_QUOTA counts reserve ships; partial-repair shot.
+- (S0064, QA, P3) FPS gun now near-centre (fps_player.gd GUN_X 0.02) and hides "Click to capture mouse" hint at 1280x720; try GUN_X 0.10-0.15 or a touch-only offset.
+- (S0064, QA, P3) Map scroll cue overdraws last ~22 px of scroll viewport; no shipped shot clips the panel, so cue is only covered by assert, not a shot (add forced-clip scenario).

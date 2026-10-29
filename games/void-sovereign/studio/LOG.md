@@ -334,3 +334,8 @@
 - Task(s): VS-068 Map side panel Buy/Build/Orders tabs — done (QA PASS r1); VS-076 follow-up added
 - Check: PASS · Git: committed (see git log)
 - Notes: New scripts/ui/map_tabs.gd (44 px tabs, keys 1-3). map_view.gd grew to 645 lines; shrink deferred to VS-076.
+
+## S0064 — 2026-10-29 10:20 — BUILD
+- Task(s): VS-065 900x720 touch/panel polish - done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: Gun moved to GUN_X 0.02 (QA P3: too central, parked); over.png Best moved above ship; map scroll cue added with assert.

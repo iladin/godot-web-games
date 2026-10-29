@@ -26,6 +26,8 @@ const COYOTE := 0.12
 var touch: TouchControls
 var head: Node3D
 var cam: Camera3D
+## Gun sits left of the right-hand touch cluster (FIRE/ACT/JUMP) at 900x720.
+const GUN_X := 0.02
 var gun: Node3D
 var flash: MeshInstance3D
 var hp: float = MAX_HP
@@ -62,7 +64,7 @@ func setup(p_touch: TouchControls) -> void:
 	cam.far = 1500.0
 	head.add_child(cam)
 	gun = Node3D.new()
-	gun.position = Vector3(0.28, -0.26, -0.5)
+	gun.position = Vector3(GUN_X, -0.26, -0.5)
 	gun.scale = Vector3.ONE * 0.8
 	cam.add_child(gun)
 	var dark := ProxyFactory.mat(Color("2a2f3a"))
@@ -168,7 +170,7 @@ func tick(delta: float) -> void:
 	var moving := hv.length() > 1.0 and on_floor
 	bob_t += delta * (hv.length() * 0.9 if moving else 0.0)
 	var reload_dip := 0.0 if reload_t <= 0.0 else sin(reload_t / RELOAD_TIME * PI) * 0.25
-	gun.position = Vector3(0.28 + sin(bob_t) * 0.015, -0.26 - absf(cos(bob_t)) * 0.015 - reload_dip, -0.5 + kick * 0.06)
+	gun.position = Vector3(GUN_X + sin(bob_t) * 0.015, -0.26 - absf(cos(bob_t)) * 0.015 - reload_dip, -0.5 + kick * 0.06)
 
 
 func take_damage(amount: float) -> void:
