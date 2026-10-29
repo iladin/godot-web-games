@@ -5,9 +5,9 @@
     "since": "",
     "session": ""
   },
-  "session_counter": 70,
-  "last_session": "S0070",
+  "session_counter": 71,
+  "last_session": "S0071",
   "last_mode": "BUILD",
   "last_review_session": "S0069",
-  "builds_since_review": 1
+  "builds_since_review": 2
 }

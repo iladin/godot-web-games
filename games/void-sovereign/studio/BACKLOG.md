@@ -1167,7 +1167,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - why: VS-071 trials: nest cap 135 breaks passive earliest-loss gate; warship -10% fixes HQ 9/9 but nw30 q1 stays 57k. Seeds 101/152/186/118 are weak economies (S0062-balance.md).
 - acceptance:
   - [ ] One lever tried (candidates: late Hive raid size, defense platform cost cut, post-20-min income floor); economic 9 seeds HQ >= 8/9 and nw30 median >= 120k, q1 >= 90k, or documented rejection with numbers
-  - [ ] Passive 9 seeds (no --reserve) earliest HQ loss >= 22 min unchanged; selftest/DESIGN.md/metrics.csv updated; check.sh PASS
+  - [ ] Passive 9 seeds (no --reserve) HQ lost median within 20-35 and earliest not worse than the baseline (S0071 VS-077: baseline earliest is 19.2, not >= 22); selftest/DESIGN.md/metrics.csv updated; check.sh PASS
 - notes: Warship -10% (Defs cost + balance.gd bot gate reads Defs fighter cost) is a known partial option. Run balance_gate.sh one GATE_OFFSETS per call.
 - notes2: S0068: Defense Platform cost 30000->24000 KEPT. Economic 9 seeds HQ 9/9, nw30 median 132,396 (q1 115,699), nw20 median 105,464. Passive bit-identical to baseline (bot buys nothing). Warship -10% and nest cap 135 stay rejected. Seeds 101 (89k) and 135 (71k) still weak. Passive gate ambiguity -> VS-077.
 - done: S0068 - platform cost 24k; economic gate met; QA PASS r1
@@ -1188,7 +1188,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0070 — page building moved to map_pages.gd (map_view 714->582), raid_map_build/orders shots, 44 px order buttons (QA PASS r1)
 
 ## VS-077 · Clarify passive balance gate (earliest HQ loss 19.2 vs >= 22 min)
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -1199,7 +1199,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Determine whether the passive gate is meant to run with or without --reserve (run offsets 0/3/6 both ways, 40 min where feasible) and document the numbers
   - [ ] Update balance-analyst.md, balance_gate.sh and VS-075/other task wording to one consistent definition; if no-reserve genuinely fails, propose one lever
   - [ ] check.sh PASS
-- notes: Run foreground, one GATE_OFFSETS per call (120 s cap).
+- notes: Run foreground, one GATE_OFFSETS per call (120 s cap). S0071 in progress.
+- done: S0071 — passive gate defined WITHOUT --reserve (median 20-35 min; earliest advisory); docs/script wording unified; numbers in reviews/S0071-balance-gate.md (QA PASS r1)
 
 ## VS-078 · Touch cluster rehome: spread THR/wing/ACT/JUMP/RUN/FIRE, re-shoot 900x720
 - status: todo
@@ -1268,6 +1269,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Decree costs ~25k cr, once per run, fortifies a sector for 2 min, usable by keyboard and touch
   - [ ] Economic 9-seed gate still HQ 9/9; selftest + DESIGN.md updated; check.sh PASS
 - notes: Scout S0069 proposal 5. Run balance after.
+
+## VS-083 · Trial RAID_SIZE_GROWTH 100 to lift earliest passive HQ loss (seed 169 at 19.2 min)
+- status: todo
+- priority: P3
+- type: balance
+- size: S
+- source: qa
+- created: S0071
+- why: S0071 gate review (reviews/S0071-balance-gate.md): no-reserve passive median 28.4 is in band but seed 169 loses at 19.2 and seed 203 at 22.1; developer proposed RAID_SIZE_GROWTH 90->100 (untested).
+- acceptance:
+  - [ ] Passive 9 seeds no-reserve: median stays 20-35 and earliest loss >= 22 min (or documented why not), one GATE_OFFSETS per call
+  - [ ] Economic 9 seeds still HQ 9/9 with nw30 median >= 120k; else revert and record
+  - [ ] check.sh PASS
+- notes: Low urgency; guard is advisory per VS-077.
 
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.

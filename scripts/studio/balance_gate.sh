@@ -9,6 +9,9 @@
 #                 The second call's summary covers every offset file present for this run tag.
 #   GATE_OUT      directory for per-offset raw output (default .tools/balance_gate/<tag>); a run
 #                 overwrites only the offsets it runs. GATE_OFFSETS="" just re-summarises.
+# Passive gate definition (VS-077, S0071): policy=passive means nobody plays, so run it WITHOUT --reserve (the Fleet
+#   Reserve is a player action; --reserve is only for explicit A/B). HEAD 40 min 9 seeds: no-reserve median 28.4,
+#   earliest 19.2 (seed 169); with --reserve median 27.6, earliest 22.1. Gate = median 20-35; earliest is watched.
 # Summary: hq_lost_at / union_collapse_at of -1 (never happened) count as "> minutes" (sorted last).
 # Measured S0010 on Daniel's 2-core device (void-sovereign):
 #   economic 30 min, 9 seeds, one call: 154 s.

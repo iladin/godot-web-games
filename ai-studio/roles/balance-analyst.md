@@ -10,7 +10,7 @@ Balance in Void Sovereign is measurable: the whole cluster is a data simulation 
 ## Run (9-seed gate: the sim is chaotic, so judge medians + IQR over 9 seeds, never 1–3 seeds)
 ```
 bash scripts/studio/balance_gate.sh <slug> economic 30                    # modest economic player; one call (~154 s)
-GATE_OFFSETS="0 3" bash scripts/studio/balance_gate.sh <slug> passive 40  # nobody plays: how fast does the Hive win?
+GATE_OFFSETS="0 3" bash scripts/studio/balance_gate.sh <slug> passive 40  # nobody plays; never add --reserve here: how fast does the Hive win?
 GATE_OFFSETS="6"   bash scripts/studio/balance_gate.sh <slug> passive 40  # 2nd call (passive 40 min exceeds 180 s in one)
 ```
 The gate runs seed offsets 0/3/6 (seeds 101..237) via `balance.sh` and prints `GATE_SEED` lines plus one
@@ -23,7 +23,7 @@ a change only counts if it moves the 9-seed median beyond the IQR noise, ideally
 ## Targets (edit here when Daniel changes the vision)
 | Metric | Target |
 |---|---|
-| Passive: HQ lost at | 20–35 min (pressure exists, but not a stopwatch) |
+| Passive: HQ lost at | median 20–35 min (pressure exists, but not a stopwatch). Passive = nobody plays = NO `--reserve` (VS-077: the Fleet Reserve is a player action). Per-seed earliest is a watch item: report it; S0071 measured 19.2 (seed 169) on HEAD, so ">= 22" is NOT a hard gate until a lever lands |
 | Economic: net worth at 10 min | ≥ 45,000 |
 | Economic: net worth at 20 min | ≥ 90,000 |
 | Economic: HQ survives 30 min | yes, in ≥ 6 of 9 seeds |

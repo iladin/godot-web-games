@@ -369,3 +369,8 @@
 - Task(s): VS-076 map pages split out of map_view.gd (714->582), raid_map_build/orders shots, 44 px order buttons — done (QA PASS r1)
 - Check: PASS · Git: committed
 - Notes: QA found P3 cue overlap on Orders at 1280 (parked). Real-browser VS-042 still unverified.
+
+## S0071 — 2026-10-29 17:20 — BUILD
+- Task(s): VS-077 passive balance gate clarified (no --reserve; median 20-35 min, earliest advisory) - done, QA PASS r1. VS-083 added (P3 RAID_SIZE_GROWTH 100 trial).
+- Check: PASS · Git: committed (see git log)
+- Notes: docs/script comments only, no game constants changed. check.sh needs GODOT=$PWD/.tools/godot exported.
