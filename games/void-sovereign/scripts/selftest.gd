@@ -1362,7 +1362,7 @@ func _test_station_wounds() -> void:
 	_test_bot_repair()
 	_test_fleet_floor()
 	_test_reserve()
-	assert(Defs.NEST_CAP_BASE + int(1200.0 / Defs.NEST_CAP_GROWTH) == 15, "VS-056 Nest cap at 20 min is 15")
+	assert(Defs.NEST_CAP_BASE + int(1200.0 / Defs.NEST_CAP_GROWTH) == 14, "VS-064 Nest cap at 20 min is 14")
 
 
 ## VS-052: harness economic repair policy: only below 80% hull, only above the credit reserve.

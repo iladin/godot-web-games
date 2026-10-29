@@ -316,3 +316,11 @@
 - Task(s): VS-070 raid_hit shot hardening — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: STUCK_FRAMES=30000 exceeds shots.sh 150 s timeout (QA P3); run time varied 44-123 s.
+
+## S0062 — 2026-10-29 06:57 — SKIPPED
+- Lock held by S0061 since 05:56Z (<4h); files modified 06:38Z, so it appears active. No work done.
+
+## S0061 — 2026-10-29 07:05 — BUILD
+- Task(s): VS-064 passive Hive cap trim — done (Developer + independent QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: NEST_CAP_GROWTH 126->145 (140 and 150 failed earliest-HQ-loss gate). Econ HQ now 8/9 (seed 186 lost at 23.7 min) — thin margin. metrics rows lack nw10/nw30/union cols.

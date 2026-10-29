@@ -998,7 +998,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0059 — raid_hit 3-frame shot + raid_hit_long log (QA PASS r1)
 
 ## VS-064 · Passive Hive cap trim
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -1006,10 +1006,11 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - created: S0056
 - why: Balance S0056 WARN: passive hive_ships_20 median 60 (q3 65) at the guard; earliest passive HQ loss 21.1 min vs 20 floor.
 - acceptance:
-  - [ ] defs.gd Hive t/126 cap lowered ~5-8% (or slower spawn while player fleet < 3), commented with S0056 reference
-  - [ ] 9-seed passive: hive_ships_20 median <= 58, q3 <= 62; HQ lost median stays 20-35 min, earliest >= 22 min
-  - [ ] 9-seed economic: HQ survives >= 8/9, nw20 median >= 90,000, hive_ships_20 median <= 60; metrics.csv row appended; DESIGN Ramp bullet updated; check.sh PASS
+  - [x] defs.gd Hive t/126 cap lowered ~5-8% (or slower spawn while player fleet < 3), commented with S0056 reference
+  - [x] 9-seed passive: hive_ships_20 median <= 58, q3 <= 62; HQ lost median stays 20-35 min, earliest >= 22 min
+  - [x] 9-seed economic: HQ survives >= 8/9, nw20 median >= 90,000, hive_ships_20 median <= 60; metrics.csv row appended; DESIGN Ramp bullet updated; check.sh PASS
 - notes: Run seeds as single-seed calls under timeout 175 (about 35 s/seed). Do not strengthen raid damage. VS-061 done; reserve rescues passive seed 101 (--reserve only), so judge passive gates WITHOUT --reserve.
+- done: S0061 — Nest cap growth 126->145 (cap@20min 15->14); passive hive_ships_20 median 56, econ HQ 8/9; QA PASS r1
 
 ## VS-065 · 900x720 touch and panel polish bundle
 - status: todo
