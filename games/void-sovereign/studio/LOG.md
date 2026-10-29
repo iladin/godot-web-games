@@ -354,3 +354,8 @@
 - Task(s): VS-074 Map stakes: raid banner + fleet route lines — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: 16px raid banner, strip forecast 14px, outcome wraps; amber dashed route arrows on galaxy inset. QA P3s: banner duplicates strip forecast; banner comment claims shrink-to-fit but it clips; no selftest asserts routes draw.
+
+## S0068 — 2026-10-29 14:50 — BUILD
+- Task(s): VS-075 Lift weak-economy seeds — done (Defense Platform 30000->24000; QA PASS r1); VS-077 added (passive gate clarification)
+- Check: PASS · Git: committed (see git log)
+- Notes: econ 9/9 HQ, nw30 median 132,396 q1 115,699. Seeds 101/135 still weak. Passive gate wording inconsistent (19.2 min baseline).

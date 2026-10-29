@@ -102,7 +102,8 @@ const STATION: Dictionary = {
 	"factory": {"name": "Munitions Factory", "hull": 5000.0, "shield": 1500.0, "in": {"alloy": 3, "energy": 6}, "out": {"munitions": 2}, "cost": 52000, "dps": 0.0, "range": 0.0, "radius": 140.0},
 	"trade": {"name": "Trade Hub", "hull": 7000.0, "shield": 2500.0, "in": {}, "out": {}, "cost": 0, "dps": 30.0, "range": 1300.0, "radius": 170.0},
 	"shipyard": {"name": "Shipyard", "hull": 9000.0, "shield": 3000.0, "in": {"alloy": 4, "munitions": 2}, "out": {}, "cost": 0, "dps": 50.0, "range": 1500.0, "radius": 190.0},
-	"defense": {"name": "Defense Platform", "hull": 4500.0, "shield": 2500.0, "in": {}, "out": {}, "cost": 30000, "dps": 95.0, "range": 1700.0, "radius": 90.0},
+# VS-075: Defense Platform cost 30000 -> 24000 (weak-economy seeds could not afford the 10 min platform before cap-145 raids; economic 9-seed HQ 9/9, nw30 median 132k).
+	"defense": {"name": "Defense Platform", "hull": 4500.0, "shield": 2500.0, "in": {}, "out": {}, "cost": 24000, "dps": 95.0, "range": 1700.0, "radius": 90.0},
 	"hq": {"name": "Sovereign HQ", "hull": 30000.0, "shield": 6000.0, "in": {}, "out": {}, "cost": 0, "dps": 70.0, "range": 1600.0, "radius": 200.0},
 	"nest": {"name": "Hive Nest", "hull": 9000.0, "shield": 5000.0, "in": {}, "out": {}, "cost": 0, "dps": 75.0, "range": 1700.0, "radius": 200.0},
 }

@@ -1158,7 +1158,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0067 — 16px raid banner, 14px strip/wrapped outcome, inset fleet route lines; QA PASS r1
 
 ## VS-075 · Lift weak-economy seeds (nw30 / seed 186 HQ)
-- status: todo
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -1169,6 +1169,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] One lever tried (candidates: late Hive raid size, defense platform cost cut, post-20-min income floor); economic 9 seeds HQ >= 8/9 and nw30 median >= 120k, q1 >= 90k, or documented rejection with numbers
   - [ ] Passive 9 seeds (no --reserve) earliest HQ loss >= 22 min unchanged; selftest/DESIGN.md/metrics.csv updated; check.sh PASS
 - notes: Warship -10% (Defs cost + balance.gd bot gate reads Defs fighter cost) is a known partial option. Run balance_gate.sh one GATE_OFFSETS per call.
+- notes2: S0068: Defense Platform cost 30000->24000 KEPT. Economic 9 seeds HQ 9/9, nw30 median 132,396 (q1 115,699), nw20 median 105,464. Passive bit-identical to baseline (bot buys nothing). Warship -10% and nest cap 135 stay rejected. Seeds 101 (89k) and 135 (71k) still weak. Passive gate ambiguity -> VS-077.
+- done: S0068 - platform cost 24k; economic gate met; QA PASS r1
 
 ## VS-076 · Map tabs follow-up: shrink map_view.gd, Build/Orders tab shots, 44 px order buttons
 - status: todo
@@ -1183,6 +1185,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Shot scenarios for Build tab and Orders tab (raid_map_build / raid_map_orders) with fold asserts at 1280x720 and 900x720
   - [ ] Order buttons >= 44 px (or documented why not); check.sh PASS
 - notes: S0063 QA follow-ups (a)(b)(c)(d). raid_map_touch not enabling touch mode is a separate P3 (park if not folded in).
+
+## VS-077 · Clarify passive balance gate (earliest HQ loss 19.2 vs >= 22 min)
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: qa
+- created: S0068
+- why: QA S0068: default no-reserve passive gate already loses seed 169 at 19.2 min (baseline too), contradicting the ">= 22 min" gate and S0062's "earliest 23.6" figure (likely a --reserve number).
+- acceptance:
+  - [ ] Determine whether the passive gate is meant to run with or without --reserve (run offsets 0/3/6 both ways, 40 min where feasible) and document the numbers
+  - [ ] Update balance-analyst.md, balance_gate.sh and VS-075/other task wording to one consistent definition; if no-reserve genuinely fails, propose one lever
+  - [ ] check.sh PASS
+- notes: Run foreground, one GATE_OFFSETS per call (120 s cap).
 
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
