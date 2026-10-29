@@ -311,3 +311,8 @@
 - Task(s): VS-063 raid-hit proof run — done (QA PASS r1); VS-070 added (harden raid_hit vs slow runs)
 - Check: PASS · Git: committed (see git log)
 - Notes: new scripts/raid_hit_proof.gd, shots.sh multi-frame (_2/_3). raid_hit flaked 1/4 runs under load.
+
+## S0060 — 2026-10-29 05:06 — BUILD
+- Task(s): VS-070 raid_hit shot hardening — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: STUCK_FRAMES=30000 exceeds shots.sh 150 s timeout (QA P3); run time varied 44-123 s.

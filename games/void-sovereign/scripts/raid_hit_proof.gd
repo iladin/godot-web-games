@@ -6,6 +6,7 @@ extends RefCounted
 const LONG_END := 130.0
 const LOG_STEP := 30.0
 const RAIDER_HULL_MULT := 12.0
+const STUCK_FRAMES := 30000   ## frame-based stuck cap: slow machines render fewer frames per second, so wall/state time must not decide
 
 var g: VoidMain
 var _stage: int = 0          ## 0 setup, 1 wait forecast, 2 wait impact, 3 wait reserve, 4 done
@@ -15,6 +16,7 @@ var _min_hq: float = 1.0
 var _reserve_seen: int = 0
 var _hq_hit: bool = false
 var _retries: int = 0
+var _frames: int = 0
 
 
 func _init(p_g: VoidMain) -> void:
@@ -85,6 +87,7 @@ func tick(t: float) -> void:
 		return
 	if _stage == 0:
 		return
+	_frames += 1
 	if g.u.hq != null:
 		_min_hq = minf(_min_hq, _hq_pct())
 		_hq_hit = _hq_hit or _hq_pct() < 1.0
@@ -121,8 +124,8 @@ func tick(t: float) -> void:
 				if not is_long:
 					await _snap(3)
 					g.get_tree().quit()
-	if t - _t_mark > 80.0 and _stage in [1, 2, 3] and not is_long:
-		push_error("raid_hit: stuck in stage %d (hq=%d%%)" % [_stage, int(_hq_pct() * 100.0)])
+	if _frames > STUCK_FRAMES and _stage in [1, 2, 3] and not is_long:
+		push_error("raid_hit: stuck in stage %d after %d frames (hq=%d%%)" % [_stage, _frames, int(_hq_pct() * 100.0)])
 		g.get_tree().quit(1)
 	if is_long and t > LONG_END:
 		print("raid_hit_long END: min_hq=%d%% hq_hit=%s reserve_peak=%d credits=%d state=%s mode=%s" % [int(_min_hq * 100.0), str(_hq_hit), _reserve_seen, int(g.u.credits), str(g.state), g.mode])

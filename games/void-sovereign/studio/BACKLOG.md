@@ -1081,7 +1081,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Do before or with VS-068 (tabs may remove the fold problem). Files: scripts/ui/map_strip.gd, scripts/test_driver.gd.
 
 ## VS-070 · Harden raid_hit shot against slow runs
-- status: todo
+- status: done
 - priority: P2
 - type: tech
 - size: S
@@ -1092,7 +1092,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] raid_hit_proof.gd stuck cap raised or based on frames, not wall/state time that slow machines exceed
   - [ ] shots.sh greps "ERROR: raid_hit" and reports FAILED when raid_hit _2 or _3 is missing/stale
   - [ ] 3 consecutive `shots.sh void-sovereign raid_hit` runs yield 3 fresh frames; check.sh PASS
-- notes: S0059 QA follow-up.
+- notes: S0059 QA follow-up. S0060 working.
 
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
@@ -1181,7 +1181,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
 - S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
 - S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).
-- done: S0058 — strip compacted (BTN 44, sep 1, forecast 11px), raid_map_damaged shot + partial-repair label; QA PASS r1
+- done: S0060 — frame-based stuck cap, shots.sh FAILED on stale raid_hit frames (QA PASS r1)
 - VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
 - Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing
 

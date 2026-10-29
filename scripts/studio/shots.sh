@@ -18,10 +18,16 @@ for sc in "$@"; do
   tmo="${SHOT_TIMEOUT:-60}"; [[ "$sc" == raid_hit && -z "${SHOT_TIMEOUT:-}" ]] && tmo=150   # raid_hit waits for a real raid to land (3 frames)
   timeout -k 5 "$tmo" xvfb-run -a -s "-screen 0 ${RES}x24" "$GODOT" --path "$ROOT/games/$SLUG" --rendering-driver opengl3 \
     --resolution "$RES" -- --shot="$sc" --shotfile="$OUT/$sc.png" 2>&1 \
-    | grep -E "SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Nonexistent function" | head -5
+    | grep -E "ERROR: raid_hit|SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Nonexistent function" | head -5
   if [[ -f "$OUT/$sc.png" && $(stat -c %Y "$OUT/$sc.png") -ge $start ]]; then echo "shot $OUT/$sc.png"; else echo "FAILED $sc (no fresh PNG written; stale file ignored)"; rc=1; fi
   for extra in "$OUT/${sc}"_[0-9].png; do   # multi-frame scenarios (raid_hit): <scenario>_2.png, _3.png ...
     [[ -f "$extra" && $(stat -c %Y "$extra") -ge $start ]] && echo "shot $extra"
   done
+  if [[ "$sc" == raid_hit ]]; then   # all 3 frames are required; partial output is a failure
+    for n in 2 3; do
+      f="$OUT/${sc}_$n.png"
+      if [[ ! -f "$f" || $(stat -c %Y "$f") -lt $start ]]; then echo "FAILED $sc (frame _$n missing or stale)"; rc=1; fi
+    done
+  fi
 done
 exit $rc
