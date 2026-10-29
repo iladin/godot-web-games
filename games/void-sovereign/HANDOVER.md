@@ -1,19 +1,18 @@
 # Void Sovereign — Handover
-_Last updated: S0066 · 2026-10-29 12:15 UTC · mode: BUILD_
+_Last updated: S0067 · 2026-10-29 13:25 UTC · mode: BUILD_
 
 ## TL;DR
-S0066 shipped VS-073 (22 s base collapse after Core death: extraction zone 150 m toward ship, reinforcements every 6 s, auto-extract or evacuation on timeout). QA PASS r1, check green. 3 todo tasks ready; PLANNING due when builds_since_review reaches 6 (now 4).
+S0067 shipped VS-074 (16 px raid banner on the map, 14 px strip forecast, wrapped raid outcome, amber route arrows on the galaxy inset). QA PASS r1, check green. 2 todo tasks ready (VS-076, VS-075); builds_since_review is 5, so PLANNING is due next session or the one after (at 6).
 
 ## Next session should
-1. BUILD VS-074 (S): map stakes - raid banner >= 14 px + fleet route lines. Run `RES=900x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_damaged map` after, then check.sh.
-2. VS-076 (S): move page building out of `scripts/ui/map_view.gd` (~660 lines) into map_pages.gd; add Build/Orders tab shots; 44 px order buttons.
+1. BUILD VS-076 (S): move page building out of `scripts/ui/map_view.gd` (now larger after VS-074) into map_pages.gd; add Build/Orders tab shots; 44 px order buttons. Run `RES=900x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_damaged raid_map_touch map` after, then check.sh.
+2. Then PLANNING (builds_since_review will be 6): Critic + QA sweep + Balance in parallel, then Feature Scout. Fold in VS-074 P3 follow-ups: raid banner/strip duplication, banner clips instead of shrinking on "+N" raids (fix comment or implement), selftest asserting _draw_fleet_routes draws, hop-by-hop routes along gates, routes on main sector view.
 3. Run `shots.sh void-sovereign raid_hit` alone (SHOT_TIMEOUT=150) to confirm VS-072 probe left it intact.
-4. VS-075 (P2 balance): lift weak-economy seeds 101/152/186/118; read studio/reviews/S0062-balance.md first; run balance_gate.sh one GATE_OFFSETS per call.
-5. Add DESIGN.md surface-section text for the collapse beat (consts COLLAPSE_* / EXTRACT_* in sim/defs.gd); optionally a shot facing the EXTRACT beacon (marker not yet visually confirmed) and check timeout message reads as evacuation not death.
-6. builds_since_review is 4; PLANNING due at 6.
+4. VS-075 (P2 balance): lift weak-economy seeds 101/152/186/118; read studio/reviews/S0062-balance.md; balance_gate.sh one GATE_OFFSETS per call.
+5. Add DESIGN.md surface-section text for the collapse beat (COLLAPSE_* / EXTRACT_* in sim/defs.gd); optionally a shot facing the EXTRACT beacon.
 
 ## Last session
-- Did: BUILD VS-073 - surface_view.gd _begin_collapse(), defs.gd COLLAPSE_*/EXTRACT_* consts, selftest _test_surface_collapse, test_driver shots surface_collapse(+_long). QA PASS r1.
+- Did: BUILD VS-074 - map_view.gd _draw_raid_banner()/_draw_fleet_routes(), map_strip.gd font 14 + wrap, test_driver raid_map* sends 2 warships one hop, selftest RAID_BANNER_FONT>=14. QA PASS r1.
 - Check: PASS · Git: committed (see git log) · Roles collapsed: none
 
 ## In-flight / uncommitted work
@@ -24,7 +23,7 @@ none after the final commit.
 - Latest metrics: S0062 economic HQ 8/9, nw20 median 104590, nw30 106269; passive HQ lost median 28.2, earliest 23.6.
 
 ## Backlog snapshot
-todo 3 · in-progress 0 · done 65 · blocked 3 · split 5 · Top ready: VS-074, VS-076, VS-075
+todo 2 · in-progress 0 · done 66 · blocked 3 · split 5 · Top ready: VS-076, VS-075
 
 ## Watch out for
 - Dev subagent wrongly claimed stock surface_long dies at t~49; QA ran it and Core dies t=67, boards t=84. Don't skip it.
@@ -42,6 +41,7 @@ todo 3 · in-progress 0 · done 65 · blocked 3 · split 5 · Top ready: VS-074,
 - none
 
 ## Session history (newest first, keep 10)
+- S0067 2026-10-29 BUILD - VS-074 raid banner + fleet route lines done (QA PASS r1)
 - S0066 2026-10-29 BUILD - VS-073 surface collapse-and-extract beat done (QA PASS r1)
 - S0065 2026-10-29 BUILD - VS-072 shakedown probe done (QA r2 PASS)
 - S0064 2026-10-29 BUILD - VS-065 touch/panel polish done (QA PASS r1)
@@ -51,4 +51,3 @@ todo 3 · in-progress 0 · done 65 · blocked 3 · split 5 · Top ready: VS-074,
 - S0060 2026-10-29 BUILD - VS-070 raid_hit hardening done (QA PASS r1)
 - S0059 2026-10-29 BUILD - VS-063 raid_hit shot + raid_hit_long done (QA PASS r1); VS-070 added
 - S0058 2026-10-29 BUILD - VS-069 damaged-HQ strip compaction + raid_map_damaged shot done (QA PASS r1)
-- S0057 2026-10-29 BUILD - VS-066 split; VS-067 pinned map command strip done (QA PASS r1); VS-069 added

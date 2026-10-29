@@ -19,8 +19,8 @@ func setup(p_u: Universe) -> void:
 	forecast = Label.new()
 	forecast.autowrap_mode = TextServer.AUTOWRAP_OFF
 	forecast.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	forecast.add_theme_font_size_override("font_size", 11)
-	forecast.custom_minimum_size = Vector2(0, 14)   # VS-069: shrink to a 14 px line (clipped, not pushing the BUILD grid)
+	forecast.add_theme_font_size_override("font_size", 14)
+	forecast.custom_minimum_size = Vector2(0, 18)   # VS-069: shrink to a 18 px line (clipped, not pushing the BUILD grid)
 	forecast.clip_text = true
 	add_child(forecast)
 	reserve_btn = DockPanel.make_reserve_button(u, BTN_H)

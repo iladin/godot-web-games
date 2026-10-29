@@ -349,3 +349,8 @@
 - Task(s): VS-073 surface collapse-and-extract beat — done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: Dev claimed surface_long bot dies ~t=49; QA found stock surface_long reaches Core at t=67 and shows the beat (boards t=84). New shots surface_collapse / surface_collapse_long added.
+
+## S0067 — 2026-10-29 13:25 — BUILD
+- Task(s): VS-074 Map stakes: raid banner + fleet route lines — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: 16px raid banner, strip forecast 14px, outcome wraps; amber dashed route arrows on galaxy inset. QA P3s: banner duplicates strip forecast; banner comment claims shrink-to-fit but it clips; no selftest asserts routes draw.

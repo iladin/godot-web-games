@@ -1143,7 +1143,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0066 — 22 s base collapse + extraction zone + reinforcements; QA PASS r1
 
 ## VS-074 · Map stakes: raid banner + fleet route lines
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -1154,7 +1154,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Raid banner readable (>= 14 px) and not truncated at 1280x720 and 900x720 map shots
   - [ ] Fleet orders draw route lines on the map
   - [ ] check.sh PASS; raid_map, raid_map_damaged, raid_map_touch shots reviewed
-- notes: Depends on VS-068 (tabs). Scout proposal 5.
+- notes: Depends on VS-068 (tabs). Scout proposal 5. S0067 built (dev+QA).
+- done: S0067 — 16px raid banner, 14px strip/wrapped outcome, inset fleet route lines; QA PASS r1
 
 ## VS-075 · Lift weak-economy seeds (nw30 / seed 186 HQ)
 - status: todo

@@ -143,6 +143,14 @@ func _shot_script(t: float) -> void:
 				tr.add(rl1, g.u.hq)
 				tr.history.append({"t": g.u.time - 40.0, "kind": "intercepted", "text": "Raid intercepted in Argent (3/4 destroyed)"})
 				g.touch.active = g.shot_mode == "raid_map_touch"
+				var rsec: int = int(g.u.sectors[g.u.hq.sector].gates[0]["to"])   # VS-074: two warships ordered one hop out -> route line on the inset
+				var nrt := 0
+				for pe: SimEntity in g.u.entities.values():
+					var ps := pe as ShipData
+					if ps != null and ps.faction == Defs.Faction.PLAYER and ps != g.u.player_ship and ps.sector == g.u.hq.sector and nrt < 2:
+						ps.order = "goto"
+						ps.order_sector = rsec
+						nrt += 1
 				if g.shot_mode == "raid_map_damaged":   # VS-069: HQ hurt -> Repair HQ joins the strip
 					g.u.hq.hull = g.u.hq.hull_max * 0.6
 					g.u.credits = maxf(g.u.credits, 500.0)

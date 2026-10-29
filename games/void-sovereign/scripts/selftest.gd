@@ -1370,6 +1370,7 @@ func _test_raid_panel_fit() -> void:
 	var lines := mv.raid_lines(act, rec)
 	assert(lines.size() <= MapView.RAID_EXTRA_LINES + MapView.RAID_OUTCOME_LINES, "raid label stays short: %d lines" % lines.size())
 	assert(mv.raid_lines(act.slice(0, 1), rec.slice(0, 1)).size() == 1, "1 raid + 1 outcome = one label line (raid is in the Defend button)")
+	assert(MapView.RAID_BANNER_FONT >= 14, "VS-074: raid banner font >= 14 px")
 	assert(MapView.DEFEND_BTN_H >= 44.0, "Defend button is a touch-sized target")
 	mv.free()
 	for sz: Vector2 in [Vector2(296, 190), Vector2(220, 190)]:
