@@ -1128,7 +1128,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0065 - Director._probe at 80 s (3 harmless breach drones, PROBE-flagged forecast/strip, saved); QA PASS r2 (P3 clip fixed). Passive median 28.9 vs 25.9 probe off (noise; watch seed 118 econ)
 
 ## VS-073 · Surface mission collapse-and-extract beat
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: M
@@ -1139,7 +1139,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] After Core destruction a short collapse sequence (timer, hazards or reinforcements) runs and an extract objective is shown
   - [ ] Mission ends via extract or failure within ~25 s of collapse start; no softlock; keyboard and touch work
   - [ ] surface_long shot log shows the beat with no script errors; check.sh PASS
-- notes: Scout proposal 3. Split if it exceeds M.
+- notes: Scout proposal 3. Split if it exceeds M. S0066
+- done: S0066 — 22 s base collapse + extraction zone + reinforcements; QA PASS r1
 
 ## VS-074 · Map stakes: raid banner + fleet route lines
 - status: todo

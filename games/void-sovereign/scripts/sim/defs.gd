@@ -211,6 +211,16 @@ const FLANK_SPEED_MULT := 1.8   # flankers run faster than normal crawlers
 const FLANK_DAMAGE_MULT := 3.8  # and bite/shoot harder
 const FLANK_DRONE_EVERY := 3
 
+# --- VS-073: collapse-and-extract beat. When the Core dies the base collapses: COLLAPSE_TIME seconds to reach the extraction
+# zone (EXTRACT_DIST m from where the Core fell, toward the ship; the ship itself if nearer). Every COLLAPSE_WAVE_INTERVAL s
+# COLLAPSE_WAVE_SIZE Hive units spawn COLLAPSE_WAVE_DIST m from the player. Timeout = emergency evacuation (hull loss).
+const COLLAPSE_TIME := 22.0
+const COLLAPSE_WAVE_INTERVAL := 6.0
+const COLLAPSE_WAVE_SIZE := 2
+const COLLAPSE_WAVE_DIST := 45.0
+const EXTRACT_DIST := 150.0
+const EXTRACT_RADIUS := 9.0
+
 # --- VS-059: Fleet Reserve call-in. Pay credits, a Union squadron arrives at the HQ sector gate and defends the HQ for a while.
 const RESERVE_COST := 4000.0
 const RESERVE_COUNT := 6

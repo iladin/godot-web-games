@@ -16,6 +16,7 @@ var _delta_shot: bool = false
 var _title_frames: int = 0
 var _save_checked: bool = false
 var _far_set := false
+var _cs_set := false   ## VS-073: surface_collapse scenarios kill the base once the bot is on the surface
 var _min_hull: float = 1e9
 var _min_hp: float = 1e9
 var _ms: Dictionary = {}   ## VS-037 milestones (surface_long): first pylon, pylons down, core dead, boarded
@@ -193,7 +194,7 @@ func _shot_script(t: float) -> void:
 							g._on_dock(e as StationData)
 				elif g.shot_mode == "ledger_map":
 					g._set_mode("map")
-			"surface", "surface_long":
+			"surface", "surface_long", "surface_collapse", "surface_collapse_long":
 				g._on_land(0)
 			"surface_far":
 				g._on_land(0)
@@ -260,6 +261,14 @@ func _shot_script(t: float) -> void:
 			_ms["boarded"] = t
 		if g.surface != null:
 			_min_foot = minf(_min_foot, (g.surface.fps.hp + g.surface.fps.shield) * 600.0 / (FpsPlayer.MAX_HP + FpsPlayer.MAX_SHIELD))
+	if g.shot_mode.begins_with("surface_collapse") and g.surface != null and not _cs_set and t > 3.0:
+		_cs_set = true   # VS-073: skip the fight; drop the player at the base, kill pylons + Core, let the bot run the beat
+		var sv2 := g.surface
+		sv2.fps.global_position = sv2.core_pos + Vector3(30, 3, 0)
+		for f: SurfaceView.Foe in sv2.foes.duplicate():
+			if f.alive and f.kind == "pylon":
+				sv2._kill(f)
+		sv2._kill(sv2.core)
 	if g.shot_mode == "surface_far" and g.surface != null and not _far_set:
 		_far_set = true   # VS-031: view the base from the far map corner
 		var sv := g.surface
@@ -306,8 +315,10 @@ func _shot_script(t: float) -> void:
 		wait = 9.0
 	if g.shot_mode == "sortie_fight":
 		wait = 16.0
+	if g.shot_mode == "surface_collapse":
+		wait = 11.0   # ~7 s into the collapse
 	if g.shot_mode.ends_with("_long"):
-		wait = 120.0 if g.shot_mode == "surface_long" else 90.0   # surface_long: leave time to walk back and board
+		wait = 120.0 if g.shot_mode == "surface_long" else (40.0 if g.shot_mode == "surface_collapse_long" else 90.0)   # surface_long: leave time to walk back and board
 	if _ap_step == 1 and t > wait:
 		_ap_step = 2
 		if g.shot_mode == "sortie_fight":

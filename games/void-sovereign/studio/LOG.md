@@ -344,3 +344,8 @@
 - Task(s): VS-072 Shakedown probe (done; QA r1 FAIL on P3 inset clip of forecast text, fixed, r2 PASS for clip; raid_map re-run clean by Producer)
 - Check: PASS · Git: committed (see git log)
 - Notes: Probe at 80 s, 3 harmless breach drones, PROBE-flagged. Passive median 28.9 vs 25.9 off; econ seed 118 lost HQ at 29.1 min with probe (chaos?). raid_hit not re-run after the string-only fix (r1 verified it).
+
+## S0066 — 2026-10-29 12:15 — BUILD
+- Task(s): VS-073 surface collapse-and-extract beat — done (QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: Dev claimed surface_long bot dies ~t=49; QA found stock surface_long reaches Core at t=67 and shows the beat (boards t=84). New shots surface_collapse / surface_collapse_long added.

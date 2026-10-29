@@ -504,6 +504,7 @@ func _init() -> void:
 	await _test_surface_over()
 	await _test_surface_landmarks()
 	await _test_surface_flank()
+	await _test_surface_collapse()
 	await _test_save_flow()
 	await _test_surface_save()
 	print("SELFTEST OK")
@@ -1103,6 +1104,52 @@ func _test_surface_flank() -> void:
 	g.queue_free()
 	await process_frame
 	print("surface flank OK")
+
+
+## VS-073: Core death starts the collapse clock + extract zone; extracting and timing out both end the mission once.
+func _test_surface_collapse() -> void:
+	for timeout in [false, true]:
+		var g: VoidMain = load("res://scenes/main.tscn").instantiate()
+		root.add_child(g)
+		await process_frame
+		await process_frame
+		g._start_game()
+		await process_frame
+		g._on_land(0)
+		for i in 300:
+			await process_frame
+			if g.surface != null:
+				break
+		for i in 3:
+			await process_frame
+		var sv: SurfaceView = g.surface
+		assert(sv != null and sv.collapse_t == 0.0 and not sv.core_dead, "no collapse before the Core falls")
+		sv.fps.global_position = sv.ship_pos + Vector3(-120.0, 3.0, 60.0)   # far from the ship (> EXTRACT_DIST)
+		var takeoffs: Array[int] = []
+		var deaths: Array[int] = []
+		sv.takeoff_requested.connect(func() -> void: takeoffs.append(1))
+		sv.player_died.connect(func() -> void: deaths.append(1))
+		sv._kill(sv.core)
+		assert(sv.core_dead and is_equal_approx(sv.collapse_t, Defs.COLLAPSE_TIME), "collapse clock starts at COLLAPSE_TIME")
+		assert(sv.extract_pos.distance_to(sv.fps.global_position) <= Defs.EXTRACT_DIST + 1.0 and "EXTRACT" in str(sv.markers()), "extract zone placed within reach and marked")
+		assert("COLLAPSING" in sv.objective_text(), "extract objective shown")
+		assert(Defs.COLLAPSE_TIME <= 25.0, "collapse fits the ~25 s window")
+		sv.tick(Defs.COLLAPSE_WAVE_INTERVAL * 0.5 + 0.1)
+		assert(sv.mobiles_alive() >= Defs.COLLAPSE_WAVE_SIZE, "collapse reinforcements spawn")
+		if timeout:
+			sv.fps.global_position = sv.extract_pos + Vector3(300, 0, 0)
+			for i in 30:
+				sv.tick(1.0)
+			assert(deaths.size() == 1 and takeoffs.is_empty(), "timeout evacuates exactly once (%d/%d)" % [deaths.size(), takeoffs.size()])
+		else:
+			sv.fps.global_position = sv.extract_pos + Vector3(2, 1, 0)
+			sv.tick(0.1)
+			for i in 30:
+				sv.tick(1.0)
+			assert(takeoffs.size() == 1 and deaths.is_empty(), "reaching the zone extracts exactly once (%d/%d)" % [takeoffs.size(), deaths.size()])
+		g.queue_free()
+		await process_frame
+	print("surface collapse OK")
 
 
 ## VS-041: landing writes an in-space checkpoint; nothing saves on foot; death + Continue restores it.

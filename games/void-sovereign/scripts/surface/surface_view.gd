@@ -61,6 +61,11 @@ var spire_t: float = 0.0
 var flanked: bool = false   ## VS-037: the flank squad spawns once, at the first pylon kill
 var flank_spawned: int = 0
 var bot_t: float = 0.0
+var collapse_t: float = 0.0       ## VS-073: seconds left once the Core is dead (0 before)
+var collapse_wave_t: float = 0.0
+var extract_pos: Vector3 = Vector3.ZERO
+var extract_node: Node3D
+var leaving: bool = false         ## takeoff/evacuation already requested; the beat stops
 
 
 func setup(p_u: Universe, p_touch: TouchControls, idx: int) -> void:
@@ -353,7 +358,7 @@ func mobiles_alive() -> int:
 
 func objective_text() -> String:
 	if core_dead:
-		return "CORE DESTROYED — return to your ship to take off"
+		return "BASE COLLAPSING %02d s — RUN TO THE EXTRACTION ZONE" % int(ceilf(collapse_t))
 	var p := pylons_left()
 	if p > 0:
 		return "Destroy the shield pylons (%d left), then the Hive Core" % p
@@ -364,7 +369,9 @@ func markers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var hive := Color("ff3b8d")
 	if core_dead:
-		out.append({"pos": ship_pos + Vector3(0, 4, 0), "col": Color("ffb347"), "label": "SHIP"})
+		out.append({"pos": extract_pos + Vector3(0, 6, 0), "col": Color("6fe3ff"), "label": "EXTRACT"})
+		if extract_pos.distance_to(ship_pos) > 1.0:
+			out.append({"pos": ship_pos + Vector3(0, 4, 0), "col": Color("ffb347"), "label": "SHIP"})
 		return out
 	for f: Foe in foes:
 		if f.alive and (f.kind == "pylon" or (f.kind == "core" and pylons_left() == 0)):
@@ -398,11 +405,66 @@ func tick(delta: float) -> void:
 					alive_mobile += 1
 			for i in mini(2 + level, MAX_FOES - alive_mobile):
 				_spawn_foe("drone" if randf() < 0.4 else "crawler", core_pos + Vector3(randf_range(-20, 20), 0, randf_range(-20, 20)))
+	else:
+		_collapse_step(delta)
 	prompt = ""
+	if leaving:
+		return
+	if core_dead and fps.global_position.distance_to(extract_pos) < Defs.EXTRACT_RADIUS:
+		prompt = "Extracting..."
+		leaving = true
+		takeoff_requested.emit()
+		return
 	if fps.global_position.distance_to(ship_pos) < BOARD_DIST:
 		prompt = ("ACT" if touch.active else "F") + ": Board ship and take off"
 		if Input.is_action_just_pressed("act") or touch.pressed("act") or (autoplay and core_dead):
+			leaving = true
 			takeoff_requested.emit()
+
+
+## VS-073: the collapse clock, reinforcements and the failure edge (timeout = evacuation via player_died).
+func _collapse_step(delta: float) -> void:
+	if leaving:
+		return
+	collapse_t = maxf(0.0, collapse_t - delta)
+	if extract_node:
+		extract_node.rotate_y(delta * 1.5)
+	collapse_wave_t -= delta
+	if collapse_wave_t <= 0.0 and collapse_t > 3.0:
+		collapse_wave_t = Defs.COLLAPSE_WAVE_INTERVAL
+		var lim := half * 0.92
+		for i in Defs.COLLAPSE_WAVE_SIZE:
+			if mobiles_alive() >= MAX_FOES:
+				break
+			var p := fps.global_position + Vector3.FORWARD.rotated(Vector3.UP, randf() * TAU) * Defs.COLLAPSE_WAVE_DIST
+			p.x = clampf(p.x, -lim, lim)
+			p.z = clampf(p.z, -lim, lim)
+			_spawn_foe("drone" if i % 2 == 1 else "crawler", p)
+	if collapse_t <= 0.0:
+		leaving = true
+		u.message.emit("The base collapsed before you got out!", Color.ORANGE)
+		player_died.emit()
+
+
+## VS-073: the Core fell. Start the clock and drop the extraction zone EXTRACT_DIST toward the ship (the ship itself if nearer).
+func _begin_collapse() -> void:
+	collapse_t = Defs.COLLAPSE_TIME
+	collapse_wave_t = Defs.COLLAPSE_WAVE_INTERVAL * 0.5
+	var pp := fps.global_position
+	var to := ship_pos - pp
+	to.y = 0.0
+	if to.length() <= Defs.EXTRACT_DIST:
+		extract_pos = ship_pos
+	else:
+		extract_pos = pp + to.normalized() * Defs.EXTRACT_DIST
+		extract_pos.y = height(extract_pos.x, extract_pos.z)
+		extract_node = Node3D.new()
+		add_child(extract_node)
+		extract_node.position = extract_pos
+		var cyan := Color("6fe3ff")
+		ProxyFactory.part(extract_node, ProxyFactory.torus(Defs.EXTRACT_RADIUS - 0.6, Defs.EXTRACT_RADIUS, 24), ProxyFactory.mat(cyan, 3.0, true), Vector3(0, 0.5, 0))
+		ProxyFactory.part(extract_node, ProxyFactory.cyl(0.8, 0.8, BEAM_HEIGHT, 6), _unlit(cyan, 0.6), Vector3(0, BEAM_HEIGHT * 0.5, 0))
+	u.message.emit("BASE COLLAPSING — reach the extraction zone in %d s!" % int(Defs.COLLAPSE_TIME), Color("6fe3ff"))
 
 
 func _bot() -> void:
@@ -419,7 +481,7 @@ func _bot() -> void:
 			best_d = d
 			best = f
 	fps.bot_target = best.node.position if best else null
-	var goal := core_pos if not core_dead else ship_pos
+	var goal := core_pos if not core_dead else extract_pos
 	var to := goal - pp
 	to.y = 0.0
 	# VS-037: the bot keeps moving: closes to 25 m, then strafes around the goal, flipping direction every BOT_STRAFE_TIME.
@@ -582,6 +644,7 @@ func _kill(f: Foe) -> void:
 		core_dead = true
 		u.core_destroyed(sector_idx)
 		core_killed.emit()
+		_begin_collapse()
 		for o: Foe in foes:
 			if o.alive:
 				o.alive = false
