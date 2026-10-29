@@ -1173,7 +1173,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0068 - platform cost 24k; economic gate met; QA PASS r1
 
 ## VS-076 · Map tabs follow-up: shrink map_view.gd, Build/Orders tab shots, 44 px order buttons
-- status: todo
+- status: done
 - priority: P2
 - type: tech
 - size: S
@@ -1184,7 +1184,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Buy/Build/Orders page construction moved out of map_view.gd (e.g. map_pages.gd); map_view.gd < 600 lines
   - [ ] Shot scenarios for Build tab and Orders tab (raid_map_build / raid_map_orders) with fold asserts at 1280x720 and 900x720
   - [ ] Order buttons >= 44 px (or documented why not); check.sh PASS
-- notes: S0063 QA follow-ups (a)(b)(c)(d). raid_map_touch not enabling touch mode is a separate P3 (park if not folded in).
+- notes: S0063 QA follow-ups (a)(b)(c)(d). raid_map_touch not enabling touch mode is a separate P3 (park if not folded in). S0070 in progress.
+- done: S0070 — page building moved to map_pages.gd (map_view 714->582), raid_map_build/orders shots, 44 px order buttons (QA PASS r1)
 
 ## VS-077 · Clarify passive balance gate (earliest HQ loss 19.2 vs >= 22 min)
 - status: todo
@@ -1365,3 +1366,4 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - Director UNION_QUOTA counts reserve ships; partial-repair shot.
 - (S0064, QA, P3) FPS gun now near-centre (fps_player.gd GUN_X 0.02) and hides "Click to capture mouse" hint at 1280x720; try GUN_X 0.10-0.15 or a touch-only offset.
 - (S0064, QA, P3) Map scroll cue overdraws last ~22 px of scroll viewport; no shipped shot clips the panel, so cue is only covered by assert, not a shot (add forced-clip scenario).
+- (S0070, QA, P3) Orders tab at 1280x720: "more - scroll" cue overlaps info text ("Ways to earn"); shorten Orders info or move cue. Buttons are 44 virtual px (~31 physical at 900 wide, canvas_items stretch).

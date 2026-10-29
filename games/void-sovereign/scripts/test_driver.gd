@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch raid_map_damaged raid_hit raid_hit_long dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_build raid_map_orders raid_map_touch raid_map_damaged raid_hit raid_hit_long dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -15,6 +15,8 @@ var _ap_step: int = 0
 var _delta_shot: bool = false
 var _title_frames: int = 0
 var _save_checked: bool = false
+var _tabs_checked: bool = false
+var _tabs_at: float = 0.0
 var _far_set := false
 var _cs_set := false   ## VS-073: surface_collapse scenarios kill the base once the bot is on the surface
 var _min_hull: float = 1e9
@@ -132,7 +134,7 @@ func _shot_script(t: float) -> void:
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")
-			"raid_map", "raid_map_touch", "raid_map_damaged":   # VS-039/043: one raid in flight on the inset + panel, one finished outcome listed
+			"raid_map", "raid_map_build", "raid_map_orders", "raid_map_touch", "raid_map_damaged":   # VS-039/043: one raid in flight on the inset + panel, one finished outcome listed
 				var nst: StationData = g.u.alive_nests()[0]
 				var tr := g.u.director.tracker
 				var r1 := g.u.spawn_ship("drone", Defs.Faction.HIVE, nst.sector, nst.pos + Vector3(300, 0, 0))
@@ -287,7 +289,7 @@ func _shot_script(t: float) -> void:
 		sv.fps.rotation.x = 0.0
 		sv.fps.rotation.z = 0.0
 	if g.shot_mode.begins_with("raid_map") or g.shot_mode == "map":   # VS-065: cue tracks clipping
-		if g.map._scroll_cue != null and t > 2.5:
+		if g.map._scroll_cue != null and t > 2.5 and (not _tabs_checked or t > _tabs_at + 0.3):   # VS-076: let the layout settle after a tab switch
 			assert(g.map._scroll_cue.visible == g.map.scroll_clipped(), "map side panel: scroll cue matches clipped state")
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
 		assert(g.map.fold_ok(), "map side panel: Buy/Build tab below the fold at %s (%s)" % [str(g.map.size), g.map.fold_report()])
@@ -295,7 +297,9 @@ func _shot_script(t: float) -> void:
 		var st: MapStrip = g.map._strip
 		assert(st.reserve_btn.size.y >= 44.0, "map strip: Call Reserve is a >= 44 px target")
 		assert(st.on_screen(Rect2(Vector2.ZERO, g.map.size)), "map strip: forecast / Reserve / Repair on screen at %s: %s" % [str(g.map.size), st.rects()])
-	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5:   # VS-068
+	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5 and not _tabs_checked:   # VS-068 (once: re-selecting tabs every frame would thrash the layout)
+		_tabs_checked = true
+		_tabs_at = t
 		assert(g.map._tabs.count() == 3 and g.map._tabs.min_tab_height() >= 44.0, "map tabs: Buy/Build/Orders, each >= 44 px")
 		g.map._tabs.select(0)
 		var only := 0
@@ -306,7 +310,18 @@ func _shot_script(t: float) -> void:
 		kev.keycode = KEY_3
 		kev.pressed = true
 		assert(g.map._tabs.handle_key(kev) and g.map._tabs.current == 2, "map tabs: key 3 selects Orders")
-		g.map._tabs.select(0)
+		g.map._tabs.select(1 if g.shot_mode == "raid_map_build" else (2 if g.shot_mode == "raid_map_orders" else 0))   # VS-076: shot tab
+	if (g.shot_mode == "raid_map_build" or g.shot_mode == "raid_map_orders") and _ap_step == 1 and t > 2.5:   # VS-076
+		var want := 1 if g.shot_mode == "raid_map_build" else 2
+		assert(g.map._tabs.current == want and g.map._tabs.page_visible(want), "%s: tab %d is showing" % [g.shot_mode, want])
+		assert(g.map.fold_ok(), "%s: tab below the fold at %s (%s)" % [g.shot_mode, str(g.map.size), g.map.fold_report()])
+		var room_end: float = g.map._scroll.get_global_rect().end.y
+		if want == 1:
+			for kb: Button in g.map._pages.build_btns.values():
+				assert(kb.size.y >= 40.0 and kb.get_global_rect().end.y <= room_end, "Build buttons are >= 40 px and above the fold (%s)" % g.map.fold_report())
+		else:
+			for ob: Button in g.map._pages.order_btns.values() + [g.map._pages.order_toggle]:
+				assert(ob.size.y >= 44.0 and ob.get_global_rect().end.y <= room_end, "Order buttons are >= 44 px and above the fold (%s)" % g.map.fold_report())
 	if g.shot_mode == "raid_map_damaged" and _ap_step == 1 and t > 2.5:   # VS-069
 		var dst: MapStrip = g.map._strip
 		assert(dst.repair_btn.visible and dst.repair_btn.size.y >= 44.0, "damaged HQ: Repair HQ visible and >= 44 px (%s)" % dst.rects())

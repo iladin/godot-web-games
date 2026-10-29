@@ -364,3 +364,8 @@
 - Task(s): review round (critic 6.7/10 flat, QA sweep no P0-P2, balance 9/9 medians) -> VS-078..082 added; no BUILD (no P0/P1 S task)
 - Check: PASS · Git: committed (see git log)
 - Notes: seed 169 passive loss at 19.2 min watched (VS-077); VS-042 real-browser pass still needs Daniel.
+
+## S0070 — 2026-10-29 16:25 — BUILD
+- Task(s): VS-076 map pages split out of map_view.gd (714->582), raid_map_build/orders shots, 44 px order buttons — done (QA PASS r1)
+- Check: PASS · Git: committed
+- Notes: QA found P3 cue overlap on Orders at 1280 (parked). Real-browser VS-042 still unverified.

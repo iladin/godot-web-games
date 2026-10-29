@@ -15,10 +15,8 @@ const VIEW_EXTENT := 7400.0
 const DEFEND_BTN_H := 46.0   # VS-043: >= 44 px touch target
 const RAID_OUTCOME_LINES := 1   # VS-043: finished-raid lines under the Defend button
 const RAID_EXTRA_LINES := 1     # VS-043: extra (2nd, 3rd..) active raids listed as one-line entries
-const RAID_BANNER_FONT := 16   # VS-074: >= 14 px
 const PICK_PX := 16.0
 const DRAG_PX := 8.0
-const SHORT_NAMES: Dictionary = {"solar": "Solar Array", "refinery": "Refinery", "factory": "Munitions", "defense": "Defense"}
 
 var u: Universe
 var view_sector: int = 0
@@ -32,19 +30,14 @@ var _drag_start: Vector2 = Vector2.ZERO
 var _dragging: bool = false
 var _drag_now: Vector2 = Vector2.ZERO
 var _side: VBoxContainer
-var _info: Label
 var _head_text: String = ""          # VS-067: credits/selection line, drawn under the map title (frees side-panel height)
 var _scroll: ScrollContainer
 var _scroll_cue: Label
-var _build_grid: GridContainer
 var _orders_grid: GridContainer
-var _sel_label: Label
 var _raid_label: Label              # VS-039: active raids + last-5-min outcomes
 var _defend_btn: Button             # VS-039: patrol the first active raid's target sector
-var _order_btns: Dictionary = {}
-var _buy_btns: Dictionary = {}
-var _build_btns: Dictionary = {}
 var _order_toggle: Button
+var _pages: MapPages                # VS-076: Buy / Build / Orders page construction + button refresh
 var _tabs: MapTabs                 # VS-068: Buy / Build / Orders tabs under the pinned strip
 var _strip: MapStrip                # VS-067: pinned forecast / Call Reserve / Repair HQ
 var t: float = 0.0
@@ -121,67 +114,12 @@ func _build_side() -> void:
 	scroll.add_child(_side)
 	# VS-032: one-line status first, details (fleet, ledger, selection) after the buy/build
 	# buttons, so BUY SHIPS / BUILD STATION stay on screen at 900x720 without scrolling.
-	var orders_page := VBoxContainer.new()   # VS-068: Orders tab page: order buttons, status, fleet/ledger, selection
-	orders_page.add_theme_constant_override("separation", 4)
-	var buy_page := VBoxContainer.new()
-	buy_page.add_theme_constant_override("separation", 4)
-	var build_page := VBoxContainer.new()
-	build_page.add_theme_constant_override("separation", 4)
-	var orders := GridContainer.new()
-	_orders_grid = orders
-	orders.columns = 4   # VS-067: 7 controls (6 orders + tap toggle) in 2 rows, frees a row for the pinned strip
-	orders_page.add_child(orders)
-	for o: Array in [["patrol", "Patrol"], ["escort", "Escort"], ["trade", "Trade"], ["mine", "Mine"], ["idle", "Stop"], ["all", "Warships"]]:
-		var b := Button.new()
-		b.text = o[1]
-		b.custom_minimum_size = Vector2(68, 34)
-		b.add_theme_font_size_override("font_size", 13)
-		var key: String = o[0]
-		b.tooltip_text = {"patrol": "Patrol this sector", "escort": "Escort your ship", "trade": "Auto-trade (traders)", "mine": "Auto-mine (miners)", "idle": "Stop: cancel orders", "all": "Select every warship here"}[key]
-		b.pressed.connect(func() -> void: _order_button(key))
-		orders.add_child(b)
-		_order_btns[key] = b
-	_order_toggle = Button.new()
-	_order_toggle.toggle_mode = true
-	_order_toggle.text = "Tap: OFF"
-	_order_toggle.tooltip_text = "Tap-to-order (touch): when ON, the next tap on the map issues an order to the selection."
-	_order_toggle.custom_minimum_size = Vector2(68, 34)
-	_order_toggle.add_theme_font_size_override("font_size", 13)
-	_order_toggle.toggled.connect(func(on: bool) -> void:
-		order_mode = on
-		_order_toggle.text = "Tap: %s" % ("ON" if on else "OFF"))
-	orders.add_child(_order_toggle)
-	buy_page.add_child(_header("BUY SHIPS (launch at HQ)"))
-	var buys := GridContainer.new()
-	buys.columns = 2
-	buy_page.add_child(buys)
-	for cls: String in Defs.PLAYER_BUYABLE:
-		var b2 := Button.new()
-		b2.custom_minimum_size = Vector2(140, 40)
-		b2.clip_text = true
-		b2.add_theme_font_size_override("font_size", 14)
-		b2.pressed.connect(func() -> void:
-			var s := u.buy_ship(cls, u.hq)
-			if s:
-				selected = [s.id])
-		buys.add_child(b2)
-		_buy_btns[cls] = b2
-	build_page.add_child(_header("BUILD STATION (click map to place)"))
-	var builds := GridContainer.new()
-	builds.columns = 2
-	build_page.add_child(builds)
-	_build_grid = builds
-	for kind: String in Defs.PLAYER_BUILDABLE:
-		var b3 := Button.new()
-		b3.custom_minimum_size = Vector2(140, 40)
-		b3.clip_text = true
-		b3.add_theme_font_size_override("font_size", 14)
-		b3.pressed.connect(func() -> void: build_kind = kind if build_kind != kind else "")
-		builds.add_child(b3)
-		_build_btns[kind] = b3
-	_info = Label.new()
-	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	orders_page.add_child(_info)
+	_pages = MapPages.new()
+	_pages.build(_order_button, _buy_ship,
+		func(kind: String) -> void: build_kind = kind if build_kind != kind else "",
+		func(on: bool) -> void: order_mode = on)
+	_orders_grid = _pages.orders_grid
+	_order_toggle = _pages.order_toggle
 	_raid_label = Label.new()
 	_raid_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # VS-074: outcome wraps (max 2 lines) instead of truncating
 	_raid_label.custom_minimum_size.y = 18
@@ -198,15 +136,11 @@ func _build_side() -> void:
 	_defend_btn.pressed.connect(defend_raid_target)
 	_side.add_child(_defend_btn)
 	_side.move_child(_defend_btn, 0)   # above every tab: the Defend button is the threat call to action
-	_sel_label = Label.new()
-	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_sel_label.add_theme_color_override("font_color", AMBER)
-	orders_page.add_child(_sel_label)
-	for pg: Control in [buy_page, build_page, orders_page]:
+	for pg: Control in [_pages.buy_page, _pages.build_page, _pages.orders_page]:
 		_side.add_child(pg)
-	_tabs.add_tab("Buy", buy_page)
-	_tabs.add_tab("Build", build_page)
-	_tabs.add_tab("Orders", orders_page)
+	_tabs.add_tab("Buy", _pages.buy_page)
+	_tabs.add_tab("Build", _pages.build_page)
+	_tabs.add_tab("Orders", _pages.orders_page)
 	var close := Button.new()   # pinned under the scrolling list so it never scrolls away
 	close.text = "Close map (M)"
 	close.custom_minimum_size = Vector2(0, 44)
@@ -277,12 +211,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _header(s: String) -> Label:
-	var l := Label.new()
-	l.text = s
-	l.add_theme_font_size_override("font_size", 16)
-	l.modulate = Color(1, 1, 1, 0.6)
-	return l
+func _buy_ship(cls: String) -> void:
+	var sh := u.buy_ship(cls, u.hq)
+	if sh:
+		selected = [sh.id]
 
 
 func _order_button(key: String) -> void:
@@ -369,34 +301,10 @@ func _process(delta: float) -> void:
 	_raid_panel()
 	_update_scroll_cue()
 	selected = selected.filter(func(id: int) -> bool: return u.get_ent(id) != null)
-	var s := u.sectors[view_sector]
-	var counts: Dictionary = {}
-	for e: SimEntity in u.entities.values():
-		if e is ShipData and e.faction == Defs.Faction.PLAYER and not (e as ShipData).is_player:
-			var c: String = (e as ShipData).display_name
-			counts[c] = int(counts.get(c, 0)) + 1
-	var fleet := ", ".join(counts.keys().map(func(k: String) -> String: return "%s ×%d" % [k, counts[k]]))
-	var pstate := {"hive": "Hive Core (threat %d)" % s.level, "colony": "Your colony", "union": "Union world"}
 	_head_text = "Credits %s  ·  %s" % [Hud._fmt(u.credits), "%d selected" % selected.size() if not selected.is_empty() else "none selected"]
-	_info.text = "%s\nPlanet %s: %s\nFleet: %s\n%s" % [s.name, s.planet_name, pstate[s.planet_state], fleet if fleet != "" else "none", Hud.ledger_text(u, 4)]
-	if selected.is_empty():
-		_sel_label.text = "Click or drag-box your ships to select. Right-click to order."
-	else:
-		var lines: Array[String] = []
-		for id: int in selected.slice(0, 6):
-			var sh := u.get_ent(id) as ShipData
-			lines.append("%s — %s%s" % [sh.display_name, sh.order, "" if sh.sector == view_sector else " (%s)" % u.sectors[sh.sector].name])
-		_sel_label.text = "\n".join(lines)
+	_pages.refresh_text(u, view_sector, selected)
 	_strip.refresh(u)
-	for cls: String in _buy_btns:
-		var cost := int(Defs.SHIP[cls]["cost"])
-		(_buy_btns[cls] as Button).text = "%s\n%s" % [Defs.SHIP[cls]["name"], Hud._fmt(cost)]
-		(_buy_btns[cls] as Button).disabled = u.credits < cost or not u.hq.alive
-	for kind: String in _build_btns:
-		var cost2 := int(Defs.STATION[kind]["cost"])
-		var b := _build_btns[kind] as Button
-		b.text = "%s%s\n%s" % ["> " if build_kind == kind else "", SHORT_NAMES[kind], Hud._fmt(cost2)]
-		b.disabled = u.credits < cost2 or u.sector_has_nest(view_sector)
+	_pages.refresh_buttons(u, build_kind, view_sector)
 	queue_redraw()
 
 
@@ -582,7 +490,7 @@ func _draw() -> void:
 	_text(Vector2(16, 34), "COMMAND MAP — %s" % s.name, 26, Color.WHITE, 600)
 	_text(Vector2(16, 58), _head_text, 16, AMBER, 600)
 	_draw_galaxy()
-	_draw_raid_banner()
+	MapOverlayDraw.raid_banner(self, _raid_banner_text, _map_rect(), font)
 
 
 func _draw_ent(e: SimEntity) -> void:
@@ -666,48 +574,8 @@ func _draw_galaxy() -> void:
 			first_lbl = u.director.tracker.label_for(rd)
 		shown += 1
 	_raid_banner_text = "" if shown == 0 else first_lbl + ("" if shown == 1 else " +%d" % (shown - 1))   # VS-074: drawn as a banner on the main map
-	_draw_fleet_routes(r)
+	MapOverlayDraw.fleet_routes(self, u, r, font)
 	_text(r.position + Vector2(6, r.size.y - 6), "Click sector to view · RMB send selection", 11, Color(1, 1, 1, 0.5), r.size.x)
-
-
-## VS-074: every player fleet order that crosses sectors gets an arrowed route line in the galaxy inset,
-## with a ship count; hops are drawn along the gate links where the order target is not adjacent.
-func _draw_fleet_routes(r: Rect2) -> void:
-	var routes: Dictionary = {}   # "from>to" -> count
-	for e: SimEntity in u.entities.values():
-		var sh := e as ShipData
-		if sh == null or sh.faction != Defs.Faction.PLAYER or not sh.alive or sh == u.player_ship:
-			continue
-		if sh.order in ["goto", "patrol", "escort"] and sh.order_sector != sh.sector and sh.order_sector >= 0 and sh.order_sector < u.sectors.size():
-			var k := "%d>%d" % [sh.sector, sh.order_sector]
-			routes[k] = int(routes.get(k, 0)) + 1
-	for k: String in routes:
-		var ft := k.split(">")
-		var a := r.position + u.sectors[int(ft[0])].map_pos * r.size
-		var b := r.position + u.sectors[int(ft[1])].map_pos * r.size
-		if a.distance_to(b) < 4.0:
-			continue
-		var dir := (b - a).normalized()
-		var tip := b - dir * 10.0
-		draw_dashed_line(a, tip, Color(AMBER, 0.95), 2.5, 7.0)
-		draw_colored_polygon(PackedVector2Array([tip + dir * 7.0, tip - dir * 3.0 + dir.orthogonal() * 5.0, tip - dir * 3.0 - dir.orthogonal() * 5.0]), AMBER)
-		var mid := (a + b) * 0.5 + dir.orthogonal() * 8.0
-		_text(mid + Vector2(-20, 4), "×%d" % int(routes[k]), 13, AMBER, 40)
-
-
-## VS-074: raid status as a full-width banner across the top of the main map, 16 px, shrunk only if it would overflow.
-func _draw_raid_banner() -> void:
-	if _raid_banner_text == "":
-		return
-	var mr := _map_rect()
-	var fs := RAID_BANNER_FONT
-	var w := mr.size.x - 32.0
-	var tw := font.get_string_size(_raid_banner_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var bw := minf(w, tw + 28.0)
-	var br := Rect2(mr.position.x + (mr.size.x - bw) * 0.5, mr.position.y + 68.0, bw, fs + 14.0)
-	draw_rect(br, Color(0.25, 0.0, 0.1, 0.85))
-	draw_rect(br, HIVE, false, 1.5)
-	draw_string(font, Vector2(br.position.x, br.position.y + fs + 3.0), _raid_banner_text, HORIZONTAL_ALIGNMENT_CENTER, bw, fs, Color(1, 0.85, 0.92))
 
 
 func _text(p: Vector2, s: String, fs: int, c: Color, w: float) -> void:
