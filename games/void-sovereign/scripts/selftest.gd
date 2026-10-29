@@ -1269,9 +1269,13 @@ func _test_touch_ux() -> void:
 					var gap := p.distance_to(cj["c"]) - r - float(cj["r"]) * 1.15
 					assert(gap >= TouchControls.BTN_GAP, "%s: %s and %s hit zones overlap at %s (gap %.1f)" % [l, ci["name"], cj["name"], str(sz), gap])
 	var wing_x: float = -1.0
+	for sz2: Vector2 in [Vector2(1280, 720), Vector2(900, 720)]:   # VS-078: >= 44 px on screen (UI scales by width/1280 when narrower)
+		for l2: String in TouchControls.LAYOUTS:
+			for c2: Dictionary in TouchControls.layout_circles(l2, sz2):
+				assert(float(c2["r"]) * 2.0 * minf(1.0, sz2.x / 1280.0) >= 44.0, "%s %s >= 44 px at %s" % [l2, c2["name"], str(sz2)])
 	for c: Dictionary in TouchControls.layout_circles("flight", Vector2(1280, 720)):
 		if str(c["name"]).begins_with("wing_"):
-			assert((c["c"] as Vector2).x < 128.0, "wing row sits in the left column, off the world labels")
+			assert((c["c"] as Vector2).y > 440.0 and (c["c"] as Vector2).x > 260.0, "wing row sits bottom-left, right of MOVE, off HUD panel and planet limb")
 			wing_x = (c["c"] as Vector2).x
 	assert(wing_x > 0.0, "flight layout has the wing buttons")
 	var u2 := Universe.new()

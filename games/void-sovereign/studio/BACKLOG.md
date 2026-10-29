@@ -1203,7 +1203,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0071 — passive gate defined WITHOUT --reserve (median 20-35 min; earliest advisory); docs/script wording unified; numbers in reviews/S0071-balance-gate.md (QA PASS r1)
 
 ## VS-078 · Touch cluster rehome: spread THR/wing/ACT/JUMP/RUN/FIRE, re-shoot 900x720
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -1214,7 +1214,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Touch buttons on surface/flight have >= 12 px gaps and >= 44 px size at 1280x720 and 900x720 (shot-verified)
   - [ ] THR+ and wing buttons no longer overlap HUD streak/planet limb
   - [ ] map side panel at 900x720 not clipped or has scroll cue; check.sh PASS
-- notes: Run RES=900x720 shots.sh touch_surface touch map.
+- notes: Run RES=900x720 shots.sh touch_surface touch map. S0072
+- done: S0072 — touch THR+/wing buttons rehomed, selftest >=44px assert (QA PASS r1)
 
 ## VS-079 · Payback labels on Buy/Build/Reserve buttons + suggested first spend
 - status: todo

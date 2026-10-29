@@ -374,3 +374,8 @@
 - Task(s): VS-077 passive balance gate clarified (no --reserve; median 20-35 min, earliest advisory) - done, QA PASS r1. VS-083 added (P3 RAID_SIZE_GROWTH 100 trial).
 - Check: PASS · Git: committed (see git log)
 - Notes: docs/script comments only, no game constants changed. check.sh needs GODOT=$PWD/.tools/godot exported.
+
+## S0072 — 2026-10-29 18:10 — BUILD
+- Task(s): VS-078 touch cluster rehome — done (Dev -> QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: THR+/THR- moved inboard, wing buttons to bottom-left column (WING_X=300), selftest asserts >=44px on-screen at 1280x720 and 900x720. QA P3: scroll cue overlaps 'Ways to earn:' on Orders tab at 1280x720 (already parked).
