@@ -1,19 +1,19 @@
 # Void Sovereign — Handover
-_Last updated: S0064 · 2026-10-29 10:20 UTC · mode: BUILD_
+_Last updated: S0065 · 2026-10-29 12:00 UTC · mode: BUILD_
 
 ## TL;DR
-S0064 shipped VS-065 (gun clear of touch cluster, game-over Best line clear of ship, map scroll cue). Build green; 5 todo tasks ready. PLANNING due when builds_since_review reaches 6 (now 2).
+S0065 shipped VS-072 (80 s shakedown probe: 3 harmless PROBE-flagged Hive drones; QA PASS after a one-line clip fix). Build green; 4 todo tasks ready. PLANNING due when builds_since_review reaches 6 (now 3).
 
 ## Next session should
 1. BUILD VS-074 (S): map stakes - raid banner >= 14 px + fleet route lines. Run `RES=900x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_damaged map` after, then check.sh.
-2. VS-076 (S): move page building out of `scripts/ui/map_view.gd` (now ~660 lines) into map_pages.gd; add Build/Orders tab shots; 44 px order buttons.
-3. VS-075 (P2 balance): lift weak-economy seeds 101/152/186/118; read `studio/reviews/S0062-balance.md` and VS-071 notes first.
-4. VS-072 shakedown probe (S), VS-073 surface collapse/extract beat (M, split if needed).
-5. Optional tiny tweak (parking lot): fps_player.gd GUN_X 0.02 is near-centre and hides the "Click to capture mouse" hint at 1280x720; try 0.10-0.15 or touch-only offset (re-check touch_surface at 900x720 so gun stays clear of ACT/FIRE).
-6. builds_since_review is 2; PLANNING due at 6.
+2. VS-076 (S): move page building out of `scripts/ui/map_view.gd` (~660 lines) into map_pages.gd; add Build/Orders tab shots; 44 px order buttons.
+3. Run `shots.sh void-sovereign raid_hit` alone (needs ~150 s, SHOT_TIMEOUT=150) to confirm the probe change left it intact (only raid_map was re-run after the final string fix).
+4. VS-075 (P2 balance): lift weak-economy seeds 101/152/186/118; note probe-on flips seed 118 econ to HQ loss at 29.1 min (S0065 QA) - re-run balance_gate.sh one GATE_OFFSETS per call; read studio/reviews/S0062-balance.md first. VS-073 (M, split if needed).
+5. Optional: probe forecast shows only ~2 s (spawns one hop out); consider 2 hops or longer lead. fps_player.gd GUN_X tweak (parking lot).
+6. builds_since_review is 3; PLANNING due at 6.
 
 ## Last session
-- Did: BUILD VS-065 - fps_player.gd GUN_X, overlay.gd game-over Score/Best layout, map_view.gd scroll_clipped()/_update_scroll_cue() "more - scroll" label, test_driver.gd cue assert. QA PASS r1 (cue only verified in a forced-clip copy; no shipped shot clips the panel).
+- Did: BUILD VS-072 - defs.gd PROBE_* consts, director.gd _probe(), raid_tracker.gd probe flag + "PROBE x3 > sector, harmless" text, save_game.gd probe_t/probe_count, selftest _test_probe. QA r1 FAIL (P3 clip), fix, r2 PASS on clip (raid_hit not re-verified in r2).
 - Check: PASS · Git: committed (see git log) · Roles collapsed: none
 
 ## In-flight / uncommitted work
@@ -24,7 +24,7 @@ none after the final commit. Stale QA scratch in .tools/ (gitignored).
 - Latest metrics: S0062 economic HQ 8/9, nw20 median 104590, nw30 106269; passive HQ lost median 28.2, earliest 23.6.
 
 ## Backlog snapshot
-todo 5 · in-progress 0 · done 63 · blocked 3 · split 5 · Top ready: VS-074, VS-076, VS-075
+todo 4 · in-progress 0 · done 64 · blocked 3 · split 5 · Top ready: VS-074, VS-076, VS-075
 
 ## Watch out for
 - device_bash calls cap ~120 s and background jobs die: run balance.sh / balance_gate.sh foreground, one GATE_OFFSETS per call.
@@ -41,6 +41,7 @@ todo 5 · in-progress 0 · done 63 · blocked 3 · split 5 · Top ready: VS-074,
 - none
 
 ## Session history (newest first, keep 10)
+- S0065 2026-10-29 BUILD - VS-072 shakedown probe done (QA r2 PASS)
 - S0064 2026-10-29 BUILD - VS-065 touch/panel polish done (QA PASS r1)
 - S0063 2026-10-29 BUILD - VS-068 map tabs done (QA PASS r1); VS-076 added
 - S0062 2026-10-29 PLANNING - review round -> VS-072..075; VS-071 blocked (no code change)
@@ -50,4 +51,3 @@ todo 5 · in-progress 0 · done 63 · blocked 3 · split 5 · Top ready: VS-074,
 - S0058 2026-10-29 BUILD - VS-069 damaged-HQ strip compaction + raid_map_damaged shot done (QA PASS r1)
 - S0057 2026-10-29 BUILD - VS-066 split; VS-067 pinned map command strip done (QA PASS r1); VS-069 added
 - S0056 2026-10-29 PLANNING+BUILD - review round -> VS-063..066; VS-061 Reserve A/B done (QA PASS r1)
-- S0055 2026-10-29 BUILD - VS-060 Reserve button done (QA PASS r1); VS-062 added

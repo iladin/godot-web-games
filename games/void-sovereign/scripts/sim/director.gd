@@ -16,6 +16,8 @@ var turned_back_at: float = -1.0e9
 var turned_back_pending: int = 0
 var breach_t: float = Defs.BREACH_TIME   # VS-029
 var breach_count: int = 0
+var probe_t: float = Defs.PROBE_TIME   # VS-072
+var probe_count: int = 0
 var opening: OpeningWave          # VS-018 one-off First Sortie wave
 
 
@@ -56,6 +58,7 @@ func step(delta: float) -> void:
 	opening.step(delta)
 	tracker.step(delta)
 	_nests(delta)
+	_probe(delta)
 	_breach(delta)
 	_raids(delta)
 	_union(delta)
@@ -104,6 +107,35 @@ func _breach(delta: float) -> void:
 		s.order_sector = hq.sector
 		launched.append(s)
 	tracker.add(launched, hq)
+
+
+## VS-072: the shakedown probe. Spawns one sector from the HQ at its return gate (fixed offsets, no RNG); tracked like a raid
+## but flagged "probe" (no chip, no bounty). Station-only targeting (breach flag) and PROBE_DPS damage: it cannot kill the HQ.
+func _probe(delta: float) -> void:
+	if probe_t <= 0.0:
+		return
+	probe_t -= delta
+	if probe_t > 0.0 or u.hq == null or not u.hq.alive:
+		return
+	var hq := u.hq
+	var home := u.sectors[hq.sector]
+	if home.gates.is_empty():
+		return
+	probe_count += 1
+	var nb := int(home.gates[0]["to"])
+	var gate: Dictionary = u.sectors[nb].gate_to(hq.sector)
+	var base: Vector3 = (gate["pos"] as Vector3) if not gate.is_empty() else Vector3.ZERO
+	var launched: Array[ShipData] = []
+	for i in mini(Defs.PROBE_SIZE, Defs.PROBE_SIZE_MAX):
+		var s := u.spawn_ship("drone", Defs.Faction.HIVE, nb, base + Vector3(160.0 + 60.0 * i, 20.0 * i, 120.0 * (float(i) - 1.0)))
+		s.dps *= Defs.PROBE_DPS
+		s.breach = true
+		s.order = "raid"
+		s.order_target = hq.id
+		s.order_sector = hq.sector
+		launched.append(s)
+	tracker.add(launched, hq, "", true)
+	u.message.emit("PROBE: %d Hive scouts approaching %s (no hull risk)" % [launched.size(), hq.display_name], Defs.faction_color(Defs.Faction.HIVE))
 
 
 func raid_interval() -> float:

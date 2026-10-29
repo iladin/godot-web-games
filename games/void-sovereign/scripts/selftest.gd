@@ -1362,10 +1362,50 @@ func _test_station_wounds() -> void:
 	_test_bot_repair()
 	_test_fleet_floor()
 	_test_reserve()
+	_test_probe()
 	assert(Defs.NEST_CAP_BASE + int(1200.0 / Defs.NEST_CAP_GROWTH) == 14, "VS-064 Nest cap at 20 min is 14")
 
 
 ## VS-052: harness economic repair policy: only below 80% hull, only above the credit reserve.
+## VS-072: the shakedown probe appears once, early, flagged, capped, harmless, and survives save/load.
+func _test_probe() -> void:
+	var u := Universe.new()
+	u.setup(JOURNEY_SEED)
+	assert(Defs.PROBE_TIME >= 60.0 and Defs.PROBE_TIME <= 100.0 and Defs.PROBE_TIME < Defs.FIRST_RAID - 60.0, "probe lands in the first ~90 s, well before the first raid")
+	assert(Defs.PROBE_SIZE >= 2 and Defs.PROBE_SIZE <= Defs.PROBE_SIZE_MAX and Defs.PROBE_SIZE_MAX <= 3, "probe size is 2-3 and capped")
+	var seen_forecast := false
+	var arrive_msg := false
+	var saved: Dictionary = {}
+	while u.time < Defs.PROBE_TIME + 55.0:
+		u.step(JOURNEY_DT)
+		if u.time < Defs.PROBE_TIME - 0.5:
+			assert(u.director.probe_count == 0, "no probe before PROBE_TIME")
+		assert(u.director.probe_count <= 1, "exactly one probe")
+		assert(u.director.raid_count == 0 and absf(u.director.raid_t - (Defs.FIRST_RAID - u.time)) < 0.2, "the probe does not touch the raid timer or count")
+		for rd: Dictionary in u.director.tracker.active():
+			if bool(rd["probe"]):
+				assert(rd["ships"] <= Defs.PROBE_SIZE_MAX, "probe ship count capped")
+				var lbl := u.director.tracker.label_for(rd)
+				assert(lbl.begins_with("PROBE"), "probe flagged on strip/HUD label: " + lbl)
+				if u.director.tracker.forecast_text(rd) != "":
+					seen_forecast = true
+				if saved.is_empty():
+					saved = JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary
+		assert(u.hq.alive and u.hq.hull_frac() > 0.5, "the probe cannot kill or cripple the HQ")
+	assert(u.director.probe_count == 1 and seen_forecast, "probe spawned once with a forecast line")
+	assert(not saved.is_empty(), "probe observed in the tracker")
+	var r := SaveGame.restore(saved)
+	assert(r != null and r.director.probe_count == 1 and r.director.probe_t <= 0.0, "probe state restored (no second probe)")
+	var found := false
+	for rd2: Dictionary in r.director.tracker.active():
+		if bool(rd2["probe"]):
+			found = true
+	assert(found, "restored tracker still flags the probe")
+	for i in 600:
+		r.step(JOURNEY_DT)
+	assert(r.director.probe_count == 1 and r.hq.alive, "restored run: still one probe, HQ alive")
+
+
 func _test_bot_repair() -> void:
 	var pol: GDScript = load("res://scripts/tools/balance.gd")
 	var u := Universe.new()

@@ -339,3 +339,8 @@
 - Task(s): VS-065 900x720 touch/panel polish - done (QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: Gun moved to GUN_X 0.02 (QA P3: too central, parked); over.png Best moved above ship; map scroll cue added with assert.
+
+## S0065 — 2026-10-29 12:00 — BUILD
+- Task(s): VS-072 Shakedown probe (done; QA r1 FAIL on P3 inset clip of forecast text, fixed, r2 PASS for clip; raid_map re-run clean by Producer)
+- Check: PASS · Git: committed (see git log)
+- Notes: Probe at 80 s, 3 harmless breach drones, PROBE-flagged. Passive median 28.9 vs 25.9 off; econ seed 118 lost HQ at 29.1 min with probe (chaos?). raid_hit not re-run after the string-only fix (r1 verified it).

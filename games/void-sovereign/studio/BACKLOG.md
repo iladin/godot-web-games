@@ -1113,7 +1113,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes2: S0062 BLOCKED (no code change kept). NEST 135 rejected: passive earliest HQ loss 20.4 min (<22 gate), median 23.4. Warship -10% (fighter 4050/corvette 14400) gave economic HQ 9/9, nw20 107k but nw30 median 107.6k, q1 56.8k (fail). Weak seeds 101/152/186/118 sit at 51-57k nw30. Superseded by VS-075.
 
 ## VS-072 · Shakedown probe: early first raid contact
-- status: todo
+- status: done
 - priority: P2
 - type: feature
 - size: S
@@ -1124,7 +1124,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] A small non-lethal raid probe appears within the first ~90 s of a new game and is clearly flagged on HUD/strip
   - [ ] Probe cannot destroy the HQ; does not alter later raid timing/balance gates (passive/economic medians unchanged within noise)
   - [ ] check.sh PASS with selftest assert for the probe
-- notes: Check scout report S0062-scout.md proposal 2.
+- notes: S0065. Check scout report S0062-scout.md proposal 2.
+- done: S0065 - Director._probe at 80 s (3 harmless breach drones, PROBE-flagged forecast/strip, saved); QA PASS r2 (P3 clip fixed). Passive median 28.9 vs 25.9 probe off (noise; watch seed 118 econ)
 
 ## VS-073 · Surface mission collapse-and-extract beat
 - status: todo

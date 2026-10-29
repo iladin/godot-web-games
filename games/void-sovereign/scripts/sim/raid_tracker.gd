@@ -15,12 +15,12 @@ func _init(p_u: Universe) -> void:
 	u = p_u
 
 
-func add(ships: Array[ShipData], target: StationData, redirected_from: String = "") -> void:
+func add(ships: Array[ShipData], target: StationData, redirected_from: String = "", probe: bool = false) -> void:
 	var ids: Array[int] = []
 	for s: ShipData in ships:
 		ids.append(s.id)
 	raids.append({"ids": ids, "n": ids.size(), "target_id": target.id, "target_sector": target.sector, "target_name": target.display_name,
-			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0, "redirected_from": redirected_from, "hull_lost": 0.0})
+			"arrived": false, "last_sector": ships[0].sector, "sector": ships[0].sector, "eta": 0.0, "redirected_from": redirected_from, "hull_lost": 0.0, "probe": probe})
 	_refresh(raids[-1])
 
 
@@ -54,18 +54,19 @@ func _refresh(r: Dictionary) -> bool:
 		var green := Defs.faction_color(Defs.Faction.PLAYER)
 		var hl := float(r.get("hull_lost", 0.0))
 		var wound := ", hull -%d%%" % int(round(hl * 100.0)) if hl > 0.0 else ""   # VS-051
+		var noun := "PROBE " if bool(r.get("probe", false)) else "Raid "   # VS-072
 		var detour := ""   # VS-036: a deterred raid that was redirected to a Union station says so in its single outcome
 		if String(r.get("redirected_from", "")) != "":
 			detour = "redirected to %s: " % r["target_name"]
 		if int(r.get("target_id", -1)) >= 0 and (target == null or not target.alive):
-			_finish("redirected" if detour != "" else "succeeded", "Raid %sSUCCEEDED: %s destroyed in %s%s" % [detour, r["target_name"], u.sectors[int(r["target_sector"])].name, wound], hive)
+			_finish("redirected" if detour != "" else "succeeded", "%s%sSUCCEEDED: %s destroyed in %s%s" % [noun, detour, r["target_name"], u.sectors[int(r["target_sector"])].name, wound], hive)
 		elif dead > 0:
-			_finish("redirected" if detour != "" else "intercepted", "Raid %sintercepted in %s%s (%d/%d destroyed)" % [detour, where, wound, dead, int(r["n"])], green)
+			_finish("redirected" if detour != "" else "intercepted", "%s%sintercepted in %s%s (%d/%d destroyed)" % [noun, detour, where, wound, dead, int(r["n"])], green)
 			# VS-036: forward defence pays; fights in the HQ sector are the base's job and pay nothing extra.
-			if detour == "" and u.hq != null and int(r["last_sector"]) != u.hq.sector:
+			if detour == "" and not bool(r.get("probe", false)) and u.hq != null and int(r["last_sector"]) != u.hq.sector:
 				u.add_credits(float(dead) * Defs.RAID_INTERCEPT_BOUNTY, "intercept")
 		else:
-			_finish("redirected" if detour != "" else "withdrew", "Raid %swithdrew from %s%s" % [detour, where, wound], green)
+			_finish("redirected" if detour != "" else "withdrew", "%s%swithdrew from %s%s" % [noun, detour, where, wound], green)
 		return true
 	var lead := live[0]
 	r["last_sector"] = lead.sector
@@ -77,7 +78,7 @@ func _refresh(r: Dictionary) -> bool:
 				r["arrived"] = true
 				r["sector"] = s.sector
 				var chip := _chip(r, live.size())
-				u.message.emit("RAID ARRIVING in %s: %d ships on %s%s" % [u.sectors[s.sector].name, live.size(), r["target_name"], " (hull -%d%%)" % int(round(chip * 100.0)) if chip > 0.0 else ""], hive)
+				u.message.emit(("PROBE" if bool(r.get("probe", false)) else "RAID") + " ARRIVING in %s: %d ships on %s%s" % [u.sectors[s.sector].name, live.size(), r["target_name"], " (hull -%d%%)" % int(round(chip * 100.0)) if chip > 0.0 else ""], hive)
 				break
 	return false
 
@@ -86,7 +87,7 @@ func _refresh(r: Dictionary) -> bool:
 ## Returns the fraction of max hull removed (0 for non-Sovereign targets).
 func _chip(r: Dictionary, survivors: int) -> float:
 	var t := u.get_ent(int(r.get("target_id", -1))) as StationData
-	if t == null or not t.alive or t.faction != Defs.Faction.PLAYER or float(r.get("hull_lost", 0.0)) > 0.0:
+	if bool(r.get("probe", false)) or t == null or not t.alive or t.faction != Defs.Faction.PLAYER or float(r.get("hull_lost", 0.0)) > 0.0:
 		return 0.0
 	var frac := chip_frac(survivors)
 	var dmg := minf(frac * t.hull_max, maxf(t.hull - 1.0, 0.0))
@@ -109,11 +110,17 @@ func forecast_pct(rd: Dictionary) -> int:
 	var t := u.get_ent(int(rd.get("target_id", -1))) as StationData
 	if t == null or not t.alive or t.faction != Defs.Faction.PLAYER:
 		return 0
+	if bool(rd.get("probe", false)):
+		return 0
 	return int(round(chip_frac(int(rd["ships"])) * 100.0))
 
 
 ## VS-054: "RAID: 3 ships -> Ember, ~5% hull", or "" when the forecast is silent.
 func forecast_text(rd: Dictionary) -> String:
+	if bool(rd.get("probe", false)):   # VS-072
+		if bool(rd["arrived"]) or int(rd["ships"]) <= 0 or float(rd["eta"]) > Defs.RAID_FORECAST_LEAD:
+			return ""
+		return "PROBE x%d > %s, harmless" % [int(rd["ships"]), u.sectors[int(rd["target_sector"])].name]
 	var pct := forecast_pct(rd)
 	if pct <= 0:
 		return ""
@@ -143,6 +150,9 @@ func label_for(rd: Dictionary) -> String:
 	var fc := forecast_text(rd)
 	if fc != "":
 		return fc
+	if bool(rd.get("probe", false)):
+		var pn: String = u.sectors[int(rd["target_sector"])].name
+		return "PROBE x%d ON %s" % [int(rd["ships"]), pn] if bool(rd["arrived"]) or int(rd["sector"]) == int(rd["target_sector"]) else "PROBE x%d > %s ETA %ds" % [int(rd["ships"]), pn, int(float(rd["eta"]))]
 	var tname: String = u.sectors[int(rd["target_sector"])].name
 	if bool(rd["arrived"]) or int(rd["sector"]) == int(rd["target_sector"]):
 		return "RAID x%d ON %s" % [int(rd["ships"]), tname]
@@ -171,5 +181,5 @@ func active() -> Array[Dictionary]:
 			var s := u.get_ent(id)
 			if s != null and s.alive:
 				n += 1
-		out.append({"sector": r["sector"], "target_sector": r["target_sector"], "target_id": r["target_id"], "eta": r["eta"], "ships": n, "arrived": r["arrived"]})
+		out.append({"sector": r["sector"], "target_sector": r["target_sector"], "target_id": r["target_id"], "eta": r["eta"], "ships": n, "arrived": r["arrived"], "probe": bool(r.get("probe", false))})
 	return out

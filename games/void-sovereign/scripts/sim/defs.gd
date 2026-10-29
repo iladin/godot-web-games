@@ -170,6 +170,13 @@ const BREACH_SIZE := 6
 const BREACH_RANGE := 2600.0
 const BREACH_HULL := 24.0
 const BREACH_DPS := 5.0
+# VS-072 Shakedown probe: PROBE_SIZE weak Hive drones appear in a neighbouring sector at PROBE_TIME s and fly at the HQ so a short
+# session meets the raid forecast, arrival and outcome lines. Flagged "PROBE", no hull chip, no intercept bounty, PROBE_DPS of a
+# drone's damage (PROBE_SIZE_MAX caps it). Not a raid: raid_t / raid_count / FIRST_RAID are untouched, and it draws no RNG.
+const PROBE_TIME := 80.0
+const PROBE_SIZE := 3
+const PROBE_SIZE_MAX := 3
+const PROBE_DPS := 0.25
 const RAID_DETER_FROM := 1200.0   # s; before this the Hive raids regardless (early game unchanged)
 const RAVAGER_TIME := 300.0
 const DREAD_TIME := 1200.0

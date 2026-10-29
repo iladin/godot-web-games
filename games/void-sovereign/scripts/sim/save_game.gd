@@ -47,7 +47,7 @@ static func capture(u: Universe) -> Dictionary:
 		"ledger": {"totals": _enc(u.ledger.totals), "buckets": _enc(u.ledger._buckets)},
 		"director": {"raid_t": d.raid_t, "union_t": d.union_t, "raid_count": d.raid_count, "rebuild_queue": rq,
 				"turned_back_at": d.turned_back_at, "turned_back_pending": d.turned_back_pending,
-				"breach_t": d.breach_t, "breach_count": d.breach_count},
+				"breach_t": d.breach_t, "breach_count": d.breach_count, "probe_t": d.probe_t, "probe_count": d.probe_count},
 		"tracker": {"raids": raids, "t": d.tracker._t, "history": _enc(d.tracker.history)},
 		"opening": {"t": ow.t, "state": ow.state, "spawn_count": ow.spawn_count, "ids": _enc(ow.ids), "active_t": ow.active_t, "engaged": ow.engaged, "eased": ow.eased,
 				"rng_seed": str(ow.rng.seed), "rng_state": str(ow.rng.state)},
@@ -152,6 +152,8 @@ static func restore(d: Dictionary) -> Universe:
 	dir.turned_back_pending = int(dd["turned_back_pending"])
 	dir.breach_t = float(dd["breach_t"])
 	dir.breach_count = int(dd["breach_count"])
+	dir.probe_t = float(dd.get("probe_t", 0.0))   # VS-072 (old saves: no probe)
+	dir.probe_count = int(dd.get("probe_count", 0))
 	var td: Dictionary = d["tracker"]
 	dir.tracker._t = float(td["t"])
 	for r in td["raids"] as Array:
