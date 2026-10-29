@@ -1200,6 +1200,74 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] check.sh PASS
 - notes: Run foreground, one GATE_OFFSETS per call (120 s cap).
 
+## VS-078 · Touch cluster rehome: spread THR/wing/ACT/JUMP/RUN/FIRE, re-shoot 900x720
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: qa
+- created: S0069
+- why: Critic S0069 #5 + QA S0069 P3s: touch ACT/JUMP/FIRE nearly touch at 1280x720; THR+ collides with station streak; wing buttons on planet limb; 900x720 overlaps and clipped map panel unverified since S0056.
+- acceptance:
+  - [ ] Touch buttons on surface/flight have >= 12 px gaps and >= 44 px size at 1280x720 and 900x720 (shot-verified)
+  - [ ] THR+ and wing buttons no longer overlap HUD streak/planet limb
+  - [ ] map side panel at 900x720 not clipped or has scroll cue; check.sh PASS
+- notes: Run RES=900x720 shots.sh touch_surface touch map.
+
+## VS-079 · Payback labels on Buy/Build/Reserve buttons + suggested first spend
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: critic
+- created: S0069
+- why: Critic S0069 #4 / pillar 6: economy legibility; players cannot see what a purchase returns; surplus credits unspent.
+- acceptance:
+  - [ ] Every Buy/Build/Reserve button shows effect and payback/benefit line
+  - [ ] A suggested first spend hint appears for new players and clears after first purchase
+  - [ ] selftest covers label text; check.sh PASS
+- notes: Scout S0069 proposal 3.
+
+## VS-080 · Core Defenders: health-gated waves and collapse chasers on surface
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: critic
+- created: S0069
+- why: Critic S0069 #3: Surface Core fight has no teeth (mobs=0 from t=57, min_hp 84), so the VS-073 collapse sprint has no opposition.
+- acceptance:
+  - [ ] Core spawns defender waves gated by core health; surface_long shows mobs > 0 after t=57
+  - [ ] Collapse phase spawns chasers; player min_hp drops below 60 in surface_long but run still winnable (3 runs)
+  - [ ] selftest + DESIGN.md updated; check.sh PASS
+- notes: Scout S0069 proposal 1. QA must run surface_long.
+
+## VS-081 · Standing orders on the Sector View: routes and stake chips in calm sectors
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: critic
+- created: S0069
+- why: Critic S0069 #5: map ~70% empty in calm sectors; reuse VS-074 route renderer.
+- acceptance:
+  - [ ] Calm sectors show fleet routes and stake chips via the VS-074 renderer
+  - [ ] Shots at 1280x720 and 900x720 show no overlap; selftest asserts _draw_fleet_routes; check.sh PASS
+- notes: Scout S0069 proposal 4; folds VS-074 P3 follow-ups.
+
+## VS-082 · Sovereign's Decree: once-per-run ~25k cr fortify ability (credit sink)
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: critic
+- created: S0069
+- why: Critic S0069 bold idea + #4: surplus credits have no sink. Un-parked by Scout S0069.
+- acceptance:
+  - [ ] Decree costs ~25k cr, once per run, fortifies a sector for 2 min, usable by keyboard and touch
+  - [ ] Economic 9-seed gate still HQ 9/9; selftest + DESIGN.md updated; check.sh PASS
+- notes: Scout S0069 proposal 5. Run balance after.
+
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
 - (S0056, Scout, P3) Sovereign's Decree: once-per-run credit sink, fortify a sector 2 min (cost ~25k, reuses Reserve spawn/expiry, `--decree` harness flag). Wait for VS-061 results and VS-066 UI.

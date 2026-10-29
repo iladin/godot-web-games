@@ -359,3 +359,8 @@
 - Task(s): VS-075 Lift weak-economy seeds — done (Defense Platform 30000->24000; QA PASS r1); VS-077 added (passive gate clarification)
 - Check: PASS · Git: committed (see git log)
 - Notes: econ 9/9 HQ, nw30 median 132,396 q1 115,699. Seeds 101/135 still weak. Passive gate wording inconsistent (19.2 min baseline).
+
+## S0069 — 2026-10-29 15:50 — PLANNING
+- Task(s): review round (critic 6.7/10 flat, QA sweep no P0-P2, balance 9/9 medians) -> VS-078..082 added; no BUILD (no P0/P1 S task)
+- Check: PASS · Git: committed (see git log)
+- Notes: seed 169 passive loss at 19.2 min watched (VS-077); VS-042 real-browser pass still needs Daniel.
