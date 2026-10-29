@@ -270,16 +270,28 @@ func _shot_script(t: float) -> void:
 		sv.fps.rotation.x = 0.0
 		sv.fps.rotation.z = 0.0
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
-		assert(g.map.fold_ok(), "map side panel: BUILD STATION buttons below the fold at %s" % str(g.map.size))
+		assert(g.map.fold_ok(), "map side panel: Buy/Build tab below the fold at %s (%s)" % [str(g.map.size), g.map.fold_report()])
 	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5:   # VS-067
 		var st: MapStrip = g.map._strip
 		assert(st.reserve_btn.size.y >= 44.0, "map strip: Call Reserve is a >= 44 px target")
 		assert(st.on_screen(Rect2(Vector2.ZERO, g.map.size)), "map strip: forecast / Reserve / Repair on screen at %s: %s" % [str(g.map.size), st.rects()])
+	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5:   # VS-068
+		assert(g.map._tabs.count() == 3 and g.map._tabs.min_tab_height() >= 44.0, "map tabs: Buy/Build/Orders, each >= 44 px")
+		g.map._tabs.select(0)
+		var only := 0
+		for i: int in 3:
+			only += 1 if g.map._tabs.page_visible(i) else 0
+		assert(only == 1 and g.map._tabs.page_visible(0), "map tabs: only the active tab's list shows")
+		var kev := InputEventKey.new()
+		kev.keycode = KEY_3
+		kev.pressed = true
+		assert(g.map._tabs.handle_key(kev) and g.map._tabs.current == 2, "map tabs: key 3 selects Orders")
+		g.map._tabs.select(0)
 	if g.shot_mode == "raid_map_damaged" and _ap_step == 1 and t > 2.5:   # VS-069
 		var dst: MapStrip = g.map._strip
 		assert(dst.repair_btn.visible and dst.repair_btn.size.y >= 44.0, "damaged HQ: Repair HQ visible and >= 44 px (%s)" % dst.rects())
 	if g.shot_mode.begins_with("raid_map") and _ap_step == 1 and t > 2.5:   # VS-043
-		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (grid end %.0f, scroll end %.0f)" % [str(g.map.size), g.map._build_grid.get_global_rect().end.y, g.map._scroll.get_global_rect().end.y])
+		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (%s)" % [str(g.map.size), g.map.fold_report()])
 		assert(g.map._defend_btn.visible and g.map._defend_btn.size.y >= 44.0, "Defend button is a >= 44 px target")
 		assert(g.map._defend_btn.get_global_rect().end.y <= g.map._scroll.get_global_rect().end.y, "Defend button is on screen")
 	if g.shot_mode == "touch_wing" and _ap_step == 1 and t > 2.4 and not _delta_shot:   # VS-053: deltas live at capture

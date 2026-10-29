@@ -329,3 +329,8 @@
 - Task(s): review round -> VS-072..074, VS-075 added; VS-071 (nest cap 135 / nw30 gate) BLOCKED: 135 fails passive earliest-loss (20.4<22); warship -10% gives 9/9 HQ but nw30 q1 57k. No game code changed.
 - Check: PASS · Git: committed (see git log)
 - Notes: Critic avg 6.8; QA no P0-P2; balance targets met, economic nw30 168k->106k. Decree parked.
+
+## S0063 — 2026-10-29 09:10 — BUILD
+- Task(s): VS-068 Map side panel Buy/Build/Orders tabs — done (QA PASS r1); VS-076 follow-up added
+- Check: PASS · Git: committed (see git log)
+- Notes: New scripts/ui/map_tabs.gd (44 px tabs, keys 1-3). map_view.gd grew to 645 lines; shrink deferred to VS-076.

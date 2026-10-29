@@ -34,6 +34,7 @@ var _info: Label
 var _head_text: String = ""          # VS-067: credits/selection line, drawn under the map title (frees side-panel height)
 var _scroll: ScrollContainer
 var _build_grid: GridContainer
+var _orders_grid: GridContainer
 var _sel_label: Label
 var _raid_label: Label              # VS-039: active raids + last-5-min outcomes
 var _defend_btn: Button             # VS-039: patrol the first active raid's target sector
@@ -41,6 +42,7 @@ var _order_btns: Dictionary = {}
 var _buy_btns: Dictionary = {}
 var _build_btns: Dictionary = {}
 var _order_toggle: Button
+var _tabs: MapTabs                 # VS-068: Buy / Build / Orders tabs under the pinned strip
 var _strip: MapStrip                # VS-067: pinned forecast / Call Reserve / Repair HQ
 var t: float = 0.0
 
@@ -102,6 +104,9 @@ func _build_side() -> void:
 	_strip = MapStrip.new()
 	_strip.setup(u)
 	panel.add_child(_strip)
+	_tabs = MapTabs.new()
+	_tabs.add_theme_constant_override("separation", 4)
+	panel.add_child(_tabs)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -113,9 +118,16 @@ func _build_side() -> void:
 	scroll.add_child(_side)
 	# VS-032: one-line status first, details (fleet, ledger, selection) after the buy/build
 	# buttons, so BUY SHIPS / BUILD STATION stay on screen at 900x720 without scrolling.
+	var orders_page := VBoxContainer.new()   # VS-068: Orders tab page: order buttons, status, fleet/ledger, selection
+	orders_page.add_theme_constant_override("separation", 4)
+	var buy_page := VBoxContainer.new()
+	buy_page.add_theme_constant_override("separation", 4)
+	var build_page := VBoxContainer.new()
+	build_page.add_theme_constant_override("separation", 4)
 	var orders := GridContainer.new()
+	_orders_grid = orders
 	orders.columns = 4   # VS-067: 7 controls (6 orders + tap toggle) in 2 rows, frees a row for the pinned strip
-	_side.add_child(orders)
+	orders_page.add_child(orders)
 	for o: Array in [["patrol", "Patrol"], ["escort", "Escort"], ["trade", "Trade"], ["mine", "Mine"], ["idle", "Stop"], ["all", "Warships"]]:
 		var b := Button.new()
 		b.text = o[1]
@@ -136,10 +148,10 @@ func _build_side() -> void:
 		order_mode = on
 		_order_toggle.text = "Tap: %s" % ("ON" if on else "OFF"))
 	orders.add_child(_order_toggle)
-	_side.add_child(_header("BUY SHIPS (launch at HQ)"))
+	buy_page.add_child(_header("BUY SHIPS (launch at HQ)"))
 	var buys := GridContainer.new()
 	buys.columns = 2
-	_side.add_child(buys)
+	buy_page.add_child(buys)
 	for cls: String in Defs.PLAYER_BUYABLE:
 		var b2 := Button.new()
 		b2.custom_minimum_size = Vector2(140, 40)
@@ -151,10 +163,10 @@ func _build_side() -> void:
 				selected = [s.id])
 		buys.add_child(b2)
 		_buy_btns[cls] = b2
-	_side.add_child(_header("BUILD STATION (click map to place)"))
+	build_page.add_child(_header("BUILD STATION (click map to place)"))
 	var builds := GridContainer.new()
 	builds.columns = 2
-	_side.add_child(builds)
+	build_page.add_child(builds)
 	_build_grid = builds
 	for kind: String in Defs.PLAYER_BUILDABLE:
 		var b3 := Button.new()
@@ -166,7 +178,7 @@ func _build_side() -> void:
 		_build_btns[kind] = b3
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_side.add_child(_info)
+	orders_page.add_child(_info)
 	_raid_label = Label.new()
 	_raid_label.autowrap_mode = TextServer.AUTOWRAP_OFF   # VS-043: one line per entry, ellipsis instead of wrapping
 	_raid_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -174,7 +186,6 @@ func _build_side() -> void:
 	_raid_label.add_theme_font_size_override("font_size", 13)
 	_raid_label.visible = false
 	_side.add_child(_raid_label)
-	_side.move_child(_raid_label, _side.get_child_count() - 2)   # VS-043: outcome lines sit below BUY/BUILD, above the selection text
 	_defend_btn = Button.new()
 	_defend_btn.custom_minimum_size = Vector2(0, DEFEND_BTN_H)
 	_defend_btn.clip_text = true
@@ -183,21 +194,59 @@ func _build_side() -> void:
 	_defend_btn.visible = false
 	_defend_btn.pressed.connect(defend_raid_target)
 	_side.add_child(_defend_btn)
-	_side.move_child(_defend_btn, 1)   # right under the status line: the Defend button is the threat call to action
+	_side.move_child(_defend_btn, 0)   # above every tab: the Defend button is the threat call to action
 	_sel_label = Label.new()
 	_sel_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sel_label.add_theme_color_override("font_color", AMBER)
-	_side.add_child(_sel_label)
-	var close := Button.new()
+	orders_page.add_child(_sel_label)
+	for pg: Control in [buy_page, build_page, orders_page]:
+		_side.add_child(pg)
+	_tabs.add_tab("Buy", buy_page)
+	_tabs.add_tab("Build", build_page)
+	_tabs.add_tab("Orders", orders_page)
+	var close := Button.new()   # pinned under the scrolling list so it never scrolls away
 	close.text = "Close map (M)"
-	close.custom_minimum_size = Vector2(0, 48)
+	close.custom_minimum_size = Vector2(0, 44)
 	close.pressed.connect(func() -> void: close_requested.emit())
-	_side.add_child(close)
+	panel.add_child(close)
 
 
-## VS-032: true when the last BUILD STATION button ends inside the side scroll area (no scrolling needed).
+## VS-032/068: true when the Buy and Build tabs (plus the Defend/raid lines above them) fit in the side scroll
+## area without scrolling. The Orders tab's status text may scroll; its order buttons must still fit.
 func fold_ok() -> bool:
-	return _build_grid.get_global_rect().end.y <= _scroll.get_global_rect().end.y + 0.5
+	var keep := _tabs.current
+	var ok := true
+	var room := _scroll.size.y + 0.5
+	for i: int in 2:
+		_tabs.select(i)
+		ok = ok and _side.get_combined_minimum_size().y <= room
+	ok = ok and _above_pages_h() + _orders_grid.get_combined_minimum_size().y <= room
+	_tabs.select(keep)
+	return ok
+
+
+func fold_report() -> String:
+	var keep := _tabs.current
+	var parts: Array[String] = []
+	for i: int in 2:
+		_tabs.select(i)
+		parts.append("tab%d %.0f" % [i, _side.get_combined_minimum_size().y])
+	_tabs.select(keep)
+	return "%s, room %.0f" % [", ".join(parts), _scroll.size.y]
+
+
+## Height of the always-visible lines above the tab pages (Defend button, raid outcome label).
+func _above_pages_h() -> float:
+	var h := 0.0
+	for c: Control in [_defend_btn, _raid_label]:
+		if c.visible:
+			h += c.get_combined_minimum_size().y + 4.0
+	return h
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if visible and _tabs.handle_key(event):
+		get_viewport().set_input_as_handled()
 
 
 func _header(s: String) -> Label:

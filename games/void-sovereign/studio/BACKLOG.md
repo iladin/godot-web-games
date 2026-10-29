@@ -1055,7 +1055,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0057 — MapStrip pinned forecast/Call Reserve/Repair HQ; QA PASS r1 (P2 -> VS-069)
 
 ## VS-068 · Map side panel Buy/Build/Orders tabs
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -1066,6 +1066,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Buy / Build / Orders are tabs below the pinned strip, selectable by keyboard and touch (>= 44 px tabs); only the active tab's list shows
   - [ ] No content clipped at 1280x720 and 900x720 in map shots; VS-043 fold assert still passes; tab helper split out of map_view.gd; check.sh PASS
 - notes: Depends on VS-067.
+- done: S0063 — Buy/Build/Orders tabs (map_tabs.gd), keys 1-3, QA PASS r1
 
 ## VS-069 · Repair HQ strip: damaged-HQ fold overflow + coverage
 - status: done
@@ -1164,6 +1165,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] One lever tried (candidates: late Hive raid size, defense platform cost cut, post-20-min income floor); economic 9 seeds HQ >= 8/9 and nw30 median >= 120k, q1 >= 90k, or documented rejection with numbers
   - [ ] Passive 9 seeds (no --reserve) earliest HQ loss >= 22 min unchanged; selftest/DESIGN.md/metrics.csv updated; check.sh PASS
 - notes: Warship -10% (Defs cost + balance.gd bot gate reads Defs fighter cost) is a known partial option. Run balance_gate.sh one GATE_OFFSETS per call.
+
+## VS-076 · Map tabs follow-up: shrink map_view.gd, Build/Orders tab shots, 44 px order buttons
+- status: todo
+- priority: P2
+- type: tech
+- size: S
+- source: qa
+- created: S0063
+- why: QA S0063 on VS-068: map_view.gd grew 596->645 lines (only tab bar split out); shots only cover the Buy tab; Orders buttons are 34 px; Orders info text scrolls at 1280x720; raid_map_touch is visually identical to raid_map.
+- acceptance:
+  - [ ] Buy/Build/Orders page construction moved out of map_view.gd (e.g. map_pages.gd); map_view.gd < 600 lines
+  - [ ] Shot scenarios for Build tab and Orders tab (raid_map_build / raid_map_orders) with fold asserts at 1280x720 and 900x720
+  - [ ] Order buttons >= 44 px (or documented why not); check.sh PASS
+- notes: S0063 QA follow-ups (a)(b)(c)(d). raid_map_touch not enabling touch mode is a separate P3 (park if not folded in).
 
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
