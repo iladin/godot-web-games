@@ -260,6 +260,10 @@ func _shot_script(t: float) -> void:
 		sv.fps.rotation.z = 0.0
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
 		assert(g.map.fold_ok(), "map side panel: BUILD STATION buttons below the fold at %s" % str(g.map.size))
+	if (g.shot_mode == "map" or g.shot_mode == "raid_map" or g.shot_mode == "raid_map_touch") and _ap_step == 1 and t > 2.5:   # VS-067
+		var st: MapStrip = g.map._strip
+		assert(st.reserve_btn.size.y >= 44.0, "map strip: Call Reserve is a >= 44 px target")
+		assert(st.on_screen(Rect2(Vector2.ZERO, g.map.size)), "map strip: forecast / Reserve / Repair on screen at %s: %s" % [str(g.map.size), st.rects()])
 	if (g.shot_mode == "raid_map" or g.shot_mode == "raid_map_touch") and _ap_step == 1 and t > 2.5:   # VS-043
 		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (grid end %.0f, scroll end %.0f)" % [str(g.map.size), g.map._build_grid.get_global_rect().end.y, g.map._scroll.get_global_rect().end.y])
 		assert(g.map._defend_btn.visible and g.map._defend_btn.size.y >= 44.0, "Defend button is a >= 44 px target")

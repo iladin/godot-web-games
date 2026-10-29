@@ -31,7 +31,7 @@ var _dragging: bool = false
 var _drag_now: Vector2 = Vector2.ZERO
 var _side: VBoxContainer
 var _info: Label
-var _head: Label
+var _head_text: String = ""          # VS-067: credits/selection line, drawn under the map title (frees side-panel height)
 var _scroll: ScrollContainer
 var _build_grid: GridContainer
 var _sel_label: Label
@@ -41,7 +41,7 @@ var _order_btns: Dictionary = {}
 var _buy_btns: Dictionary = {}
 var _build_btns: Dictionary = {}
 var _order_toggle: Button
-var _reserve_btn: Button            # VS-060: Fleet Reserve call-in
+var _strip: MapStrip                # VS-067: pinned forecast / Call Reserve / Repair HQ
 var t: float = 0.0
 
 
@@ -89,16 +89,23 @@ func s2w(p: Vector2) -> Vector3:
 
 # --- Side panel ------------------------------------------------------------------------------
 func _build_side() -> void:
+	var panel := VBoxContainer.new()   # VS-067: pinned strip on top, scrolling list below
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.anchor_bottom = 1.0
+	panel.offset_left = -SIDE_W + 8
+	panel.offset_top = 208
+	panel.offset_right = -8
+	panel.offset_bottom = -8
+	panel.add_theme_constant_override("separation", 4)
+	add_child(panel)
+	_strip = MapStrip.new()
+	_strip.setup(u)
+	panel.add_child(_strip)
 	var scroll := ScrollContainer.new()
-	scroll.anchor_left = 1.0
-	scroll.anchor_right = 1.0
-	scroll.anchor_bottom = 1.0
-	scroll.offset_left = -SIDE_W + 8
-	scroll.offset_top = 212
-	scroll.offset_right = -8
-	scroll.offset_bottom = -8
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	panel.add_child(scroll)
 	_scroll = scroll
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size = Vector2(SIDE_W - 30, 0)
@@ -106,38 +113,38 @@ func _build_side() -> void:
 	scroll.add_child(_side)
 	# VS-032: one-line status first, details (fleet, ledger, selection) after the buy/build
 	# buttons, so BUY SHIPS / BUILD STATION stay on screen at 900x720 without scrolling.
-	_head = Label.new()
-	_head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_head.add_theme_color_override("font_color", AMBER)
-	_head.add_theme_font_size_override("font_size", 15)
-	_side.add_child(_head)
 	var orders := GridContainer.new()
-	orders.columns = 3   # VS-043: 2 rows instead of 3 (frees a row for the Defend button)
+	orders.columns = 4   # VS-067: 7 controls (6 orders + tap toggle) in 2 rows, frees a row for the pinned strip
 	_side.add_child(orders)
-	for o: Array in [["patrol", "Patrol"], ["escort", "Escort me"], ["trade", "Auto-trade"], ["mine", "Auto-mine"], ["idle", "Stop"], ["all", "Warships"]]:
+	for o: Array in [["patrol", "Patrol"], ["escort", "Escort"], ["trade", "Trade"], ["mine", "Mine"], ["idle", "Stop"], ["all", "Warships"]]:
 		var b := Button.new()
 		b.text = o[1]
-		b.custom_minimum_size = Vector2(88, 34)
-		b.add_theme_font_size_override("font_size", 14)
+		b.custom_minimum_size = Vector2(68, 34)
+		b.add_theme_font_size_override("font_size", 13)
 		var key: String = o[0]
+		b.tooltip_text = {"patrol": "Patrol this sector", "escort": "Escort your ship", "trade": "Auto-trade (traders)", "mine": "Auto-mine (miners)", "idle": "Stop: cancel orders", "all": "Select every warship here"}[key]
 		b.pressed.connect(func() -> void: _order_button(key))
 		orders.add_child(b)
 		_order_btns[key] = b
 	_order_toggle = Button.new()
 	_order_toggle.toggle_mode = true
-	_order_toggle.text = "Tap-to-order: OFF"
+	_order_toggle.text = "Tap: OFF"
+	_order_toggle.tooltip_text = "Tap-to-order (touch): when ON, the next tap on the map issues an order to the selection."
+	_order_toggle.custom_minimum_size = Vector2(68, 34)
+	_order_toggle.add_theme_font_size_override("font_size", 13)
 	_order_toggle.toggled.connect(func(on: bool) -> void:
 		order_mode = on
-		_order_toggle.text = "Tap-to-order: %s" % ("ON" if on else "OFF"))
-	_side.add_child(_order_toggle)
+		_order_toggle.text = "Tap: %s" % ("ON" if on else "OFF"))
+	orders.add_child(_order_toggle)
 	_side.add_child(_header("BUY SHIPS (launch at HQ)"))
 	var buys := GridContainer.new()
 	buys.columns = 2
 	_side.add_child(buys)
 	for cls: String in Defs.PLAYER_BUYABLE:
 		var b2 := Button.new()
-		b2.custom_minimum_size = Vector2(140, 42)
+		b2.custom_minimum_size = Vector2(140, 40)
 		b2.clip_text = true
+		b2.add_theme_font_size_override("font_size", 14)
 		b2.pressed.connect(func() -> void:
 			var s := u.buy_ship(cls, u.hq)
 			if s:
@@ -151,14 +158,12 @@ func _build_side() -> void:
 	_build_grid = builds
 	for kind: String in Defs.PLAYER_BUILDABLE:
 		var b3 := Button.new()
-		b3.custom_minimum_size = Vector2(140, 42)
+		b3.custom_minimum_size = Vector2(140, 40)
 		b3.clip_text = true
+		b3.add_theme_font_size_override("font_size", 14)
 		b3.pressed.connect(func() -> void: build_kind = kind if build_kind != kind else "")
 		builds.add_child(b3)
 		_build_btns[kind] = b3
-	_reserve_btn = DockPanel.make_reserve_button(u, 40.0)   # VS-060: after the build grid so fold_ok() is unaffected
-	_reserve_btn.add_theme_font_size_override("font_size", 14)
-	_side.add_child(_reserve_btn)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_side.add_child(_info)
@@ -268,6 +273,8 @@ func _raid_panel() -> void:
 	var tr := u.director.tracker
 	var act := tr.active()
 	var lines := raid_lines(act, tr.recent())
+	if not act.is_empty() and tr.forecast_text(act[0]) != "":
+		lines.remove_at(0)   # VS-067: the forecast line lives in the pinned strip
 	_raid_label.visible = not lines.is_empty()
 	_raid_label.text = "\n".join(lines)
 	_raid_label.tooltip_text = _raid_label.text
@@ -292,7 +299,7 @@ func _process(delta: float) -> void:
 			counts[c] = int(counts.get(c, 0)) + 1
 	var fleet := ", ".join(counts.keys().map(func(k: String) -> String: return "%s ×%d" % [k, counts[k]]))
 	var pstate := {"hive": "Hive Core (threat %d)" % s.level, "colony": "Your colony", "union": "Union world"}
-	_head.text = "Credits %s  ·  %s" % [Hud._fmt(u.credits), "%d selected" % selected.size() if not selected.is_empty() else "none selected"]
+	_head_text = "Credits %s  ·  %s" % [Hud._fmt(u.credits), "%d selected" % selected.size() if not selected.is_empty() else "none selected"]
 	_info.text = "%s\nPlanet %s: %s\nFleet: %s\n%s" % [s.name, s.planet_name, pstate[s.planet_state], fleet if fleet != "" else "none", Hud.ledger_text(u, 4)]
 	if selected.is_empty():
 		_sel_label.text = "Click or drag-box your ships to select. Right-click to order."
@@ -302,8 +309,7 @@ func _process(delta: float) -> void:
 			var sh := u.get_ent(id) as ShipData
 			lines.append("%s — %s%s" % [sh.display_name, sh.order, "" if sh.sector == view_sector else " (%s)" % u.sectors[sh.sector].name])
 		_sel_label.text = "\n".join(lines)
-	_reserve_btn.text = DockPanel.reserve_text(u)
-	_reserve_btn.disabled = u.reserve_refusal() != ""
+	_strip.refresh(u)
 	for cls: String in _buy_btns:
 		var cost := int(Defs.SHIP[cls]["cost"])
 		(_buy_btns[cls] as Button).text = "%s\n%s" % [Defs.SHIP[cls]["name"], Hud._fmt(cost)]
@@ -496,6 +502,7 @@ func _draw() -> void:
 			draw_arc(mp, Defs.station_f(build_kind, "radius") * sc + 6, 0, TAU, 24, AMBER, 2.0)
 	_text(Vector2(16, size.y - 18), hint, 16, Color(1, 1, 1, 0.55), mr.size.x - 32)
 	_text(Vector2(16, 34), "COMMAND MAP — %s" % s.name, 26, Color.WHITE, 600)
+	_text(Vector2(16, 58), _head_text, 16, AMBER, 600)
 	_draw_galaxy()
 
 

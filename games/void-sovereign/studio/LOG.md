@@ -296,3 +296,8 @@
 - Task(s): review round (Critic 6.7/10, QA sweep no P0-P2, Balance 8/9 targets, Scout 5 proposals) -> VS-063..VS-066 (+Decree to parking lot). VS-061 Reserve A/B done (QA PASS r1, no code change).
 - Check: PASS · Git: committed (review round f124513 + wrap-up commit)
 - Notes: Reserve rescues passive seed 101 when --reserve is on (default passive unchanged). Stale .git/HEAD.lock moved to .git/stale-HEAD-lock-S0056.
+
+## S0057 — 2026-10-29 02:20 — BUILD
+- Task(s): VS-066 split -> VS-067/068; VS-067 map pinned command strip done (QA PASS r1); VS-062 superseded; VS-069 added from QA P2
+- Check: PASS · Git: committed (see git log)
+- Notes: New scripts/ui/map_strip.gd; order grid 4 cols with shortened labels; credits line moved to map canvas. QA found 6 px fold overflow when HQ damaged -> VS-069.

@@ -1426,6 +1426,9 @@ func _test_reserve() -> void:
 	var why := u.call_reserve()
 	assert(u.reserve_refusal() == why and DockPanel.reserve_text(u).contains("cooldown"), "VS-060: label shows the cooldown reason")
 	assert(why != "" and why.contains("cooldown") and u.entities.size() == n0 + Defs.RESERVE_COUNT, "second call on cooldown: " + why)
+	var st_txt := MapStrip.reserve_text(u)   # VS-067: pinned strip text states ships + linger and the refusal
+	assert(st_txt.contains("%d ships" % Defs.RESERVE_COUNT) and st_txt.contains("%d min" % int(Defs.RESERVE_LINGER / 60.0)) and st_txt.contains(why), "VS-067: strip Reserve text: " + st_txt)
+	assert(MapStrip.BTN_H >= 44.0 and MapStrip.forecast_line(u) == "No raid inbound", "VS-067: strip button is touch sized; calm forecast line")
 	var r := SaveGame.restore(JSON.parse_string(JSON.stringify(SaveGame.capture(u))) as Dictionary)
 	assert(r != null and is_equal_approx(r.reserve_ready_at, u.reserve_ready_at), "cooldown round-trips")
 	var rsq := 0

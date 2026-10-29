@@ -968,7 +968,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0056 — economic 9-seed --reserve: HQ 9/9, nw30 median 170,283, Q1 128,619 (QA PASS r1; passive seed 101 with --reserve survives 30 min vs HQ lost 24.4 without: strong comeback, consider passive 9-seed --reserve run)
 
 ## VS-062 · Reserve button reachable during raids + disabled-state shots
-- status: todo
+- status: done
 - priority: P2
 - type: polish
 - size: S
@@ -979,6 +979,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Map Reserve button is >= 44 px and visible without scrolling in raid_map and raid_map_touch shots at 1280x720 (move above BUY/BUILD or into the raid block), VS-043 fold assert still passes
   - [ ] New shot scenarios show the disabled state (cooldown and short credits) on map and dock; label not clipped (shorten text or wrap if needed); check.sh PASS
 - notes: Files: scripts/ui/map_view.gd (make_reserve_button call ~line 159), dock_panel.gd, scripts/tools/test_driver or shots scenarios.
+- done: S0057 — superseded by VS-067
 
 
 ## VS-063 · Raid-hit proof run: scripted "first raid lands" scenario
@@ -1024,7 +1025,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Do map-panel part after VS-062 / VS-066.
 
 ## VS-066 · Command strip: pinned raid actions, Buy/Build/Orders tabs
-- status: todo
+- status: split
 - priority: P2
 - type: polish
 - size: M
@@ -1036,6 +1037,47 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Call Reserve >= 44 px and fully on-screen at 1280x720 and 900x720 in map, raid_map, raid_map_touch shots; VS-043 fold assert extended
   - [ ] Reserve text states ship count and linger; disabled state shows refusal reason; no sim change; check.sh PASS
 - notes: If built, mark VS-062 as done/superseded. Split tab helper out of map_view.gd. Likely split into S tasks before building (size M).
+
+## VS-067 · Map pinned command strip: forecast, Call Reserve, Repair HQ
+- status: done
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0057
+- why: Split from VS-066 (Critic S0056 #3/#1). Reserve is buried below the fold at 1280x720 exactly when a raid makes it useful; absorbs VS-062.
+- acceptance:
+  - [ ] map_view side panel has a fixed top strip (raid forecast line, Call Reserve, Repair HQ) outside the scrolling list; Call Reserve >= 44 px tall and fully on-screen at 1280x720 and 900x720 in map, raid_map, raid_map_touch shots
+  - [ ] Reserve text states ship count and linger; disabled state (cooldown / short credits) shows the refusal reason without clipping; VS-043 fold assert extended to the strip; no sim change; check.sh PASS
+- notes: Files: scripts/ui/map_view.gd (make_reserve_button ~line 159). Mark VS-062 done/superseded when this lands. Run `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_touch map dock`.
+- done: S0057 — MapStrip pinned forecast/Call Reserve/Repair HQ; QA PASS r1 (P2 -> VS-069)
+
+## VS-068 · Map side panel Buy/Build/Orders tabs
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0057
+- why: Split from VS-066: with the strip pinned, the long Buy/Build/Orders column still clips; tabs fix it.
+- acceptance:
+  - [ ] Buy / Build / Orders are tabs below the pinned strip, selectable by keyboard and touch (>= 44 px tabs); only the active tab's list shows
+  - [ ] No content clipped at 1280x720 and 900x720 in map shots; VS-043 fold assert still passes; tab helper split out of map_view.gd; check.sh PASS
+- notes: Depends on VS-067.
+
+## VS-069 · Repair HQ strip: damaged-HQ fold overflow + coverage
+- status: todo
+- priority: P2
+- type: bug
+- size: S
+- source: qa
+- created: S0057
+- why: QA VS-067: with HQ damaged in a raid at 1280x720 the Repair HQ button pushes the BUILD grid 6 px past the fold (VS-043 assert would fail "grid end 718, scroll end 712"); no shot covers a damaged HQ.
+- acceptance:
+  - [ ] Strip compacted (e.g. 13 px forecast, 44 px Repair button, or Repair beside Reserve) so the BUILD grid fits at 1280x720 with HQ damaged
+  - [ ] New shot scenario (e.g. raid_map_damaged) with hull < 100% asserts Repair HQ visible, >= 44 px, fold ok at 1280x720 and 900x720; check.sh PASS
+  - [ ] Repair label hints partial repair when credits < cost (P3, optional)
+- notes: Do before or with VS-068 (tabs may remove the fold problem). Files: scripts/ui/map_strip.gd, scripts/test_driver.gd.
 
 # Ideas parking lot
 - (S0056, Scout, P3) Sovereign's Decree: once-per-run credit sink, fortify a sector 2 min (cost ~25k, reuses Reserve spawn/expiry, `--decree` harness flag). Wait for VS-061 results and VS-066 UI.
