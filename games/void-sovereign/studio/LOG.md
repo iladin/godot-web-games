@@ -301,3 +301,8 @@
 - Task(s): VS-066 split -> VS-067/068; VS-067 map pinned command strip done (QA PASS r1); VS-062 superseded; VS-069 added from QA P2
 - Check: PASS · Git: committed (see git log)
 - Notes: New scripts/ui/map_strip.gd; order grid 4 cols with shortened labels; credits line moved to map canvas. QA found 6 px fold overflow when HQ damaged -> VS-069.
+
+## S0058 — 2026-10-29 03:10 — BUILD
+- Task(s): VS-069 Repair HQ strip fold overflow + coverage — done (Developer + independent QA PASS r1)
+- Check: PASS · Git: committed (see git log)
+- Notes: strip compacted (BTN 44, sep 1, forecast 11 px); new raid_map_damaged shot; partial-repair label. P3 follow-up parked.

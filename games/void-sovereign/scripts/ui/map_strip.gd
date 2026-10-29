@@ -3,7 +3,7 @@ extends VBoxContainer
 ## VS-067: pinned command strip at the top of the map side panel (outside the scrolling list):
 ## raid forecast line, Call Reserve, Repair HQ. Always on screen, buttons >= 44 px.
 
-const BTN_H := 46.0   # >= 44 px touch target
+const BTN_H := 44.0   # >= 44 px touch target
 const HIVE := Color("ff3b8d")
 const AMBER := Color("ffb347")
 
@@ -15,11 +15,13 @@ var repair_btn: Button
 
 func setup(p_u: Universe) -> void:
 	u = p_u
-	add_theme_constant_override("separation", 4)
+	add_theme_constant_override("separation", 1)
 	forecast = Label.new()
 	forecast.autowrap_mode = TextServer.AUTOWRAP_OFF
 	forecast.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	forecast.add_theme_font_size_override("font_size", 13)
+	forecast.add_theme_font_size_override("font_size", 11)
+	forecast.custom_minimum_size = Vector2(0, 14)   # VS-069: shrink to a 14 px line (clipped, not pushing the BUILD grid)
+	forecast.clip_text = true
 	add_child(forecast)
 	reserve_btn = DockPanel.make_reserve_button(u, BTN_H)
 	reserve_btn.add_theme_font_size_override("font_size", 14)
@@ -51,7 +53,7 @@ static func reserve_text(p_u: Universe) -> String:
 static func repair_text(p_u: Universe) -> String:
 	var hq := p_u.hq
 	var cost := p_u.station_repair_cost(hq)
-	return "Repair HQ: hull %d%%\n%s" % [int(hq.hull_frac() * 100.0), "%s cr" % Hud._fmt(cost) if p_u.credits >= 1.0 else "No credits to repair"]
+	return "Repair HQ: hull %d%%\n%s" % [int(hq.hull_frac() * 100.0), ("%s cr" % Hud._fmt(cost) if p_u.credits >= cost else "%s cr (partial)" % Hud._fmt(p_u.credits)) if p_u.credits >= 1.0 else "No credits to repair"]
 
 
 func refresh(p_u: Universe) -> void:

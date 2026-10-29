@@ -1066,7 +1066,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Depends on VS-067.
 
 ## VS-069 · Repair HQ strip: damaged-HQ fold overflow + coverage
-- status: todo
+- status: done
 - priority: P2
 - type: bug
 - size: S
@@ -1080,6 +1080,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - notes: Do before or with VS-068 (tabs may remove the fold problem). Files: scripts/ui/map_strip.gd, scripts/test_driver.gd.
 
 # Ideas parking lot
+- (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
 - (S0056, Scout, P3) Sovereign's Decree: once-per-run credit sink, fortify a sector 2 min (cost ~25k, reuses Reserve spawn/expiry, `--decree` harness flag). Wait for VS-061 results and VS-066 UI.
 - (S0054, QA VS-059, P3) Reserve fighters (expires>=0) count toward Director UNION_QUOTA (director.gd ~246) and delay Union fighter respawns for 180 s; skip ships with expires>=0 in that count. Also reserve spawns at sec.gates[0]; unverified whether it leads toward Hive. Untuned: RESERVE_COST 4000 / COUNT 6 / LINGER 180 (VS-061).
 - (S0050, QA VS-054, P3) Map side panel at 1280x720: raid forecast line sits below the fold under the build list — move raid block above buy/build lists; add raid_warn_touch shot; HUD forecast shows only soonest raid.
@@ -1165,7 +1166,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - S0037 QA P3: on-foot/dead state never autosaves (run_flow.gd:60); partly addressed by VS-041.
 - S0037 balance: passive Hive ships at 20 min median 59 (guard 60); if it creeps, cut Hive cap/wave constant in scripts/sim/defs.gd ~5%.
 - S0037 balance: economic nw30 below nw20 in 3 of 9 seeds (wide variance).
-- done: S0053 — single bottom HUD lane on touch (forecast>sortie>objective>trade>tip), touch button spacing, pylon label merge, thousands separators; map Close pin dropped (QA PASS r2)
+- done: S0058 — strip compacted (BTN 44, sep 1, forecast 11px), raid_map_damaged shot + partial-repair label; QA PASS r1
 - VS-048 follow-up: reduced station intake below 50% hull (Scout S0037 bullet); repair from map without docking; damaged-HQ shot scenarios (hq_wounded/dock_wounded) (S0043)
 - Cosmetics (S0043 QA P3): misplaced VS-024 doc comment in universe.gd (above station_repair_cost, belongs on add_credits); map DAMAGED label clipped to 80px loses '%'; HUD hull % pokes past backing
 

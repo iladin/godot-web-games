@@ -2,7 +2,7 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch raid_map_damaged dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
@@ -123,7 +123,7 @@ func _shot_script(t: float) -> void:
 			"map":
 				g._set_mode("map")
 				g.map._order_button("all")
-			"raid_map", "raid_map_touch":   # VS-039/043: one raid in flight on the inset + panel, one finished outcome listed
+			"raid_map", "raid_map_touch", "raid_map_damaged":   # VS-039/043: one raid in flight on the inset + panel, one finished outcome listed
 				var nst: StationData = g.u.alive_nests()[0]
 				var tr := g.u.director.tracker
 				var r1 := g.u.spawn_ship("drone", Defs.Faction.HIVE, nst.sector, nst.pos + Vector3(300, 0, 0))
@@ -134,6 +134,9 @@ func _shot_script(t: float) -> void:
 				tr.add(rl1, g.u.hq)
 				tr.history.append({"t": g.u.time - 40.0, "kind": "intercepted", "text": "Raid intercepted in Argent (3/4 destroyed)"})
 				g.touch.active = g.shot_mode == "raid_map_touch"
+				if g.shot_mode == "raid_map_damaged":   # VS-069: HQ hurt -> Repair HQ joins the strip
+					g.u.hq.hull = g.u.hq.hull_max * 0.6
+					g.u.credits = maxf(g.u.credits, 500.0)
 				g._set_mode("map")
 				g.map._order_button("all")
 			"raid_warn", "raid_warn_map":   # VS-054: 3 raiders about to reach the HQ sector; forecast on HUD (flight) or inset + panel (map)
@@ -260,11 +263,14 @@ func _shot_script(t: float) -> void:
 		sv.fps.rotation.z = 0.0
 	if g.shot_mode == "map" and _ap_step == 1 and t > 2.5:   # VS-032: buy/build buttons visible without scrolling
 		assert(g.map.fold_ok(), "map side panel: BUILD STATION buttons below the fold at %s" % str(g.map.size))
-	if (g.shot_mode == "map" or g.shot_mode == "raid_map" or g.shot_mode == "raid_map_touch") and _ap_step == 1 and t > 2.5:   # VS-067
+	if (g.shot_mode == "map" or g.shot_mode.begins_with("raid_map")) and _ap_step == 1 and t > 2.5:   # VS-067
 		var st: MapStrip = g.map._strip
 		assert(st.reserve_btn.size.y >= 44.0, "map strip: Call Reserve is a >= 44 px target")
 		assert(st.on_screen(Rect2(Vector2.ZERO, g.map.size)), "map strip: forecast / Reserve / Repair on screen at %s: %s" % [str(g.map.size), st.rects()])
-	if (g.shot_mode == "raid_map" or g.shot_mode == "raid_map_touch") and _ap_step == 1 and t > 2.5:   # VS-043
+	if g.shot_mode == "raid_map_damaged" and _ap_step == 1 and t > 2.5:   # VS-069
+		var dst: MapStrip = g.map._strip
+		assert(dst.repair_btn.visible and dst.repair_btn.size.y >= 44.0, "damaged HQ: Repair HQ visible and >= 44 px (%s)" % dst.rects())
+	if g.shot_mode.begins_with("raid_map") and _ap_step == 1 and t > 2.5:   # VS-043
 		assert(g.map.fold_ok(), "raid map: BUY/BUILD pushed below the fold at %s (grid end %.0f, scroll end %.0f)" % [str(g.map.size), g.map._build_grid.get_global_rect().end.y, g.map._scroll.get_global_rect().end.y])
 		assert(g.map._defend_btn.visible and g.map._defend_btn.size.y >= 44.0, "Defend button is a >= 44 px target")
 		assert(g.map._defend_btn.get_global_rect().end.y <= g.map._scroll.get_global_rect().end.y, "Defend button is on screen")
