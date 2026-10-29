@@ -1095,6 +1095,76 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] 3 consecutive `shots.sh void-sovereign raid_hit` runs yield 3 fresh frames; check.sh PASS
 - notes: S0059 QA follow-up. S0060 working.
 
+## VS-071 · Nest cap 135 trial + nw30 gate
+- status: blocked
+- priority: P1
+- type: balance
+- size: S
+- source: balance
+- created: S0062
+- why: S0062 balance: economic nw30 fell 168k->106k and seed 186 loses HQ at 23.7 min since NEST_CAP_GROWTH 145 (VS-064); economic HQ 8/9 has no margin (balance report, critic #3).
+- acceptance:
+  - [ ] NEST_CAP_GROWTH tried at 135 in defs.gd; passive 9 seeds (no --reserve) earliest HQ loss >= 22 min and median within 20-35
+  - [ ] Economic 9 seeds: HQ survives >= 8/9 (aim 9/9), nw20 median >= 90k, nw30 median >= 120k and q1 >= 90k; if not met, keep 145 and try Sovereign warship cost -10% instead
+  - [ ] selftest nest cap assert, DESIGN.md Ramp bullet and metrics.csv updated; nw30 target added to ai-studio/roles/balance-analyst.md; check.sh PASS
+- notes: Results sensitive to seed; run balance.sh foreground, 3-4 seeds per call.
+- notes2: S0062 BLOCKED (no code change kept). NEST 135 rejected: passive earliest HQ loss 20.4 min (<22 gate), median 23.4. Warship -10% (fighter 4050/corvette 14400) gave economic HQ 9/9, nw20 107k but nw30 median 107.6k, q1 56.8k (fail). Weak seeds 101/152/186/118 sit at 51-57k nw30. Superseded by VS-075.
+
+## VS-072 · Shakedown probe: early first raid contact
+- status: todo
+- priority: P2
+- type: feature
+- size: S
+- source: critic
+- created: S0062
+- why: Critic #2: a scripted/short session never meets a raid (first raid at 196 s), so the raid system is invisible in the first 99 s.
+- acceptance:
+  - [ ] A small non-lethal raid probe appears within the first ~90 s of a new game and is clearly flagged on HUD/strip
+  - [ ] Probe cannot destroy the HQ; does not alter later raid timing/balance gates (passive/economic medians unchanged within noise)
+  - [ ] check.sh PASS with selftest assert for the probe
+- notes: Check scout report S0062-scout.md proposal 2.
+
+## VS-073 · Surface mission collapse-and-extract beat
+- status: todo
+- priority: P2
+- type: feature
+- size: M
+- source: critic
+- created: S0062
+- why: Critic #5: after the Core dies at t=67 the surface mission idles ~30 s with no pressure (min_hp 84).
+- acceptance:
+  - [ ] After Core destruction a short collapse sequence (timer, hazards or reinforcements) runs and an extract objective is shown
+  - [ ] Mission ends via extract or failure within ~25 s of collapse start; no softlock; keyboard and touch work
+  - [ ] surface_long shot log shows the beat with no script errors; check.sh PASS
+- notes: Scout proposal 3. Split if it exceeds M.
+
+## VS-074 · Map stakes: raid banner + fleet route lines
+- status: todo
+- priority: P2
+- type: polish
+- size: S
+- source: critic
+- created: S0062
+- why: Critic #4 / QA P3: raid status line is tiny/truncated on the command map and fleet movement is invisible.
+- acceptance:
+  - [ ] Raid banner readable (>= 14 px) and not truncated at 1280x720 and 900x720 map shots
+  - [ ] Fleet orders draw route lines on the map
+  - [ ] check.sh PASS; raid_map, raid_map_damaged, raid_map_touch shots reviewed
+- notes: Depends on VS-068 (tabs). Scout proposal 5.
+
+## VS-075 · Lift weak-economy seeds (nw30 / seed 186 HQ)
+- status: todo
+- priority: P2
+- type: balance
+- size: S
+- source: balance
+- created: S0062
+- why: VS-071 trials: nest cap 135 breaks passive earliest-loss gate; warship -10% fixes HQ 9/9 but nw30 q1 stays 57k. Seeds 101/152/186/118 are weak economies (S0062-balance.md).
+- acceptance:
+  - [ ] One lever tried (candidates: late Hive raid size, defense platform cost cut, post-20-min income floor); economic 9 seeds HQ >= 8/9 and nw30 median >= 120k, q1 >= 90k, or documented rejection with numbers
+  - [ ] Passive 9 seeds (no --reserve) earliest HQ loss >= 22 min unchanged; selftest/DESIGN.md/metrics.csv updated; check.sh PASS
+- notes: Warship -10% (Defs cost + balance.gd bot gate reads Defs fighter cost) is a known partial option. Run balance_gate.sh one GATE_OFFSETS per call.
+
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.
 - (S0056, Scout, P3) Sovereign's Decree: once-per-run credit sink, fortify a sector 2 min (cost ~25k, reuses Reserve spawn/expiry, `--decree` harness flag). Wait for VS-061 results and VS-066 UI.
@@ -1188,3 +1258,5 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 
 - (S0050, critic) Pre-raid info/reserve ideas now VS-054/057; real-browser pass VS-042 still blocked on allowlist (cdn.playwright.dev).
 - (S0053, VS-058 dev, P3) Map side panel clip at 900x720: pin "Close map (M)" below the scroll area only when the viewport is tall (pinning at 1280x720 broke the VS-043 fold assert); add a sortie-on-touch shot scenario; add raid_map_touch fold check to selftest.
+- Sovereign's Decree: credit-sink fortify ability deepening Reserve spawn/expiry (critic bold idea; scout proposal 4; needs VS-068 first).
+- Director UNION_QUOTA counts reserve ships; partial-repair shot.

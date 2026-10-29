@@ -324,3 +324,8 @@
 - Task(s): VS-064 passive Hive cap trim — done (Developer + independent QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: NEST_CAP_GROWTH 126->145 (140 and 150 failed earliest-HQ-loss gate). Econ HQ now 8/9 (seed 186 lost at 23.7 min) — thin margin. metrics rows lack nw10/nw30/union cols.
+
+## S0062 — 2026-10-29 08:55 — PLANNING
+- Task(s): review round -> VS-072..074, VS-075 added; VS-071 (nest cap 135 / nw30 gate) BLOCKED: 135 fails passive earliest-loss (20.4<22); warship -10% gives 9/9 HQ but nw30 q1 57k. No game code changed.
+- Check: PASS · Git: committed (see git log)
+- Notes: Critic avg 6.8; QA no P0-P2; balance targets met, economic nw30 168k->106k. Decree parked.

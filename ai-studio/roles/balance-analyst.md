@@ -27,6 +27,7 @@ a change only counts if it moves the 9-seed median beyond the IQR noise, ideally
 | Economic: net worth at 10 min | ≥ 45,000 |
 | Economic: net worth at 20 min | ≥ 90,000 |
 | Economic: HQ survives 30 min | yes, in ≥ 6 of 9 seeds |
+| Economic: net worth at 30 min | median ≥ 120,000 and Q1 ≥ 90,000 (VS-071; S0062 measured 106,269 / 94,217, not yet met) |
 | Union fleet collapse (0 Union ships) | not before 20 min in the economic policy |
 | First Hive raid | 3–4 min |
 | Hive ship count at 20 min | ≤ 60 (performance guard for web) |

@@ -1,45 +1,47 @@
 # Void Sovereign — Handover
-_Last updated: S0061 · 2026-10-29 07:05 UTC · mode: BUILD_
+_Last updated: S0062 · 2026-10-29 08:55 UTC · mode: PLANNING_
 
 ## TL;DR
-S0061 shipped VS-064: NEST_CAP_GROWTH 126->145 in defs.gd (Hive cap at 20 min 15->14). Passive and economic gates met, QA PASS r1, check PASS. builds_since_review is now 6, so the health rule requires a PLANNING round next. Backlog: 2 todo (P2, size S): VS-065, VS-068.
+S0062 ran a review round (Critic 6.8/10, QA no P0-P2, Balance all targets met but economic nw30 fell 168k->106k). VS-071 balance trial was blocked with no code change. Build is green; 6 todo tasks ready.
 
 ## Next session should
-1. Run PLANNING first (health rule, builds_since_review=6): Critic + QA sweep + Balance Analyst in parallel, then Feature Scout; create 4-8 tasks. Balance Analyst: re-check economic seed 186 (HQ lost 23.7 min, economic HQ 8/9 is at the gate floor) and fill the nw10/nw30/union columns in metrics.csv that the S0061 rows left blank.
-2. Then BUILD VS-068 (S): Buy/Build/Orders tabs (>= 44 px) below the strip; split tab helper out of `scripts/ui/map_view.gd` (~596 lines). Then `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_damaged map dock` and at 900x720, then check.sh.
-3. Then VS-065 (900x720 touch/panel polish; do the map-panel part after VS-068).
-4. Optional tiny tweak: lower STUCK_FRAMES in `scripts/raid_hit_proof.gd` to ~7000 (or raise shots.sh raid_hit timeout). Parking lot: Sovereign's Decree, Director UNION_QUOTA counts reserve ships, partial-repair shot.
+1. BUILD VS-068 (S): Buy/Build/Orders tabs (>= 44 px) below the pinned strip; split tab helper out of `scripts/ui/map_view.gd` (~596 lines). Then `RES=1280x720 bash scripts/studio/shots.sh void-sovereign raid_map raid_map_damaged map dock` and at 900x720, then check.sh. (`backlog.py next` currently says VS-065, but VS-065's map-panel part must follow VS-068: do VS-068 first.)
+2. Then VS-065 (900x720 touch spacing / panel polish), then VS-074 (map stakes: raid banner + route lines, depends on VS-068).
+3. VS-075 (P2 balance): lift weak-economy seeds 101/152/186/118; read `studio/reviews/S0062-balance.md` and the VS-071 notes2 first.
+4. VS-072 shakedown probe (S), VS-073 surface collapse/extract beat (M, split if needed).
+5. builds_since_review is 0; next PLANNING due after 6 builds.
 
 ## Last session
-- Did: VS-064 done. defs.gd NEST_CAP_GROWTH 145 (140 -> earliest passive HQ loss 19.1 min, 150 -> 20.6, both fail); selftest nest cap assert 15->14; DESIGN.md Ramp bullet; 2 metrics.csv rows. Passive 9 seeds: hive_ships_20 median 56 / q3 60, HQ lost median 28.2, earliest 23.6. Economic 9 seeds: HQ 8/9, nw20 median 104590, hive_ships_20 median 53. QA re-ran all seeds, same numbers.
+- Did: PLANNING round (reviews/S0062-{critic,qa,balance,scout}.md); VS-072..074 and VS-075 created; VS-071 tried and blocked (NEST_CAP_GROWTH 135: passive earliest HQ loss 20.4 min < 22 gate; warship -10%: economic HQ 9/9, nw20 107k, but nw30 median 107.6k / q1 56.8k). Added nw30 target (median >= 120k, q1 >= 90k) to ai-studio/roles/balance-analyst.md. defs.gd/balance.gd restored to original.
 - Check: PASS · Git: committed (see git log) · Roles collapsed: none
 
 ## In-flight / uncommitted work
-none after the final commit. Scratch under `.tools/` is gitignored.
+none after the final commit.
 
 ## Build health
-- check.sh: PASS · known noise: ObjectDB leak at exit, ALSA, ERR_CANT_OPEN on --shot exit; git may warn about HEAD.lock unlink.
-- Latest metrics: S0061 passive hive_ships_20 median 56, economic nw20 median 104590, HQ 8/9.
+- check.sh: PASS · known noise: ObjectDB leak at exit, ALSA, ERR_CANT_OPEN on --shot exit.
+- Latest metrics: S0062 economic HQ 8/9, nw20 median 104590, nw30 106269; passive HQ lost median 28.2, earliest 23.6.
 
 ## Backlog snapshot
-todo 2 · in-progress 0 · done 61 · blocked 2 · split 5 · Top ready: VS-068, VS-065
+todo 6 · in-progress 0 · done 61 · blocked 3 · split 5 · Top ready: VS-068, VS-065, VS-074
 
 ## Watch out for
-- Earliest HQ loss is very seed-sensitive; any sim change can move it. Economic HQ 8/9 has no spare margin.
-- device_bash calls cap ~120 s and background jobs die when the call returns: run balance.sh foreground, 3-4 seeds per call.
-- raid_hit takes 44-123 s wall (shots.sh timeout 150 s); check.sh needs GODOT=$PWD/.tools/godot exported.
-- Strip is at the 44 px floor with 1 px spacing and an 11 px forecast; any added strip content will break the fold assert until VS-068 tabs land.
-- check.sh does NOT run raid_map/raid_map_damaged/raid_map_touch shots; run them after any map UI change.
-- With --reserve the bot rescues passive seed 101; judge passive balance gates WITHOUT --reserve.
-- 900x720 window renders virtual 1280x1024 viewport. /tmp not writable from device shell; logs under .tools/. Do NOT `pkill -f godot`. Append new backlog tasks ABOVE "# Ideas parking lot".
+- Earliest HQ loss is very seed-sensitive; economic HQ 8/9 has no margin; the new nw30 target currently reads red at baseline.
+- device_bash calls cap ~120 s and background jobs die: run balance.sh / balance_gate.sh foreground, one GATE_OFFSETS per call (all three in one call times out).
+- Strip is at the 44 px floor; added strip content breaks the fold assert until VS-068 tabs land.
+- check.sh does NOT run raid_map/raid_map_damaged/raid_map_touch shots; run them after map UI changes.
+- Judge passive balance WITHOUT --reserve. Do NOT `pkill -f godot`. Append new backlog tasks ABOVE "# Ideas parking lot".
+- Parking lot: Sovereign's Decree (needs VS-068), UNION_QUOTA counts reserve ships, partial-repair shot.
 
 ## Open questions for Daniel
-- VS-042 needs a headless browser: allow cdn.playwright.dev in egress or point to an installed chromium (real-browser pass still unverified).
+- VS-042 (real-browser pass, Critic's #1 problem for 10 reviews) needs a headless browser: allow cdn.playwright.dev in egress or point to an installed chromium.
+- Accept nw30 as aspirational, or keep chasing it (VS-075)?
 
 ## Answers to Daniel
 - none
 
 ## Session history (newest first, keep 10)
+- S0062 2026-10-29 PLANNING - review round -> VS-072..075; VS-071 blocked (no code change)
 - S0061 2026-10-29 BUILD - VS-064 Nest cap growth 145 done (QA PASS r1)
 - S0060 2026-10-29 BUILD - VS-070 raid_hit hardening done (QA PASS r1)
 - S0059 2026-10-29 BUILD - VS-063 raid_hit shot + raid_hit_long done (QA PASS r1); VS-070 added
@@ -49,4 +51,3 @@ todo 2 · in-progress 0 · done 61 · blocked 2 · split 5 · Top ready: VS-068,
 - S0055 2026-10-29 BUILD - VS-060 Reserve button done (QA PASS r1); VS-062 added
 - S0054 2026-10-28 BUILD - VS-059 Fleet Reserve sim logic done (QA PASS r1)
 - S0053 2026-10-28 BUILD - VS-057 split (059/060/061); VS-058 touch HUD lane done (QA PASS r2)
-- S0052 2026-10-28 BUILD - VS-056 Hive cap trim + --fleet-floor done (QA PASS r1)
