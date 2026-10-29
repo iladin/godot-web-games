@@ -2,12 +2,15 @@ class_name TestDriver
 extends RefCounted
 ## Headless/automation hooks. `--autoplay` (used by scripts/check.sh) walks every layer
 ## in ~15 s; `--shot=<scenario> --shotfile=<png>` stages a scenario and saves a screenshot.
-## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch raid_map_damaged dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
+## Scenarios: sortie combat_long title title_continue title_continue_touch title_confirm map raid_map raid_map_touch raid_map_damaged raid_hit raid_hit_long dock dock_touch touch_wing ledger ledger_dock ledger_map surface surface_far touch touch_surface over over_map win death combat hints sortie_fight
 ## hints_touch (+ _long variants).
 
 const TITLE_HOLD_FRAMES := 10   # autoplay idles this long on the title before launching
 
+const RaidHitProof := preload("res://scripts/raid_hit_proof.gd")
+
 var g: VoidMain
+var _rh: RefCounted = null
 var _ap_step: int = 0
 var _delta_shot: bool = false
 var _title_frames: int = 0
@@ -108,6 +111,11 @@ func _exercise_hints() -> void:
 
 
 func _shot_script(t: float) -> void:
+	if g.shot_mode == "raid_hit" or g.shot_mode == "raid_hit_long":   # VS-063: own frame sequencer, quits itself
+		if _rh == null:
+			_rh = RaidHitProof.new(g)
+		_rh.tick(t)
+		return
 	if _ap_step == 0 and t > 0.2:
 		_ap_step = 1
 		match g.shot_mode:

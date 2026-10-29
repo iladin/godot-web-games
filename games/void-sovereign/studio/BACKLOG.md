@@ -983,7 +983,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 
 
 ## VS-063 · Raid-hit proof run: scripted "first raid lands" scenario
-- status: todo
+- status: done
 - priority: P2
 - type: tech
 - size: S
@@ -995,6 +995,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] Headless `raid_hit_long` log prints HQ hull %, reserve ships alive and credits at 30 s steps; HQ hull < 100% at some step; no softlock
   - [ ] Scenario does not touch gameplay RNG or balance harness; shot list noted in HANDOVER; check.sh PASS
 - notes: Scout S0056 proposal 2. Single call < 175 s.
+- done: S0059 — raid_hit 3-frame shot + raid_hit_long log (QA PASS r1)
 
 ## VS-064 · Passive Hive cap trim
 - status: todo
@@ -1078,6 +1079,20 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] New shot scenario (e.g. raid_map_damaged) with hull < 100% asserts Repair HQ visible, >= 44 px, fold ok at 1280x720 and 900x720; check.sh PASS
   - [ ] Repair label hints partial repair when credits < cost (P3, optional)
 - notes: Do before or with VS-068 (tabs may remove the fold problem). Files: scripts/ui/map_strip.gd, scripts/test_driver.gd.
+
+## VS-070 · Harden raid_hit shot against slow runs
+- status: todo
+- priority: P2
+- type: tech
+- size: S
+- source: qa
+- created: S0059
+- why: QA S0059: raid_hit produced only frame 1 in 1 of 4 runs (~84 s wall); raid_hit_proof.gd quits after an 80 s stuck cap with an error the shots.sh grep does not show, and shots.sh returns rc=0 on partial frames.
+- acceptance:
+  - [ ] raid_hit_proof.gd stuck cap raised or based on frames, not wall/state time that slow machines exceed
+  - [ ] shots.sh greps "ERROR: raid_hit" and reports FAILED when raid_hit _2 or _3 is missing/stale
+  - [ ] 3 consecutive `shots.sh void-sovereign raid_hit` runs yield 3 fresh frames; check.sh PASS
+- notes: S0059 QA follow-up.
 
 # Ideas parking lot
 - (S0058, QA VS-069, P3) Partial-repair label (credits < 4800) has no shot/assert: add a raid_map_damaged_poor scenario. Forecast line is 11 px / strip buttons at 44 px floor with 1 px separation; if VS-068 tabs free space, restore 13 px font and 4 px spacing.

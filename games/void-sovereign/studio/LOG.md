@@ -306,3 +306,8 @@
 - Task(s): VS-069 Repair HQ strip fold overflow + coverage — done (Developer + independent QA PASS r1)
 - Check: PASS · Git: committed (see git log)
 - Notes: strip compacted (BTN 44, sep 1, forecast 11 px); new raid_map_damaged shot; partial-repair label. P3 follow-up parked.
+
+## S0059 — 2026-10-29 04:30 — BUILD
+- Task(s): VS-063 raid-hit proof run — done (QA PASS r1); VS-070 added (harden raid_hit vs slow runs)
+- Check: PASS · Git: committed (see git log)
+- Notes: new scripts/raid_hit_proof.gd, shots.sh multi-frame (_2/_3). raid_hit flaked 1/4 runs under load.
