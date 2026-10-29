@@ -955,7 +955,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - done: S0055 - Call Reserve button on dock + map (QA PASS r1)
 
 ## VS-061 · Fleet Reserve 9-seed A/B
-- status: in-progress
+- status: done
 - priority: P2
 - type: balance
 - size: S
@@ -964,7 +964,8 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
 - why: Split from VS-057; verify the reserve helps without trivialising.
 - acceptance:
   - [ ] 9-seed A/B economic 30 with --reserve: HQ survives >= 8/9, nw30 Q1 > 48,075, median >= 115k; passive unchanged; check.sh PASS
-- notes: Depends on VS-059. Run seeds as single-seed parallel calls. S0056 building.
+- notes: Depends on VS-059. Run seeds as single-seed parallel calls. S0056 building. S0056 dev: 9-seed economic 30 --reserve (seeds 101..237, single-seed calls): HQ 9/9, nw30 median 170,283 (Q1 128,619; min 101,578 seed 135; max 196,653), nw10/nw20 medians 97,689/120,755 (same as baseline); reserve called in 3/9 seeds (118, 135, 237), 6/9 seeds identical to no-reserve baseline. Seed 135 nw30 101,578 is the lowest. Tunables untouched (RESERVE_COST 4000/COUNT 6/LINGER 180). Passive unchanged (call_reserve only reachable via bot --reserve or UI). Details in reviews/S0056-balance.md.
+- done: S0056 — economic 9-seed --reserve: HQ 9/9, nw30 median 170,283, Q1 128,619 (QA PASS r1; passive seed 101 with --reserve survives 30 min vs HQ lost 24.4 without: strong comeback, consider passive 9-seed --reserve run)
 
 ## VS-062 · Reserve button reachable during raids + disabled-state shots
 - status: todo
@@ -1006,7 +1007,7 @@ One task per `##` heading. The Producer owns this file; `python3 scripts/studio/
   - [ ] defs.gd Hive t/126 cap lowered ~5-8% (or slower spawn while player fleet < 3), commented with S0056 reference
   - [ ] 9-seed passive: hive_ships_20 median <= 58, q3 <= 62; HQ lost median stays 20-35 min, earliest >= 22 min
   - [ ] 9-seed economic: HQ survives >= 8/9, nw20 median >= 90,000, hive_ships_20 median <= 60; metrics.csv row appended; DESIGN Ramp bullet updated; check.sh PASS
-- notes: Run seeds as single-seed calls under timeout 175 (about 35 s/seed). Do not strengthen raid damage. Run after VS-061.
+- notes: Run seeds as single-seed calls under timeout 175 (about 35 s/seed). Do not strengthen raid damage. VS-061 done; reserve rescues passive seed 101 (--reserve only), so judge passive gates WITHOUT --reserve.
 
 ## VS-065 · 900x720 touch and panel polish bundle
 - status: todo

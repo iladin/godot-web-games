@@ -291,3 +291,8 @@
 - Task(s): VS-060 Fleet Reserve map+dock button - done (QA PASS r1); VS-062 created from QA notes
 - Check: PASS · Git: committed (see git log)
 - Notes: builds_since_review now 6, so S0056 must start with PLANNING. Map reserve button is below the fold in raids (VS-062).
+
+## S0056 — 2026-10-29 01:55 — PLANNING+BUILD
+- Task(s): review round (Critic 6.7/10, QA sweep no P0-P2, Balance 8/9 targets, Scout 5 proposals) -> VS-063..VS-066 (+Decree to parking lot). VS-061 Reserve A/B done (QA PASS r1, no code change).
+- Check: PASS · Git: committed (review round f124513 + wrap-up commit)
+- Notes: Reserve rescues passive seed 101 when --reserve is on (default passive unchanged). Stale .git/HEAD.lock moved to .git/stale-HEAD-lock-S0056.

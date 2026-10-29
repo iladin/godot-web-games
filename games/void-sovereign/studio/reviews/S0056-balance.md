@@ -27,3 +27,18 @@ FPS check: surface_long headless ran to completion; no script errors (only a God
 1. Passive Hive ships @20 (q3 65, median 60): the cap lowered economic ships but passive is above guard in the upper half. Lever: Hive t/126 cap in defs.gd (VS-056 value) - lower the cap ~5-8% (about -4 ships at t=20) or slow Hive spawn rate once player fleet is under 3 ships. Verify with 9-seed passive and economic; economic must keep HQ >= 8/9.
 2. Passive earliest HQ loss 21.1 min is close to the 20 floor: do not strengthen Hive raid damage; recommendation 1 also helps here.
 3. Surface pylon 55 s: watch, no change. No change needed for economic targets.
+
+## VS-061 Fleet Reserve A/B (economic 30 min, --reserve, 9 seeds)
+| Seed | HQ lost | nw10 | nw20 | nw30 | reserve calls |
+|---|---|---|---|---|---|
+| 101 | no | 94,328 | 102,720 | 116,462 | 0 |
+| 118 | no | 97,689 | 91,747 | 128,619 | 1 |
+| 135 | no | 95,083 | 113,562 | 101,578 | 1 |
+| 152 | no | 89,760 | 123,341 | 174,636 | 0 |
+| 169 | no | 100,528 | 140,648 | 196,653 | 0 |
+| 186 | no | 106,932 | 123,911 | 170,283 | 0 |
+| 203 | no | 104,050 | 136,671 | 168,407 | 0 |
+| 220 | no | 102,104 | 120,755 | 180,886 | 0 |
+| 237 | no | 97,553 | 106,891 | 175,238 | 1 |
+
+HQ survives 9/9 (>= 8). nw30 median 170,283 (>= 115k; baseline 168,407), Q1 128,619 (> 48,075; baseline Q1 146,057). Reserve fired in 3/9 seeds (policy: after 18 min with < 4 Sovereign warships); the other 6 seeds are identical to the no-reserve baseline. Seeds 118/135 nw30 differ from baseline (reserve cost 4,000 cr vs. defence gained; seed 135 lowest at 101,578). Passive is unchanged: call_reserve is only reached via the bot flag or the UI button. No retune needed.
