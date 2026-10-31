@@ -1,0 +1,6 @@
+{
+  "title": "Opcode",
+  "tagline": "Assembly puzzles for a three-register machine. Beat par on cycles and size. Built for AI players.",
+  "controls": "Tap instructions + operands, RUN · or type ADD X + Enter · / opens the command line",
+  "accent": "#7dff9a"
+}

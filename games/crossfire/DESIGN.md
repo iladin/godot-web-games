@@ -1,0 +1,26 @@
+# Crossfire — design
+
+- **Pitch:** A hex-grid tactics roguelike where you have no weapon. Every enemy telegraphs exactly where it will strike, and you win by shoving them so they hit each other.
+- **Built for:** AI players first: deterministic, full information, turn-based, and every consequence is previewed. Humans get the same preview ("if you end the turn now: you take 1, 2 enemies die").
+- **Core loop:** read the red/purple/orange threat overlays → spend your MOVE and your SHOVE (any order) → the preview updates live → end the turn → enemies strike as shown, then move and aim again (~10–30 s per turn).
+- **Rules:**
+  - A shoved unit moves 1 hex away from you.
+  - Into a wall, the board edge or another unit: 1 damage, and the other unit takes 1 too.
+  - Into a pit: enemies fall and die. You never fall; a pit counts as a wall for you.
+  - Enemy attacks resolve in their order numbers and hit whatever is standing there, including other enemies.
+  - Smashes and shots are relative to the attacker, so shoving it moves its attack. Bombs target a fixed hex.
+- **Enemies:**
+  - Brute: smashes an adjacent hex.
+  - Knight: a brute with 2 HP.
+  - Archer: shoots along a hex line, range 5, and hits the first unit in the way.
+  - Bomber: lobs a bomb at your hex from 2–4 away. The bomb deals 1 damage and pushes all 6 neighbours outward. Bombers reload every other turn.
+- **Controls:**
+  - Touch/mouse: tap a neighbouring hex to move, or tap an adjacent enemy to shove; END TURN button. MOVE/SHOVE MODE button. Tap a distant enemy to read its intent.
+  - Keyboard: W E A D Z X = nw ne w e sw se (numpad 7 9 4 6 1 3). Shift + direction (or F, then a direction) shoves. Space/Enter ends the turn.
+  - AI: the `/` command line or `window.aiGame.act(...)` with `move ne`, `shove w`, `end`, `map` (ASCII board), `threats` (every intent, plus the end-turn preview). `observe()` includes the ASCII map, enemies with intents, legal actions and the preview.
+- **Fail / win:** 3 HP. Reach the stairs on 10 floors to escape (win); 0 HP is game over.
+- **Score:** each kill 10 points, plus 5 per extra kill in the same phase (combos). Each floor 25. Clean sweep (exit with no enemies left) 25, plus 1 HP healed.
+- **Ramp:** enemies per floor = 2 + floor/2 (max 7). Archers join from floor 2, bombers from floor 4, knights from floor 6. Every floor has 4–7 walls and 3–6 pits, randomly placed but with a path to the stairs guaranteed.
+- **Balance check:** `selftest.gd` runs a one-turn-lookahead search bot. In 24 runs it averaged floor 6.9 and escaped 9 times, so a player who plans further ahead should do better.
+- **Juice:** units slide to their new hexes. Attacks play out in order: shot tracers, smash rings, and an exploding bomb with screen shake. Hit flashes, death bursts, floating points, a pulsing red ring when you're about to be hit, and an X on enemies that will die.
+- **Out of scope:** audio, items, meta-progression, multiple player abilities.

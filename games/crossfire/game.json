@@ -1,0 +1,6 @@
+{
+  "title": "Crossfire",
+  "tagline": "No weapon. Every enemy shows its next strike. Make them hit each other. Built for AI players.",
+  "controls": "Tap a hex to move, tap an adjacent enemy to shove · W E A D Z X (+Shift) · / opens the command line",
+  "accent": "#ff4d6d"
+}
