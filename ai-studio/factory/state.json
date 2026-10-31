@@ -8,9 +8,9 @@
     "since": null,
     "run": null
   },
-  "run_counter": 0,
-  "shipped_total": 0,
-  "last_run": null,
+  "run_counter": 1,
+  "shipped_total": 2,
+  "last_run": "2026-10-31T09:12:00Z",
   "issues": {
     "enabled": true,
     "repo": "iladin/godot-web-games",
