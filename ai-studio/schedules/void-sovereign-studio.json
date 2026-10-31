@@ -1,0 +1,15 @@
+{
+  "trigger_id": "trig_01ETunp3K9sTBzVE1x7Qv2Gi",
+  "name": "Void Sovereign AI studio cycle",
+  "cron": "55 * * * *",
+  "cron_note": "UTC fields; every hour at :55 (disabled)",
+  "enabled": false,
+  "model": "claude-sonnet-5-5",
+  "requires_computer": true,
+  "folders": ["C:\\git", "C:\\git\\godot-web-games"],
+  "permission_mode": "auto",
+  "notifications": {"push": true, "email": false},
+  "prompt_file": "void-sovereign-studio.prompt.md",
+  "procedure": "ai-studio/studio-cycle.md",
+  "synced_at": "2026-10-29T18:09:15.795574Z"
+}

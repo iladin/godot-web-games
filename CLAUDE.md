@@ -49,7 +49,7 @@ If Godot isn't available in your environment, say so plainly, still run `bash -n
 - Commit message per game: `Add <Title>` / `<Title>: <change>`.
 
 ## AI studio (autonomous development loop)
-Games can be developed by a role-based AI studio — strategy in `docs/AI_STUDIO.md`, procedure in `ai-studio/studio-cycle.md`, roles in `ai-studio/roles/` (game-developer, qa-tester, game-critic, balance-analyst, feature-scout). A scheduled session runs one studio cycle every 5 hours for `void-sovereign`.
+Games can be developed by a role-based AI studio — strategy in `docs/AI_STUDIO.md`, procedure in `ai-studio/studio-cycle.md`, roles in `ai-studio/roles/` (game-developer, qa-tester, game-critic, balance-analyst, feature-scout). Its scheduled task for `void-sovereign` is currently off (`ai-studio/schedules/void-sovereign-studio.json`).
 
 Studio state per game lives in `games/<slug>/HANDOVER.md` and `games/<slug>/studio/` (BACKLOG, INBOX, LOG, state.json, metrics.csv, reviews/). The `studio/` folder has a `.gdignore`, so Godot never imports or exports it.
 
@@ -62,3 +62,10 @@ Studio tooling: `scripts/studio/ensure_godot.sh` (find/install Godot into gitign
 
 ## Game Factory (hourly new games)
 A scheduled session runs `ai-studio/game-factory.md` every hour: an Opus designer subagent writes design docs for `batch_size` new games, Sonnet builder subagents implement them in parallel, and the orchestrator re-runs `check.sh`, commits each passing game to `main` and tries to push. The sandbox has no GitHub credentials, so pushing is done by `scripts/push_loop.sh` running in Daniel's WSL. Settings, the lock and the pause flag are in `ai-studio/factory/state.json`; the pitch queue is `ai-studio/factory/IDEAS.md`; the run log is `ai-studio/factory/LOG.md`.
+
+## Scheduled tasks (kept in git)
+Every Claude scheduled task for this repo is defined in `ai-studio/schedules/`: `<name>.json` holds the settings and `<name>.prompt.md` the exact prompt. Git is the source of truth. The full rules are in `ai-studio/schedules/README.md`; in short:
+- If you create, change, pause or delete a scheduled task, update its files in the same session and commit with a subject starting `schedules: sync`. Set `synced_at` to the task's new `updated_at`.
+- If you edit those files, apply the change to the scheduled task in the same session (`update_trigger`). Prompt changes on computer-bound tasks need Daniel's approval in a conversation linked to his computer. Model and folder changes are his to make in the Claude desktop app. List anything unapplied under **Pending** in the README.
+- To check for drift, run `python3 scripts/schedules.py diff <saved list_triggers JSON>`.
+- A scheduled run compares the prompt it started with to its `.prompt.md` file. If they differ, it reports `DRIFT: prompt` in its log and final message and carries on.

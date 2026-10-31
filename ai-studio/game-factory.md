@@ -25,7 +25,8 @@ Pause the factory: set `"paused": true` in `state.json`. Change throughput: `"ba
    - `lock.held` true and `lock.since` less than 2 h ago → append `F#### skipped: previous run still active`, stop.
    - Otherwise take the lock (`held`, `since` = now, `run` = `F####`) and increment `run_counter`. A stale lock older than 2 h is taken over and noted in LOG.
 2. `git branch --show-current` must be `main`. If it isn't, release the lock, log it, stop. Don't switch branches.
-3. Leftovers: `git --no-optional-locks status --porcelain games/`. For any untracked game folder from an earlier run:
+3. Drift self-check: compare the prompt this run started with to `ai-studio/schedules/game-factory.prompt.md`. If they differ, put `DRIFT: prompt` in this run's LOG line and final message, then continue. Don't edit schedules from a factory run.
+4. Leftovers: `git --no-optional-locks status --porcelain games/`. For any untracked game folder from an earlier run:
    - If it has `DESIGN.md` and `check.sh` PASSes, adopt it into this run's Step 3.
    - Otherwise move it to `.tools/factory-failed/`.
 
