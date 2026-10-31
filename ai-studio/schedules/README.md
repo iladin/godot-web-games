@@ -32,4 +32,4 @@ Every Claude scheduled task that works on this repo is defined here. Each one is
 
 ## Pending
 Changes that git already describes but the live scheduled task doesn't have yet. Remove each line once it's applied.
-- `game-factory`: no folder is attached to the live task. Daniel needs to attach `C:\git\godot-web-games` in the Claude desktop app (scheduled task settings); until then runs may not see the repo.
+(nothing pending)

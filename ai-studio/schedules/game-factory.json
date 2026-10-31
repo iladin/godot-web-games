@@ -6,10 +6,12 @@
   "enabled": true,
   "model": "claude-sonnet-5-5",
   "requires_computer": true,
-  "folders": ["C:\\git\\godot-web-games"],
+  "folders": [
+    "C:\\git\\godot-web-games"
+  ],
   "permission_mode": "auto",
   "notifications": null,
   "prompt_file": "game-factory.prompt.md",
   "procedure": "ai-studio/game-factory.md",
-  "synced_at": "2026-10-31T08:11:58.506394Z"
+  "synced_at": "2026-10-31T08:27:48.667345Z"
 }

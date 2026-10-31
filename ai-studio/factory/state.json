@@ -3,8 +3,20 @@
   "batch_size": 2,
   "designer_model": "opus",
   "builder_model": "sonnet",
-  "lock": {"held": false, "since": null, "run": null},
+  "lock": {
+    "held": false,
+    "since": null,
+    "run": null
+  },
   "run_counter": 0,
   "shipped_total": 0,
-  "last_run": null
+  "last_run": null,
+  "issues": {
+    "enabled": true,
+    "repo": "iladin/godot-web-games",
+    "authors": [
+      "iladin"
+    ],
+    "max_per_run": 2
+  }
 }
