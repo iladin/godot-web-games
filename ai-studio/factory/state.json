@@ -1,0 +1,10 @@
+{
+  "paused": false,
+  "batch_size": 2,
+  "designer_model": "opus",
+  "builder_model": "sonnet",
+  "lock": {"held": false, "since": null, "run": null},
+  "run_counter": 0,
+  "shipped_total": 0,
+  "last_run": null
+}

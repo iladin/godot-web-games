@@ -59,3 +59,6 @@ Studio state per game lives in `games/<slug>/HANDOVER.md` and `games/<slug>/stud
 3. If you're running out of time or context, write the handover first, then stop.
 
 Studio tooling: `scripts/studio/ensure_godot.sh` (find/install Godot into gitignored `.tools/`), `backlog.py`, `shots.sh`, `balance.sh`, `snapshot.sh`.
+
+## Game Factory (hourly new games)
+A scheduled session runs `ai-studio/game-factory.md` every hour: an Opus designer subagent writes design docs for `batch_size` new games, Sonnet builder subagents implement them in parallel, and the orchestrator re-runs `check.sh`, commits each passing game to `main` and tries to push. The sandbox has no GitHub credentials, so pushing is done by `scripts/push_loop.sh` running in Daniel's WSL. Settings, the lock and the pause flag are in `ai-studio/factory/state.json`; the pitch queue is `ai-studio/factory/IDEAS.md`; the run log is `ai-studio/factory/LOG.md`.
