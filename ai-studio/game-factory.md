@@ -6,7 +6,7 @@ Settings and lock: `ai-studio/factory/state.json`. Pitch history: `ai-studio/fac
 Pause the factory: set `"paused": true` in `state.json`. Change throughput: `"batch_size"`.
 
 ## Rules
-1. Touch only `games/<new slugs>/`, `ai-studio/factory/` and `.tools/` (scratch). Never edit `template/`, existing games, `scripts/`, `.github/` or `CLAUDE.md`.
+1. Touch only `games/<new slugs>/`, `ai-studio/factory/` and `.tools/` (scratch). Never edit `template/`, existing games, `scripts/`, `.github/` or `CLAUDE.md`. Don't read or check other games, including `void-sovereign` and its studio files; the factory only needs `ls games/` for slug names.
 2. Never delete files. Abandon a game with `mv games/<slug> .tools/factory-failed/<slug>-F####` (moving inside the repo works).
 3. Write files on the computer with `device_bash` (heredoc or a short python write). Don't author files in the cloud container and copy them with `device_commit_files`: it caches by staged path, so repeated copies of the same path can land stale content.
 4. Git:
@@ -24,9 +24,8 @@ Pause the factory: set `"paused": true` in `state.json`. Change throughput: `"ba
    - `paused: true` → append `F#### paused` to LOG, stop.
    - `lock.held` true and `lock.since` less than 2 h ago → append `F#### skipped: previous run still active`, stop.
    - Otherwise take the lock (`held`, `since` = now, `run` = `F####`) and increment `run_counter`. A stale lock older than 2 h is taken over and noted in LOG.
-2. If `games/void-sovereign/studio/state.json` has `lock.held` true and less than 4 h old, the Void Sovereign studio is mid-run. Release your lock, log `skipped: studio running`, stop.
-3. `git branch --show-current` must be `main`. If it isn't, release the lock, log it, stop. Don't switch branches.
-4. Leftovers: `git --no-optional-locks status --porcelain games/`. For any untracked game folder from an earlier run:
+2. `git branch --show-current` must be `main`. If it isn't, release the lock, log it, stop. Don't switch branches.
+3. Leftovers: `git --no-optional-locks status --porcelain games/`. For any untracked game folder from an earlier run:
    - If it has `DESIGN.md` and `check.sh` PASSes, adopt it into this run's Step 3.
    - Otherwise move it to `.tools/factory-failed/`.
 
