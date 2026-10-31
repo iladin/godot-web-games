@@ -25,7 +25,8 @@ cp -r "$ROOT/template" "$dest"
 safe_title="$(printf '%s' "$title" | sed -e 's/[\\"]/\\&/g')"
 sed_title="$(printf '%s' "$safe_title" | sed -e 's/[\\&|]/\\&/g')"
 grep -rl "__TITLE__" "$dest" | while read -r f; do
-  sed -i.bak "s|__TITLE__|$sed_title|g" "$f" && rm -f "$f.bak"
+  # No -i suffix: avoids creating .bak files that sandboxed folders can't delete.
+  sed -i "s|__TITLE__|$sed_title|g" "$f"
 done
 
 echo "Created games/$slug  (\"$title\")"
